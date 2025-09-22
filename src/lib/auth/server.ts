@@ -38,7 +38,9 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() { return []; },
+          getAll() {
+            return [];
+          },
           setAll() {},
         },
       }
@@ -46,7 +48,7 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
   }
 
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -69,7 +71,7 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
  */
 async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -98,7 +100,7 @@ async function createSupabaseServerClient() {
  */
 async function createSupabaseAdminClient() {
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -122,14 +124,24 @@ async function createSupabaseAdminClient() {
 }
 
 /**
- * Supabase認証を使用したサーバー認証チェック 
+ * Supabase認証を使用したサーバー認証チェック
  * 静的レンダリング対応版 - ログイン状態チェック時はキャッシュなし
  */
-export async function getServerAuth(allowStatic: boolean = false, enableCache: boolean = false): Promise<BasicAuthResult> {
+export async function getServerAuth(
+  allowStatic: boolean = false,
+  enableCache: boolean = false
+): Promise<BasicAuthResult> {
   try {
-    
+    console.log('🔍 [GET_SERVER_AUTH] Starting auth check...', {
+      allowStatic,
+      enableCache,
+    });
+
     // 静的レンダリングモードの場合は認証なしを返す
     if (allowStatic) {
+      console.log(
+        '📄 [GET_SERVER_AUTH] Static mode, returning unauthenticated'
+      );
       return {
         isAuthenticated: false,
         user: null,
@@ -137,12 +149,27 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
       };
     }
 
+    console.log('🔧 [GET_SERVER_AUTH] Creating Supabase client...');
     const supabase = await createSupabaseServerClientReadOnly(true);
-    
+
     // Supabase セッションを取得
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
+    console.log('🔍 [GET_SERVER_AUTH] Getting user session...');
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    console.log('🔍 [GET_SERVER_AUTH] Supabase auth result:', {
+      hasUser: !!user,
+      hasError: !!error,
+      userId: user?.id,
+      email: user?.email,
+      user_metadata: user?.user_metadata,
+      errorMessage: error?.message,
+    });
+
     if (error || !user) {
+      console.log('❌ [GET_SERVER_AUTH] No valid user session');
       return {
         isAuthenticated: false,
         user: null,
@@ -153,13 +180,25 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
     // user_metadataからユーザータイプを取得
     // フォールバック: company_account_id があれば company_user とみなす
     const meta = user.user_metadata || {};
-    let userType: UserType = (meta.user_type as UserType) || (meta.userType as UserType) || 'candidate';
+    console.log('🔍 [GET_SERVER_AUTH] User metadata:', meta);
+
+    let userType: UserType =
+      (meta.user_type as UserType) ||
+      (meta.userType as UserType) ||
+      'candidate';
+    console.log('🔍 [GET_SERVER_AUTH] Initial userType:', userType);
+
     if (userType !== 'company_user') {
       if (meta.company_account_id || (meta as any).companyAccountId) {
+        console.log(
+          '🔄 [GET_SERVER_AUTH] Found company_account_id, changing to company_user'
+        );
         userType = 'company_user';
       }
     }
-    
+
+    console.log('✅ [GET_SERVER_AUTH] Final userType:', userType);
+
     const authUser: User = {
       id: user.id,
       email: user.email || '',
@@ -170,11 +209,20 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
       user_metadata: user.user_metadata,
     };
 
-    return {
+    const result = {
       isAuthenticated: true,
       user: authUser,
       userType,
     };
+
+    console.log('✅ [GET_SERVER_AUTH] Authentication successful:', {
+      isAuthenticated: result.isAuthenticated,
+      userType: result.userType,
+      userId: result.user?.id,
+      email: result.user?.email,
+    });
+
+    return result;
   } catch (error) {
     console.error('❌ [AUTH] Server auth error:', error);
     return {
@@ -186,7 +234,8 @@ export async function getServerAuth(allowStatic: boolean = false, enableCache: b
 }
 
 // キャッシュによる認証状態の取り違いを避けるため、メモ化は無効化
-export const getCachedServerAuth = getServerAuth as unknown as typeof getServerAuth;
+export const getCachedServerAuth =
+  getServerAuth as unknown as typeof getServerAuth;
 
 /**
  * 静的レンダリング用の認証チェック（cookiesを使わない）
@@ -215,7 +264,9 @@ export async function requireCandidateAuth(): Promise<User | null> {
  */
 export async function getCachedCandidateUser(): Promise<User | null> {
   const auth = await getServerAuth(false, false); // 非キャッシュ
-  return auth.isAuthenticated && auth.userType === 'candidate' ? auth.user : null;
+  return auth.isAuthenticated && auth.userType === 'candidate'
+    ? auth.user
+    : null;
 }
 
 /**
@@ -224,7 +275,9 @@ export async function getCachedCandidateUser(): Promise<User | null> {
  */
 export async function getCachedCompanyUser(): Promise<User | null> {
   const auth = await getServerAuth(false, false); // 非キャッシュ
-  return auth.isAuthenticated && auth.userType === 'company_user' ? auth.user : null;
+  return auth.isAuthenticated && auth.userType === 'company_user'
+    ? auth.user
+    : null;
 }
 
 /**
@@ -253,7 +306,6 @@ export async function requireAdminAuth(): Promise<User | null> {
   const auth = await getServerAuth(false, false); // キャッシュなし
   return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
-
 
 /**
  * 統一的な認証エラーレスポンス
@@ -329,14 +381,14 @@ export async function requireCompanyAuthForAction(): Promise<
   // Supabase Auth IDからCompany User IDへの変換が必要な場合
   try {
     const supabase = await createSupabaseServerClientReadOnly(true);
-    
+
     // 直接company_usersテーブルで確認
     const { data: directUser } = await supabase
       .from('company_users')
       .select('id, company_account_id')
       .eq('id', companyUserId)
       .single();
-    
+
     if (!directUser) {
       // Auth IDの場合、メールで検索
       const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
@@ -346,7 +398,7 @@ export async function requireCompanyAuthForAction(): Promise<
           .select('id, company_account_id')
           .eq('email', authUser.user.email)
           .single();
-        
+
         if (companyUser) {
           companyUserId = companyUser.id;
           companyAccountId = companyUser.company_account_id;
@@ -392,7 +444,7 @@ export async function getAuthenticatedSupabaseClient() {
  */
 export async function getCandidateSupabaseClient() {
   const user = await getCachedCandidateUser();
-  
+
   if (!user) {
     throw new Error('候補者としての認証が必要です');
   }
@@ -405,7 +457,7 @@ export async function getCandidateSupabaseClient() {
  */
 export async function getCompanySupabaseClient() {
   const user = await getCachedCompanyUser();
-  
+
   if (!user) {
     throw new Error('企業ユーザーとしての認証が必要です');
   }
@@ -426,9 +478,9 @@ export async function getAdminSupabaseClient() {
 /**
  * Supabaseユーザー認証を要求するヘルパー関数 (API用)
  */
-export async function requireCandidateAuthForAPI(request?: Request): Promise<
-  AuthResult<{ candidateId: string }>
-> {
+export async function requireCandidateAuthForAPI(
+  request?: Request
+): Promise<AuthResult<{ candidateId: string }>> {
   const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {
@@ -456,9 +508,9 @@ export async function requireCandidateAuthForAPI(request?: Request): Promise<
 /**
  * 企業認証を要求するヘルパー関数 (API用)
  */
-export async function requireCompanyAuthForAPI(request?: Request): Promise<
-  AuthResult<{ companyUserId: string; companyAccountId: string }>
-> {
+export async function requireCompanyAuthForAPI(
+  request?: Request
+): Promise<AuthResult<{ companyUserId: string; companyAccountId: string }>> {
   const auth = await getServerAuth(false, false); // キャッシュなし
 
   if (!auth.isAuthenticated) {

@@ -81,6 +81,11 @@ export function useClientAuth(): AuthState {
           userType: null,
           loading: false,
         });
+
+        // Force refresh navigation after sign out
+        setTimeout(() => {
+          window.dispatchEvent(new Event('auth-state-changed'));
+        }, 100);
       } else if (
         event === 'SIGNED_IN' ||
         event === 'TOKEN_REFRESHED' ||

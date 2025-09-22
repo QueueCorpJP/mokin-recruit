@@ -1,4 +1,4 @@
-'use server'
+'use server';
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
@@ -26,7 +26,7 @@ export interface LogoutResult {
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies();
-  
+
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -61,14 +61,14 @@ export async function signInAction(
 ): Promise<AuthResult> {
   try {
     if (!email || !password) {
-      return { 
-        success: false, 
-        error: 'メールアドレスとパスワードは必須です' 
+      return {
+        success: false,
+        error: 'メールアドレスとパスワードは必須です',
       };
     }
 
     const supabase = await createSupabaseServerClient();
-    
+
     // Supabaseでサインイン
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
@@ -77,13 +77,14 @@ export async function signInAction(
 
     if (error) {
       let errorMessage = 'ログインに失敗しました';
-      
+
       if (error.message.includes('Invalid login credentials')) {
         errorMessage = 'メールアドレスまたはパスワードが正しくありません';
       } else if (error.message.includes('Email not confirmed')) {
         errorMessage = 'メールアドレスが確認されていません';
       } else if (error.message.includes('Too many requests')) {
-        errorMessage = 'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください';
+        errorMessage =
+          'ログイン試行回数が上限に達しました。しばらくしてから再度お試しください';
       }
 
       return { success: false, error: errorMessage };
@@ -103,7 +104,7 @@ export async function signInAction(
     } = {
       id: data.user.id,
       email: data.user.email!,
-      userType: userType || 'candidate' as const,
+      userType: userType || ('candidate' as const),
       name: data.user.email,
     };
 
@@ -115,7 +116,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (candidateData) {
           userInfo = {
             ...userInfo,
@@ -130,7 +131,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (companyData) {
           userInfo = {
             ...userInfo,
@@ -145,7 +146,7 @@ export async function signInAction(
           .select('*')
           .eq('email', email)
           .single();
-        
+
         if (adminData) {
           userInfo = {
             ...userInfo,
@@ -163,17 +164,16 @@ export async function signInAction(
     // パスの再検証
     revalidatePath('/', 'layout');
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       user: userInfo,
-      message: 'ログインに成功しました'
+      message: 'ログインに成功しました',
     };
-
   } catch (error) {
     console.error('Sign in action error:', error);
-    return { 
-      success: false, 
-      error: 'システムエラーが発生しました' 
+    return {
+      success: false,
+      error: 'システムエラーが発生しました',
     };
   }
 }
@@ -181,8 +181,11 @@ export async function signInAction(
 export async function getServerAuth() {
   try {
     const supabase = await createSupabaseServerClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
     if (error || !user) {
       return null;
     }
@@ -208,7 +211,7 @@ export async function logoutAction(): Promise<LogoutResult> {
       return {
         success: false,
         error: 'ログアウトに失敗しました',
-        message: 'ログアウトに失敗しました'
+        message: 'ログアウトに失敗しました',
       };
     }
 
@@ -217,18 +220,39 @@ export async function logoutAction(): Promise<LogoutResult> {
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
 
+    // candidateの主要ページのキャッシュも明示的にクリア
+    const candidatePaths = [
+      '/candidate',
+      '/candidate/dashboard',
+      '/candidate/messages',
+      '/candidate/scouts',
+      '/candidate/jobs',
+      '/candidate/favorites',
+      '/candidate/profile',
+      '/candidate/setting',
+      '/auth/login',
+    ];
+
+    for (const path of candidatePaths) {
+      try {
+        revalidatePath(path);
+      } catch (e) {
+        console.warn('revalidatePath failed:', path, e);
+      }
+    }
+
     return {
       success: true,
-      message: 'ログアウトしました'
+      message: 'ログアウトしました',
     };
-    
   } catch (error) {
     console.error('Logout action error:', error);
-    
+
     return {
       success: false,
       error: 'システムエラーが発生しました',
-      message: 'システムエラーが発生しました。しばらくしてから再度お試しください'
+      message:
+        'システムエラーが発生しました。しばらくしてから再度お試しください',
     };
   }
 }
