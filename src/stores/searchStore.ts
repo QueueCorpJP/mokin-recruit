@@ -185,9 +185,14 @@ export const useSearchStore = create<SearchState>()(
     // Form field setters
     setSearchGroup: value => set({ searchGroup: value }),
     setKeyword: value => set({ keyword: value }),
-    setExperienceJobTypes: jobTypes => set({ experienceJobTypes: jobTypes }),
-    setExperienceIndustries: industries =>
-      set({ experienceIndustries: industries }),
+    setExperienceJobTypes: jobTypes => {
+      console.log('[DEBUG] setExperienceJobTypes called with:', jobTypes);
+      set({ experienceJobTypes: jobTypes });
+    },
+    setExperienceIndustries: industries => {
+      console.log('[DEBUG] setExperienceIndustries called with:', industries);
+      set({ experienceIndustries: industries });
+    },
     updateExperienceJobTypeYears: (id, experienceYears) =>
       set(state => ({
         experienceJobTypes: state.experienceJobTypes.map(jobType =>

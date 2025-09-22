@@ -434,9 +434,19 @@ export default function SearchClient({
   const paginatedCandidates = sortedCandidates.slice(startIndex, endIndex);
 
   // 検索条件表示テキスト生成 - searchStoreの値が変更されたら再計算
-  const searchConditionText = useMemo(() => {
-    return generateSearchConditionText(searchStore);
-  }, [searchStore]);
+  const [searchConditionText, setSearchConditionText] = useState('');
+
+  useEffect(() => {
+    setSearchConditionText(generateSearchConditionText(searchStore));
+  }, [
+    searchStore.experienceJobTypes,
+    searchStore.experienceIndustries,
+    searchStore.desiredJobTypes,
+    searchStore.desiredIndustries,
+    searchStore.keyword,
+    searchStore.desiredLocations,
+    searchStore.workStyles,
+  ]);
 
   // 検索実行ハンドラー
   const handleSearch = useCallback(async () => {
@@ -622,10 +632,110 @@ export default function SearchClient({
 
   // 初期検索パラメータを適用
   useEffect(() => {
-    if (initialSearchParams && initialSearchParams.searchGroup) {
-      searchStore.setSearchGroup(initialSearchParams.searchGroup);
+    if (initialSearchParams) {
+      console.log(
+        '[DEBUG] Setting initial search params:',
+        initialSearchParams
+      );
+
+      // 基本条件
+      if (initialSearchParams.searchGroup) {
+        searchStore.setSearchGroup(initialSearchParams.searchGroup);
+      }
+      if (initialSearchParams.keyword) {
+        searchStore.setKeyword(initialSearchParams.keyword);
+      }
+
+      // 経験職種・業種
+      if (initialSearchParams.experienceJobTypes?.length > 0) {
+        searchStore.setExperienceJobTypes(
+          initialSearchParams.experienceJobTypes
+        );
+      }
+      if (initialSearchParams.experienceIndustries?.length > 0) {
+        searchStore.setExperienceIndustries(
+          initialSearchParams.experienceIndustries
+        );
+      }
+
+      // 希望職種・業種
+      if (initialSearchParams.desiredJobTypes?.length > 0) {
+        searchStore.setDesiredJobTypes(initialSearchParams.desiredJobTypes);
+      }
+      if (initialSearchParams.desiredIndustries?.length > 0) {
+        searchStore.setDesiredIndustries(initialSearchParams.desiredIndustries);
+      }
+
+      // 希望勤務地・働き方
+      if (initialSearchParams.desiredLocations?.length > 0) {
+        searchStore.setDesiredLocations(initialSearchParams.desiredLocations);
+      }
+      if (initialSearchParams.workStyles?.length > 0) {
+        searchStore.setWorkStyles(initialSearchParams.workStyles);
+      }
+
+      // 年収・年齢
+      if (initialSearchParams.currentSalaryMin) {
+        searchStore.setCurrentSalaryMin(initialSearchParams.currentSalaryMin);
+      }
+      if (initialSearchParams.currentSalaryMax) {
+        searchStore.setCurrentSalaryMax(initialSearchParams.currentSalaryMax);
+      }
+      if (initialSearchParams.desiredSalaryMin) {
+        searchStore.setDesiredSalaryMin(initialSearchParams.desiredSalaryMin);
+      }
+      if (initialSearchParams.desiredSalaryMax) {
+        searchStore.setDesiredSalaryMax(initialSearchParams.desiredSalaryMax);
+      }
+      if (initialSearchParams.ageMin) {
+        searchStore.setAgeMin(initialSearchParams.ageMin);
+      }
+      if (initialSearchParams.ageMax) {
+        searchStore.setAgeMax(initialSearchParams.ageMax);
+      }
+
+      // その他の条件
+      if (initialSearchParams.currentCompany) {
+        searchStore.setCurrentCompany(initialSearchParams.currentCompany);
+      }
+      if (initialSearchParams.education) {
+        searchStore.setEducation(initialSearchParams.education);
+      }
+      if (initialSearchParams.englishLevel) {
+        searchStore.setEnglishLevel(initialSearchParams.englishLevel);
+      }
+      if (initialSearchParams.otherLanguage) {
+        searchStore.setOtherLanguage(initialSearchParams.otherLanguage);
+      }
+      if (initialSearchParams.otherLanguageLevel) {
+        searchStore.setOtherLanguageLevel(
+          initialSearchParams.otherLanguageLevel
+        );
+      }
+      if (initialSearchParams.qualifications) {
+        searchStore.setQualifications(initialSearchParams.qualifications);
+      }
+      if (initialSearchParams.transferTime) {
+        searchStore.setTransferTime(initialSearchParams.transferTime);
+      }
+      if (initialSearchParams.selectionStatus) {
+        searchStore.setSelectionStatus(initialSearchParams.selectionStatus);
+      }
+      if (initialSearchParams.similarCompanyIndustry) {
+        searchStore.setSimilarCompanyIndustry(
+          initialSearchParams.similarCompanyIndustry
+        );
+      }
+      if (initialSearchParams.similarCompanyLocation) {
+        searchStore.setSimilarCompanyLocation(
+          initialSearchParams.similarCompanyLocation
+        );
+      }
+      if (initialSearchParams.lastLoginMin) {
+        searchStore.setLastLoginMin(initialSearchParams.lastLoginMin);
+      }
     }
-  }, [initialSearchParams, searchStore.setSearchGroup]);
+  }, []); // Only run once on mount since initialSearchParams is from server-side
 
   // 保存された候補者を取得
   useEffect(() => {
@@ -780,23 +890,9 @@ export default function SearchClient({
     // URLパラメータから検索条件をストアに復元
     loadSearchParamsToStore(searchParams, searchStore);
     loadInitialData();
-  }, [
-    isHydrated,
-    authLoading,
-    user,
-    initialCandidates,
-    searchParams,
-    searchStore,
-  ]);
+  }, [isHydrated, authLoading, user, initialCandidates, searchParams]);
 
-  // URLパラメータが変更された時の処理
-  useEffect(() => {
-    if (!isHydrated) return;
-
-    // URLパラメータから検索条件をストアに復元
-    loadSearchParamsToStore(searchParams, searchStore);
-    console.log('[DEBUG] URL parameters changed, reloading search params');
-  }, [searchParams, isHydrated]);
+  // URLパラメータが変更された時の処理は上記のメインuseEffectで処理されるため削除
 
   // 初回のみ外部パラメータで検索実行
   useEffect(() => {
@@ -1504,6 +1600,10 @@ export default function SearchClient({
                         </button>
                         {searchStore.desiredJobTypes.length > 0 && (
                           <div className='flex flex-wrap gap-2 mt-4'>
+                            {console.log(
+                              '[DEBUG] desiredJobTypes:',
+                              searchStore.desiredJobTypes
+                            )}
                             {searchStore.desiredJobTypes.map(job => (
                               <div
                                 key={job.id}
@@ -1560,6 +1660,10 @@ export default function SearchClient({
                         </button>
                         {searchStore.desiredIndustries.length > 0 && (
                           <div className='flex flex-wrap gap-2 mt-4'>
+                            {console.log(
+                              '[DEBUG] desiredIndustries:',
+                              searchStore.desiredIndustries
+                            )}
                             {searchStore.desiredIndustries.map(industry => (
                               <div
                                 key={industry.id}
@@ -2675,9 +2779,17 @@ export default function SearchClient({
         isOpen={searchStore.isJobTypeModalOpen}
         onClose={() => searchStore.setIsJobTypeModalOpen(false)}
         onConfirm={selected => {
-          searchStore.setExperienceJobTypes(
-            selected.map(name => ({ id: name, name, experienceYears: '' }))
+          console.log('[DEBUG] Experience JobType Modal selected:', selected);
+          const jobTypes = selected.map(name => ({
+            id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+            name,
+            experienceYears: '',
+          }));
+          console.log(
+            '[DEBUG] Experience JobType Modal mapped jobTypes:',
+            jobTypes
           );
+          searchStore.setExperienceJobTypes(jobTypes);
           searchStore.setIsJobTypeModalOpen(false);
         }}
         initialSelected={searchStore.experienceJobTypes.map(j => j.name)}
@@ -2688,9 +2800,17 @@ export default function SearchClient({
         isOpen={searchStore.isIndustryModalOpen}
         onClose={() => searchStore.setIsIndustryModalOpen(false)}
         onConfirm={selected => {
-          searchStore.setExperienceIndustries(
-            selected.map(name => ({ id: name, name, experienceYears: '' }))
+          console.log('[DEBUG] Experience Industry Modal selected:', selected);
+          const industries = selected.map(name => ({
+            id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+            name,
+            experienceYears: '',
+          }));
+          console.log(
+            '[DEBUG] Experience Industry Modal mapped industries:',
+            industries
           );
+          searchStore.setExperienceIndustries(industries);
           searchStore.setIsIndustryModalOpen(false);
         }}
         initialSelected={searchStore.experienceIndustries.map(i => i.name)}
@@ -2701,9 +2821,12 @@ export default function SearchClient({
         isOpen={searchStore.isDesiredJobTypeModalOpen}
         onClose={() => searchStore.setIsDesiredJobTypeModalOpen(false)}
         onConfirm={selected => {
-          searchStore.setDesiredJobTypes(
-            selected.map(name => ({ id: name, name }))
-          );
+          const jobTypes = selected.map(name => ({
+            id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+            name,
+            experienceYears: '',
+          }));
+          searchStore.setDesiredJobTypes(jobTypes);
           searchStore.setIsDesiredJobTypeModalOpen(false);
         }}
         initialSelected={searchStore.desiredJobTypes.map(j => j.name)}
@@ -2715,7 +2838,11 @@ export default function SearchClient({
         onClose={() => searchStore.setIsDesiredIndustryModalOpen(false)}
         onConfirm={selected => {
           searchStore.setDesiredIndustries(
-            selected.map(name => ({ id: name, name }))
+            selected.map(name => ({
+              id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+              name,
+              experienceYears: '',
+            }))
           );
           searchStore.setIsDesiredIndustryModalOpen(false);
         }}

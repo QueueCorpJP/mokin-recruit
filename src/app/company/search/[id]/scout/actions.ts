@@ -158,9 +158,6 @@ export async function sendScout(
       message_content: formData.message,
       template_id: templateId,
       status: 'sent',
-      search_query: formData.searchQuery
-        ? JSON.parse(formData.searchQuery)
-        : null,
       query_source: formData.searchQuery ? 'search' : 'direct',
       sent_at: new Date().toISOString(),
     };
