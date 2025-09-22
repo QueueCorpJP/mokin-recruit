@@ -329,6 +329,101 @@ export async function sendScout(
       }
     }
 
+    // スカウト通知メールを送信
+    console.info('=== Email送信フロー開始 ===');
+    try {
+      // 候補者の通知設定を確認
+      const { data: notificationSettings, error: settingsError } =
+        await supabase
+          .from('notification_settings')
+          .select('scout_notification')
+          .eq('candidate_id', formData.candidateId)
+          .maybeSingle();
+
+      // 通知設定が存在しない場合はデフォルトで通知する
+      // 通知設定が'not-receive'の場合はメール送信をスキップ
+      if (
+        notificationSettings &&
+        notificationSettings.scout_notification === 'not-receive'
+      ) {
+        console.info(
+          '候補者がスカウト通知メールを拒否しているため、メール送信をスキップします:',
+          {
+            candidateId: formData.candidateId,
+          }
+        );
+      } else {
+        const { sendScoutNotificationEmail } = await import(
+          '@/lib/email/sender'
+        );
+
+        // 企業情報を取得
+        const { data: companyInfo, error: companyError } = await supabase
+          .from('company_groups')
+          .select(
+            `
+            group_name,
+            company_account:company_accounts(company_name)
+          `
+          )
+          .eq('id', formData.group)
+          .single();
+
+        if (companyError || !companyInfo) {
+          console.error('企業情報取得エラー:', companyError);
+          throw new Error('企業情報の取得に失敗しました');
+        }
+
+        // 企業名を安全に取得
+        const companyAccount = companyInfo.company_account;
+        let companyName = '';
+
+        if (Array.isArray(companyAccount)) {
+          companyName = companyAccount[0]?.company_name || '';
+        } else if (
+          companyAccount &&
+          typeof companyAccount === 'object' &&
+          'company_name' in companyAccount
+        ) {
+          companyName = (companyAccount as any).company_name || '';
+        }
+
+        if (!companyName) {
+          console.error('企業名が取得できませんでした');
+          throw new Error('企業名の取得に失敗しました');
+        }
+
+        // メッセージページURLを生成
+        const messagePageUrl = roomId
+          ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://cuepoint.jp'}/candidate/message?room=${roomId}`
+          : `${process.env.NEXT_PUBLIC_APP_URL || 'https://cuepoint.jp'}/candidate/message`;
+
+        const emailResult = await sendScoutNotificationEmail({
+          candidateEmail: candidate.email,
+          candidateName:
+            `${candidate.last_name || ''} ${candidate.first_name || ''}`.trim() ||
+            'ご担当者',
+          companyName,
+          jobTitle: jobPosting?.title,
+          messagePageUrl,
+        });
+
+        if (emailResult.success) {
+          console.info('スカウト通知メール送信完了:', {
+            messageId: emailResult.messageId,
+            candidateEmail: candidate.email.substring(0, 3) + '***',
+            companyName,
+          });
+        } else {
+          console.error('スカウト通知メール送信失敗:', emailResult.error);
+          // メール送信失敗はスカウト全体の失敗とはしない
+        }
+      }
+    } catch (emailError) {
+      console.error('メール送信処理エラー:', emailError);
+      // メール送信エラーはスカウト全体の失敗とはしない
+    }
+
     // スカウト送信が成功したため、チケット消費が完了
     console.info('スカウト送信完了。チケットが1つ消費されました。');
 

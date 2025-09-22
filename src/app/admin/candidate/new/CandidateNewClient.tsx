@@ -119,27 +119,55 @@ export default function CandidateNewClient() {
     setSubmitting(true);
     try {
       const draftData = {
+        // Basic form data - using exact field names from CandidateFormData
         email: formData.email,
-        last_name: formData.last_name || null,
-        first_name: formData.first_name || null,
-        last_name_kana: formData.last_name_kana || null,
-        first_name_kana: formData.first_name_kana || null,
+        password: formData.password || null,
+        passwordConfirm: formData.passwordConfirm || null,
+        lastName: formData.lastName || null,
+        firstName: formData.firstName || null,
+        lastNameKana: formData.lastNameKana || null,
+        firstNameKana: formData.firstNameKana || null,
         gender: formData.gender || null,
-        birth_year: formData.birth_year || null,
-        birth_month: formData.birth_month || null,
-        birth_day: formData.birth_day || null,
-        phone: formData.phone || null,
-        postal_code: formData.postal_code || null,
+        birthYear: formData.birthYear || null,
+        birthMonth: formData.birthMonth || null,
+        birthDay: formData.birthDay || null,
         prefecture: formData.prefecture || null,
-        city: formData.city || null,
-        address: formData.address || null,
-        building: formData.building || null,
-        marital_status: formData.marital_status || null,
-        children_count: formData.children_count || 0,
+        phoneNumber: formData.phoneNumber || null,
+        currentIncome: formData.currentIncome || null,
+        hasCareerChange: formData.hasCareerChange || null,
+        jobChangeTiming: formData.jobChangeTiming || null,
+        currentActivityStatus: formData.currentActivityStatus || null,
+        recentJobCompanyName: formData.recentJobCompanyName || null,
+        recentJobDepartmentPosition:
+          formData.recentJobDepartmentPosition || null,
+        recentJobStartYear: formData.recentJobStartYear || null,
+        recentJobStartMonth: formData.recentJobStartMonth || null,
+        recentJobEndYear: formData.recentJobEndYear || null,
+        recentJobEndMonth: formData.recentJobEndMonth || null,
+        recentJobIsCurrentlyWorking:
+          formData.recentJobIsCurrentlyWorking || false,
+        recentJobDescription: formData.recentJobDescription || null,
+        recentJobIndustries: formData.recentJobIndustries || [],
+        recentJobTypes: formData.recentJobTypes || [],
+        jobSummary: formData.jobSummary || null,
+        selfPr: formData.selfPr || null,
+        desiredWorkStyles: formData.desiredWorkStyles || [],
+        desiredSalary: formData.desiredSalary || null,
+        desiredIndustries: formData.desiredIndustries || [],
+        desiredJobTypes: formData.desiredJobTypes || [],
+        desiredLocations: formData.desiredLocations || [],
+
+        // Education data
         education,
+
+        // Skills data
         skills,
-        career_status: careerStatusEntries,
-        work_history: workHistoryEntries,
+
+        // Selection entries and work history
+        careerStatusEntries,
+        workHistoryEntries,
+
+        // Admin memo
         memo,
       };
 

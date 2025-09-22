@@ -62,16 +62,31 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       company_name,
       headquarters_address,
       representative_name,
+      representative_position,
       industry,
+      industries,
       company_overview,
+      business_content,
+      appeal_points,
+      logo_image_path,
+      contract_plan,
       status,
       created_at,
       updated_at,
       plan,
-      appeal_points,
-      logo_url,
-      image_urls,
-      company_users (
+      scout_limit,
+      established_year,
+      capital_amount,
+      capital_unit,
+      employees_count,
+      prefecture,
+      address,
+      company_phase,
+      company_urls,
+      icon_image_url,
+      company_images,
+      company_attractions,
+      company_users!company_account_id (
         id,
         full_name,
         position_title,
@@ -81,7 +96,9 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       company_groups (
         id,
         group_name,
-        created_at
+        description,
+        created_at,
+        updated_at
       )
     `
     )
@@ -92,6 +109,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     console.log(
       `[Company Edit] Successfully fetched company: ${data.company_name}, Plan: ${data.plan}`
     );
+    console.log('[Company Edit] Available fields:', Object.keys(data));
   }
 
   if (error) {
@@ -104,25 +122,36 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     return null;
   }
 
-  // 存在しないフィールドにデフォルト値を設定
+  // すべてのフィールドを実際のデータから取得、存在しない場合はnullにする
   const companyData: CompanyEditData = {
-    ...data,
-    representative_position: null,
-    industries: null,
-    business_content: null,
-    established_year: null,
-    capital_amount: null,
-    capital_unit: null,
-    employees_count: null,
-    prefecture: null,
-    address: null,
-    company_phase: null,
-    company_urls: null,
-    icon_image_url: data.logo_url || null,
-    company_images: data.image_urls || null,
-    company_attractions: null,
-    logo_image_path: data.logo_url || null,
-    contract_plan: null,
+    id: data.id,
+    company_name: data.company_name || '',
+    headquarters_address: data.headquarters_address || null,
+    representative_name: data.representative_name || null,
+    representative_position: data.representative_position || null,
+    industry: data.industry || '',
+    industries: data.industries || null,
+    company_overview: data.company_overview || null,
+    business_content: data.business_content || null,
+    appeal_points: data.appeal_points || null,
+    logo_image_path: data.logo_image_path || null,
+    contract_plan: data.contract_plan || null,
+    plan: data.plan || '',
+    scout_limit: data.scout_limit || undefined,
+    status: data.status || '',
+    created_at: data.created_at || '',
+    updated_at: data.updated_at || '',
+    established_year: data.established_year || null,
+    capital_amount: data.capital_amount || null,
+    capital_unit: data.capital_unit || null,
+    employees_count: data.employees_count || null,
+    prefecture: data.prefecture || null,
+    address: data.address || null,
+    company_phase: data.company_phase || null,
+    company_urls: data.company_urls || null,
+    icon_image_url: data.icon_image_url || null,
+    company_images: data.company_images || null,
+    company_attractions: data.company_attractions || null,
     company_users: data.company_users || [],
     company_groups: data.company_groups || [],
   };

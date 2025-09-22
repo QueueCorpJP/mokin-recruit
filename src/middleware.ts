@@ -24,6 +24,27 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-nonce', nonce);
 
+  // サインアップフローの進捗チェック
+  const signupUserId = request.cookies.get('signup_user_id')?.value;
+  if (
+    signupUserId &&
+    !path.startsWith('/signup') &&
+    !path.startsWith('/api/') &&
+    !path.startsWith('/_next/')
+  ) {
+    try {
+      // signup_user_idがある場合、サインアップ継続中とみなす
+      const redirectResponse = NextResponse.redirect(
+        new URL('/signup', request.url)
+      );
+      redirectResponse.headers.set('x-nonce', nonce);
+      return redirectResponse;
+    } catch (error) {
+      // エラーが発生した場合は正常処理を継続
+      console.error('Signup progress check error:', error);
+    }
+  }
+
   // Handle root domain redirect based on user type
   if (path === '/') {
     const userType = await getUserTypeFromSession(request);

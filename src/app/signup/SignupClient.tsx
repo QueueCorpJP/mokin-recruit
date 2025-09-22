@@ -48,11 +48,14 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
           if (emailToCheck) {
             const progress = await checkRegistrationProgress(emailToCheck);
-            if (progress.exists && progress.nextStep !== '/signup') {
-              // 途中から再開
+            if (progress.exists) {
+              // 登録進捗がある場合は適切なステップに遷移
               localStorage.setItem('signup_email', emailToCheck); // localStorageにも保存
-              router.push(progress.nextStep);
-              return;
+              // サインアップ画面以外の場合、または既にパスワード設定済みの場合は次のステップへ
+              if (progress.nextStep !== '/signup') {
+                router.push(progress.nextStep);
+                return;
+              }
             }
           }
         } catch (error) {
@@ -142,19 +145,20 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           return;
         }
 
-        // クッキーに認証済みユーザーIDがある場合、OTP認証をスキップしてパスワード設定へ
+        // クッキーに認証済みユーザーIDがある場合の処理
         const signupUserId = document.cookie
           .split('; ')
           .find(row => row.startsWith('signup_user_id='))
           ?.split('=')[1];
 
-        if (
-          signupUserId &&
-          progress.exists &&
-          !progress.completedSteps.passwordSet
-        ) {
+        if (signupUserId && progress.exists) {
           localStorage.setItem('signup_email', email.trim());
-          router.push('/signup/password');
+          // パスワード未設定の場合のみパスワード画面へ、設定済みの場合は次のステップへ
+          if (!progress.completedSteps.passwordSet) {
+            router.push('/signup/password');
+          } else {
+            router.push(progress.nextStep);
+          }
           return;
         }
 

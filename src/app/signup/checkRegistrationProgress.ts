@@ -123,7 +123,12 @@ export async function checkRegistrationProgress(
   // Define base completion status for each step
   const baseCompletedSteps = {
     emailVerified: candidate.email !== null,
-    passwordSet: candidate.password_hash !== null,
+    passwordSet: !!(
+      candidate.password_hash !== null &&
+      (candidate.status === 'active' ||
+        candidate.status === 'password_setting_ready' ||
+        candidate.password_hash === 'set')
+    ),
     profileCompleted: !!(
       candidate.first_name &&
       candidate.last_name &&
