@@ -645,22 +645,24 @@ export default function CompanyDetailClient({
               URL
             </label>
             <div className='flex-1 space-y-3'>
-              <div className='flex items-center gap-4'>
-                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-                  タイトルテキストが入ります
+              {company.company_urls &&
+              Array.isArray(company.company_urls) &&
+              company.company_urls.length > 0 ? (
+                company.company_urls.map((urlData: any, index: number) => (
+                  <div key={index} className='flex items-center gap-4'>
+                    <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
+                      {urlData.title || 'タイトル未設定'}
+                    </div>
+                    <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
+                      {urlData.url || 'URL未設定'}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#999999] leading-[1.6] tracking-[1.6px]">
+                  URLが設定されていません
                 </div>
-                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-                  https://---------
-                </div>
-              </div>
-              <div className='flex items-center gap-4'>
-                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-                  タイトルテキストが入ります
-                </div>
-                <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-                  https://---------
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -671,11 +673,18 @@ export default function CompanyDetailClient({
             <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
               アイコン画像
             </label>
-            <div className='w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center'>
-              <div className='text-center'>
-                <div className='text-sm font-bold text-white'>画像を</div>
-                <div className='text-sm font-bold text-white'>変更</div>
-              </div>
+            <div className='w-32 h-32 bg-gray-400 rounded-full flex items-center justify-center overflow-hidden'>
+              {company.icon_image_url ? (
+                <img
+                  src={company.icon_image_url}
+                  alt='企業アイコン'
+                  className='w-full h-full object-cover'
+                />
+              ) : (
+                <div className='text-center'>
+                  <div className='text-sm font-bold text-white'>画像未設定</div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -687,7 +696,9 @@ export default function CompanyDetailClient({
               代表者
             </label>
             <div className='flex-1 px-3 py-3 bg-white border border-gray-300 text-base'>
-              {company.representative_name || '山田 太郎'}
+              {company.representative_position && company.representative_name
+                ? `${company.representative_position} ${company.representative_name}`
+                : company.representative_name || '未設定'}
             </div>
           </div>
 
@@ -700,7 +711,7 @@ export default function CompanyDetailClient({
             </label>
             <div className='flex items-center gap-2'>
               <div className='w-24 px-3 py-3 bg-white border border-gray-300 text-base text-center'>
-                2020
+                {company.established_year || '未設定'}
               </div>
               <span className='text-base text-black'>年</span>
             </div>
@@ -715,9 +726,11 @@ export default function CompanyDetailClient({
             </label>
             <div className='flex items-center gap-2'>
               <div className='w-24 px-3 py-3 bg-white border border-gray-300 text-base text-center'>
-                100
+                {company.capital_amount || '未設定'}
               </div>
-              <span className='text-base text-black'>万円</span>
+              <span className='text-base text-black'>
+                {company.capital_unit || '万円'}
+              </span>
             </div>
           </div>
 
@@ -730,7 +743,7 @@ export default function CompanyDetailClient({
             </label>
             <div className='flex items-center gap-2'>
               <div className='w-24 px-3 py-3 bg-white border border-gray-300 text-base text-center'>
-                500
+                {company.employees_count || '未設定'}
               </div>
               <span className='text-base text-black'>人</span>
             </div>
@@ -744,7 +757,11 @@ export default function CompanyDetailClient({
               業種
             </label>
             <div className='flex-1 px-3 py-3 bg-white border border-gray-300 text-base'>
-              テキストが入ります。
+              {company.industries &&
+              Array.isArray(company.industries) &&
+              company.industries.length > 0
+                ? company.industries.join(', ')
+                : company.industry || '未設定'}
             </div>
           </div>
 
@@ -756,7 +773,7 @@ export default function CompanyDetailClient({
               事業内容
             </label>
             <div className='flex-1 px-3 py-3 bg-white border border-gray-300 text-base whitespace-pre-wrap'>
-              テキストが入ります。 テキストが入ります。 テキストが入ります。
+              {company.business_content || company.company_overview || '未設定'}
             </div>
           </div>
 
@@ -768,7 +785,10 @@ export default function CompanyDetailClient({
               所在地
             </label>
             <div className='flex-1 px-3 py-3 bg-white border border-gray-300 text-base whitespace-pre-wrap'>
-              東京都 千代田区〜〜〜〜〜〜
+              {company.headquarters_address ||
+                (company.prefecture && company.address
+                  ? `${company.prefecture} ${company.address}`
+                  : company.prefecture || company.address || '未設定')}
             </div>
           </div>
 
@@ -780,7 +800,7 @@ export default function CompanyDetailClient({
               企業フェーズ
             </label>
             <div className='flex-1 px-3 py-3 bg-white border border-gray-300 text-base'>
-              上場企業
+              {company.company_phase || '未設定'}
             </div>
           </div>
 
@@ -792,17 +812,35 @@ export default function CompanyDetailClient({
               イメージ画像
             </label>
             <div className='flex gap-4'>
-              {[0, 1, 2].map(index => (
-                <div
-                  key={index}
-                  className='w-48 h-32 bg-gray-400 flex items-center justify-center'
-                >
-                  <div className='text-center'>
-                    <div className='text-sm font-bold text-white'>画像を</div>
-                    <div className='text-sm font-bold text-white'>変更</div>
-                  </div>
-                </div>
-              ))}
+              {company.company_images &&
+              Array.isArray(company.company_images) &&
+              company.company_images.length > 0
+                ? company.company_images
+                    .slice(0, 3)
+                    .map((imageUrl: string, index: number) => (
+                      <div
+                        key={index}
+                        className='w-48 h-32 bg-gray-400 flex items-center justify-center overflow-hidden'
+                      >
+                        <img
+                          src={imageUrl}
+                          alt={`企業画像${index + 1}`}
+                          className='w-full h-full object-cover'
+                        />
+                      </div>
+                    ))
+                : [0, 1, 2].map(index => (
+                    <div
+                      key={index}
+                      className='w-48 h-32 bg-gray-400 flex items-center justify-center'
+                    >
+                      <div className='text-center'>
+                        <div className='text-sm font-bold text-white'>
+                          画像未設定
+                        </div>
+                      </div>
+                    </div>
+                  ))}
             </div>
           </div>
 
@@ -814,16 +852,26 @@ export default function CompanyDetailClient({
               企業の魅力
             </label>
             <div className='flex-1 space-y-6'>
-              {[0, 1, 2].map(index => (
-                <div key={index} className='space-y-4'>
-                  <div className='text-xl font-bold text-black'>
-                    企業の魅力テキストが入ります
-                  </div>
-                  <div className='text-base text-black'>
-                    企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。企業の魅力説明テキストが入ります。
-                  </div>
+              {company.company_attractions &&
+              Array.isArray(company.company_attractions) &&
+              company.company_attractions.length > 0 ? (
+                company.company_attractions.map(
+                  (attraction: any, index: number) => (
+                    <div key={index} className='space-y-4'>
+                      <div className='text-xl font-bold text-black'>
+                        {attraction.title || `魅力${index + 1}`}
+                      </div>
+                      <div className='text-base text-black'>
+                        {attraction.description || '説明が設定されていません'}
+                      </div>
+                    </div>
+                  )
+                )
+              ) : (
+                <div className='text-base text-gray-500'>
+                  企業の魅力が設定されていません
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

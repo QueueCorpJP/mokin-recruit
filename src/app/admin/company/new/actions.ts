@@ -14,6 +14,7 @@ export interface CompanyFormData {
     url: string;
   }>;
   iconImage: File | null;
+  iconImageBase64?: string;
   representativePosition: string;
   representativeName: string;
   establishedYear: string;
@@ -26,6 +27,7 @@ export interface CompanyFormData {
   address: string;
   companyPhase: string;
   images: File[];
+  imagesBase64?: string[];
   attractions: Array<{
     title: string;
     description: string;
@@ -47,7 +49,7 @@ const CreateCompanySchema = z.object({
   address: z.string().optional(),
   establishedYear: z.string().optional(),
   capital: z.string().optional(),
-  capitalUnit: z.enum(['万円', '億円']).optional(),
+  capitalUnit: z.enum(['万円', '億円']).optional().nullable(),
   employeeCount: z.string().optional(),
   companyPhase: z
     .enum([
@@ -133,9 +135,29 @@ export async function checkCompanyNameDuplication(companyName: string) {
 
 export async function createCompanyData(formData: CompanyFormData) {
   try {
+    console.log('Received formData:', formData);
+    console.log('FormData details:', {
+      companyName: formData.companyName,
+      plan: formData.plan,
+      industries: formData.industries,
+      representativeName: formData.representativeName,
+      representativePosition: formData.representativePosition,
+      establishedYear: formData.establishedYear,
+      capital: formData.capital,
+      capitalUnit: formData.capitalUnit,
+      employeeCount: formData.employeeCount,
+      businessContent: formData.businessContent,
+      prefecture: formData.prefecture,
+      address: formData.address,
+      companyPhase: formData.companyPhase,
+      urls: formData.urls,
+      attractions: formData.attractions,
+    });
+
     // Step 1: Validate input data
     const validation = await validateCompanyData(formData);
     if (!validation.success) {
+      console.error('Validation failed:', validation.errors);
       return {
         success: false,
         error:
@@ -187,20 +209,23 @@ export async function createCompanyData(formData: CompanyFormData) {
       : null;
 
     const companyInsertData = {
-      // 基本情報
+      // 基本情報　（industryはNOT NULLなので必須）
       company_name: formData.companyName,
-      industry: primaryIndustry,
-      headquarters_address: headquartersAddress,
-      representative_name: formData.representativeName,
+      industry: primaryIndustry || '未設定', // NOT NULLなのでデフォルト値を設定
+      headquarters_address: headquartersAddress || null,
+      representative_name: formData.representativeName || null,
       representative_position: formData.representativePosition || null,
       company_overview: formData.businessContent || null,
-      plan: formData.plan,
+      plan: formData.plan || 'basic', // NOT NULL with DEFAULT 'basic'
       status: 'ACTIVE',
 
       // 詳細情報
       established_year: establishedYear,
       capital_amount: capitalAmount,
-      capital_unit: formData.capitalUnit || null,
+      capital_unit:
+        formData.capitalUnit === '万円' || formData.capitalUnit === '億円'
+          ? formData.capitalUnit
+          : null,
       employees_count: employeesCount,
       prefecture: formData.prefecture || null,
       address: formData.address || null,
@@ -208,25 +233,31 @@ export async function createCompanyData(formData: CompanyFormData) {
       business_content: formData.businessContent || null,
 
       // JSON形式のデータ（jsonb カラムには配列/オブジェクトをそのまま保存）
-      industries: formData.industries.length > 0 ? formData.industries : [],
-      company_urls: formData.urls.length > 0 ? formData.urls : [],
+      industries:
+        formData.industries && formData.industries.length > 0
+          ? formData.industries
+          : [],
+      company_urls:
+        formData.urls && formData.urls.length > 0 ? formData.urls : [],
       company_attractions:
-        formData.attractions.length > 0 ? formData.attractions : [],
+        formData.attractions && formData.attractions.length > 0
+          ? formData.attractions
+          : [],
 
       // 画像URL（現在は空配列、将来的にファイルアップロード機能追加時に対応）
       icon_image_url: null,
       company_images: [],
 
-      // タイムスタンプ
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      // タイムスタンプはデータベースのDEFAULTを使用
     };
+
+    console.log('Company insert data to be saved:', companyInsertData);
 
     // Step 4: Insert company data
     const { data: company, error: companyError } = await supabase
       .from('company_accounts')
       .insert(companyInsertData)
-      .select('id')
+      .select('*') // 全フィールドを返して確認
       .single();
 
     if (companyError) {
@@ -234,7 +265,12 @@ export async function createCompanyData(formData: CompanyFormData) {
       throw companyError;
     }
 
-    console.log('Created company:', company);
+    console.log('Created company (full data):', company);
+
+    if (!company || !company.id) {
+      throw new Error('Failed to get company ID after creation');
+    }
+
     const companyId = String(company.id);
 
     // Step 5: Create company group (required for company structure)
@@ -254,13 +290,18 @@ export async function createCompanyData(formData: CompanyFormData) {
       );
     }
 
-    // Step 6: Revalidate the company list page
-    revalidatePath('/admin/company');
+    // Step 6: Revalidate the company list page (コメントアウト - モーダル表示後に実行)
+    // revalidatePath('/admin/company');
 
     console.log('Company creation completed successfully with ID:', companyId);
-    return { success: true, companyId };
+    console.log('Verification - saved data fields:', Object.keys(company));
+    return { success: true, companyId, savedCompany: company };
   } catch (error) {
     console.error('Error creating company:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      error,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

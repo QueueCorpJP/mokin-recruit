@@ -228,7 +228,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
           />
           <div className='flex flex-wrap items-center justify-start'>
             <a
-              href='/candidate/auth/terms'
+              href='/candidate/terms'
               target='_blank'
               rel='noopener noreferrer'
               className='font-bold text-[#323232] text-[14px] tracking-[1.4px] underline mr-1'
@@ -247,7 +247,7 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
               ・
             </span>
             <a
-              href='/candidate/auth/privacy'
+              href='/candidate/privacy'
               target='_blank'
               rel='noopener noreferrer'
               className='font-bold text-[#323232] text-[14px] tracking-[1.4px] underline mr-1'
