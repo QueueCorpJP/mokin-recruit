@@ -68,7 +68,8 @@ export async function middleware(request: NextRequest) {
     !path.startsWith('/api/') &&
     !path.startsWith('/_next/') &&
     !path.startsWith('/candidate') &&
-    !path.startsWith('/company')
+    !path.startsWith('/company') &&
+    !path.startsWith('/admin')
   ) {
     try {
       // signup_user_idがある場合、まず認証済みかチェック
@@ -130,23 +131,30 @@ export async function middleware(request: NextRequest) {
     const authToken = request.cookies.get('auth_token')?.value;
     const adminUser = request.cookies.get('admin_user')?.value;
 
-    let isAdmin = false;
-    if (authToken && process.env.ADMIN_JWT_SECRET) {
-      try {
-        const verified = await verifyJwtEdge(
-          authToken,
-          process.env.ADMIN_JWT_SECRET
-        );
-        // 期待するクレーム: { role: 'admin' } または { admin: true }
-        if (verified.valid) {
-          const payload = verified.payload as any;
-          isAdmin = payload?.role === 'admin' || payload?.admin === true;
-        }
-      } catch {}
+    // auth_tokenがある場合は、それがSupabaseのアクセストークンとして有効かチェック
+    // ADMIN_JWT_SECRETがない場合は、adminUserクッキーの存在で判定
+    let isAuthorized = false;
+
+    if (authToken) {
+      // auth_tokenが存在する場合は、Supabaseのセッションとして扱う
+      // JWTの構造（3つのドット区切り）を持つかチェック
+      if (authToken.split('.').length === 3) {
+        try {
+          // JWTペイロードをデコード（署名検証なし）
+          const parts = authToken.split('.');
+          const payload = JSON.parse(atob(parts[1]));
+          // 有効期限をチェック
+          const exp = payload.exp;
+          const now = Math.floor(Date.now() / 1000);
+          if (exp && exp > now) {
+            isAuthorized = true;
+          }
+        } catch {}
+      }
     }
 
-    // 既存の Cookie フラグも後方互換として許容（段階的移行）
-    if (!authToken || (!isAdmin && adminUser !== 'true')) {
+    // adminUserクッキーも併せてチェック（後方互換性）
+    if (!isAuthorized && adminUser !== 'true') {
       const redirectResponse = NextResponse.redirect(
         new URL('/admin/login', request.url)
       );

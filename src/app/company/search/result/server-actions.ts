@@ -110,7 +110,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
           company_name,
           industries,
           progress_status
-        ),
+        )
       `
       )
       .eq('status', 'ACTIVE')
