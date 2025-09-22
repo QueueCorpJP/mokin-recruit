@@ -6,12 +6,36 @@ import { useSearchStore } from '@/stores/searchStore';
 import SelectableTagWithYears from './SelectableTagWithYears';
 
 export default function ExperienceSearchConditionForm() {
-  const searchStore = useSearchStore();
-
-  console.log('[DEBUG] ExperienceSearchConditionForm render:', {
-    experienceJobTypes: searchStore.experienceJobTypes,
-    experienceIndustries: searchStore.experienceIndustries,
-  });
+  const experienceJobTypes = useSearchStore(state => state.experienceJobTypes);
+  const experienceIndustries = useSearchStore(
+    state => state.experienceIndustries
+  );
+  const jobTypeAndSearch = useSearchStore(state => state.jobTypeAndSearch);
+  const industryAndSearch = useSearchStore(state => state.industryAndSearch);
+  const setIsJobTypeModalOpen = useSearchStore(
+    state => state.setIsJobTypeModalOpen
+  );
+  const setIsIndustryModalOpen = useSearchStore(
+    state => state.setIsIndustryModalOpen
+  );
+  const setJobTypeAndSearch = useSearchStore(
+    state => state.setJobTypeAndSearch
+  );
+  const setIndustryAndSearch = useSearchStore(
+    state => state.setIndustryAndSearch
+  );
+  const setExperienceJobTypes = useSearchStore(
+    state => state.setExperienceJobTypes
+  );
+  const setExperienceIndustries = useSearchStore(
+    state => state.setExperienceIndustries
+  );
+  const updateExperienceJobTypeYears = useSearchStore(
+    state => state.updateExperienceJobTypeYears
+  );
+  const updateExperienceIndustryYears = useSearchStore(
+    state => state.updateExperienceIndustryYears
+  );
 
   return (
     <>
@@ -28,7 +52,7 @@ export default function ExperienceSearchConditionForm() {
         <div className='flex-1 py-6'>
           <div className='flex items-center gap-4'>
             <button
-              onClick={() => searchStore.setIsJobTypeModalOpen(true)}
+              onClick={() => setIsJobTypeModalOpen(true)}
               className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
@@ -36,10 +60,8 @@ export default function ExperienceSearchConditionForm() {
             </button>
             <div className='flex items-center gap-2'>
               <Checkbox
-                checked={searchStore.jobTypeAndSearch}
-                onChange={(checked: boolean) =>
-                  searchStore.setJobTypeAndSearch(checked)
-                }
+                checked={jobTypeAndSearch}
+                onChange={(checked: boolean) => setJobTypeAndSearch(checked)}
               />
               <label
                 className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'
@@ -51,26 +73,22 @@ export default function ExperienceSearchConditionForm() {
           </div>
 
           {/* 選択された職種のタグ表示 */}
-          {searchStore.experienceJobTypes.length > 0 && (
+          {experienceJobTypes.length > 0 && (
             <div className='flex flex-wrap gap-2 mt-4'>
-              {console.log(
-                '[DEBUG] experienceJobTypes:',
-                searchStore.experienceJobTypes
-              )}
-              {searchStore.experienceJobTypes
+              {experienceJobTypes
                 .filter(job => job && job.id && job.name)
                 .map(job => (
                   <SelectableTagWithYears
-                    key={job.id}
-                    id={job.id}
-                    name={job.name}
+                    key={job?.id || job?.name || 'unknown'}
+                    id={job?.id || job?.name || 'unknown'}
+                    name={job?.name || 'Unknown Job'}
                     experienceYears={job.experienceYears}
                     onYearsChange={(id, years) =>
-                      searchStore.updateExperienceJobTypeYears(id, years)
+                      updateExperienceJobTypeYears(id, years)
                     }
                     onRemove={id => {
-                      searchStore.setExperienceJobTypes(
-                        searchStore.experienceJobTypes.filter(j => j.id !== id)
+                      setExperienceJobTypes(
+                        experienceJobTypes.filter(j => j.id !== id)
                       );
                     }}
                     selectIdPrefix='job'
@@ -94,7 +112,7 @@ export default function ExperienceSearchConditionForm() {
         <div className='flex-1 py-6'>
           <div className='flex items-center gap-4'>
             <button
-              onClick={() => searchStore.setIsIndustryModalOpen(true)}
+              onClick={() => setIsIndustryModalOpen(true)}
               className='w-[160px] py-[12px] bg-white border border-[#999999] rounded-[32px] text-[14px] font-bold text-[#323232] tracking-[1.4px]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
             >
@@ -102,10 +120,8 @@ export default function ExperienceSearchConditionForm() {
             </button>
             <div className='flex items-center gap-2'>
               <Checkbox
-                checked={searchStore.industryAndSearch}
-                onChange={(checked: boolean) =>
-                  searchStore.setIndustryAndSearch(checked)
-                }
+                checked={industryAndSearch}
+                onChange={(checked: boolean) => setIndustryAndSearch(checked)}
               />
               <label
                 className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'
@@ -117,28 +133,22 @@ export default function ExperienceSearchConditionForm() {
           </div>
 
           {/* 選択された業種のタグ表示 */}
-          {searchStore.experienceIndustries.length > 0 && (
+          {experienceIndustries.length > 0 && (
             <div className='flex flex-wrap gap-2 mt-4'>
-              {console.log(
-                '[DEBUG] experienceIndustries:',
-                searchStore.experienceIndustries
-              )}
-              {searchStore.experienceIndustries
+              {experienceIndustries
                 .filter(industry => industry && industry.id && industry.name)
                 .map(industry => (
                   <SelectableTagWithYears
-                    key={industry.id}
-                    id={industry.id}
-                    name={industry.name}
+                    key={industry?.id || industry?.name || 'unknown'}
+                    id={industry?.id || industry?.name || 'unknown'}
+                    name={industry?.name || 'Unknown Industry'}
                     experienceYears={industry.experienceYears}
                     onYearsChange={(id, years) =>
-                      searchStore.updateExperienceIndustryYears(id, years)
+                      updateExperienceIndustryYears(id, years)
                     }
                     onRemove={id => {
-                      searchStore.setExperienceIndustries(
-                        searchStore.experienceIndustries.filter(
-                          i => i.id !== id
-                        )
+                      setExperienceIndustries(
+                        experienceIndustries.filter(i => i.id !== id)
                       );
                     }}
                     selectIdPrefix='industry'

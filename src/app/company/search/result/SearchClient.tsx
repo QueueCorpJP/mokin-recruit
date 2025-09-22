@@ -2779,16 +2779,11 @@ export default function SearchClient({
         isOpen={searchStore.isJobTypeModalOpen}
         onClose={() => searchStore.setIsJobTypeModalOpen(false)}
         onConfirm={selected => {
-          console.log('[DEBUG] Experience JobType Modal selected:', selected);
           const jobTypes = selected.map(name => ({
             id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
             name,
             experienceYears: '',
           }));
-          console.log(
-            '[DEBUG] Experience JobType Modal mapped jobTypes:',
-            jobTypes
-          );
           searchStore.setExperienceJobTypes(jobTypes);
           searchStore.setIsJobTypeModalOpen(false);
         }}
@@ -2800,16 +2795,11 @@ export default function SearchClient({
         isOpen={searchStore.isIndustryModalOpen}
         onClose={() => searchStore.setIsIndustryModalOpen(false)}
         onConfirm={selected => {
-          console.log('[DEBUG] Experience Industry Modal selected:', selected);
           const industries = selected.map(name => ({
             id: name.toLowerCase().replace(/[^a-z0-9]/g, '_'),
             name,
             experienceYears: '',
           }));
-          console.log(
-            '[DEBUG] Experience Industry Modal mapped industries:',
-            industries
-          );
           searchStore.setExperienceIndustries(industries);
           searchStore.setIsIndustryModalOpen(false);
         }}

@@ -56,7 +56,7 @@ export async function loginAction(formData: FormData) {
         error: 'メールアドレスまたはパスワードが正しくありません',
         email,
       });
-      redirect(`/admin/auth/login?${query}`);
+      redirect(`/admin/login?${query}`);
     }
 
     if (!data.user) {
@@ -64,17 +64,24 @@ export async function loginAction(formData: FormData) {
         error: 'ログインに失敗しました',
         email,
       });
-      redirect(`/admin/auth/login?${query}`);
+      redirect(`/admin/login?${query}`);
     }
 
-    // ユーザータイプの検証
+    // ユーザータイプの検証 - adminまたはcompany_userを許可
     const actualUserType = data.user.user_metadata?.user_type || 'candidate';
-    if (actualUserType !== 'admin') {
+    const isAdmin = data.user.user_metadata?.is_admin === true;
+
+    // adminフラグがtrueか、user_typeがadminまたはcompany_userの場合は管理者として扱う
+    if (
+      !isAdmin &&
+      actualUserType !== 'admin' &&
+      actualUserType !== 'company_user'
+    ) {
       const query = encodeQuery({
         error: '管理者アカウントでログインしてください',
         email,
       });
-      redirect(`/admin/auth/login?${query}`);
+      redirect(`/admin/login?${query}`);
     }
 
     console.log('✅ [ADMIN LOGIN] Success:', {
@@ -137,6 +144,6 @@ export async function loginAction(formData: FormData) {
       error: 'システムエラーが発生しました',
       email,
     });
-    redirect(`/admin/auth/login?${query}`);
+    redirect(`/admin/login?${query}`);
   }
 }
