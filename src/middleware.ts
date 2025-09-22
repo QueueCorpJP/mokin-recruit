@@ -16,6 +16,42 @@ interface SupabaseJWTPayload {
   [key: string]: any;
 }
 
+/**
+ * Check if user has valid Supabase session
+ */
+function checkSupabaseSession(request: NextRequest): boolean {
+  try {
+    // Check for sb-access-token first
+    let accessToken = request.cookies.get('sb-access-token')?.value;
+
+    // Check for sb-<project-ref>-auth-token.0 (base64 JSON)
+    if (!accessToken) {
+      const all = request.cookies.getAll();
+      const v2Cookie = all.find(c => /sb-.*-auth-token\.0/.test(c.name));
+      if (v2Cookie) {
+        try {
+          const decoded = JSON.parse(atob(v2Cookie.value));
+          accessToken = decoded.access_token;
+        } catch {
+          // Ignore decode errors
+        }
+      }
+    }
+
+    // Check for legacy supabase-auth-token
+    if (!accessToken) {
+      const legacy = request.cookies.get('supabase-auth-token')?.value;
+      if (legacy && legacy.split('.').length === 3) {
+        accessToken = legacy;
+      }
+    }
+
+    return !!accessToken;
+  } catch (error) {
+    return false;
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
@@ -30,10 +66,27 @@ export async function middleware(request: NextRequest) {
     signupUserId &&
     !path.startsWith('/signup') &&
     !path.startsWith('/api/') &&
-    !path.startsWith('/_next/')
+    !path.startsWith('/_next/') &&
+    !path.startsWith('/candidate') &&
+    !path.startsWith('/company')
   ) {
     try {
-      // signup_user_idがある場合、サインアップ継続中とみなす
+      // signup_user_idがある場合、まず認証済みかチェック
+      const hasSupabaseSession = checkSupabaseSession(request);
+
+      // 認証済みユーザーは通常のページアクセスを許可
+      if (hasSupabaseSession) {
+        // サインアップ完了済みなのでクッキーをクリア
+        const response = NextResponse.next({
+          request: { headers: requestHeaders },
+        });
+        response.headers.set('x-nonce', nonce);
+        response.cookies.delete('signup_user_id');
+        response.cookies.delete('signup_email');
+        return response;
+      }
+
+      // 未認証でサインアップ途中の場合のみリダイレクト
       const redirectResponse = NextResponse.redirect(
         new URL('/signup', request.url)
       );

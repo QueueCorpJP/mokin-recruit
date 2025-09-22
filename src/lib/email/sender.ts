@@ -230,6 +230,105 @@ ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}
 }
 
 /**
+ * メッセージ通知メールの送信パラメータ
+ */
+export interface MessageNotificationParams {
+  candidateEmail: string;
+  candidateName: string;
+  companyName: string;
+  jobTitle?: string;
+  messagePageUrl: string;
+}
+
+/**
+ * メッセージ通知メールを送信
+ * @param params メッセージ通知パラメータ
+ * @returns 送信結果
+ */
+export async function sendMessageNotificationEmail(
+  params: MessageNotificationParams
+): Promise<EmailResult> {
+  try {
+    const subject = `【CuePoint】${params.companyName}からメッセージが届いています`;
+
+    const html = `
+<html>
+<body style="font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Yu Gothic', 'メイリオ', Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #2563eb; font-size: 18px; margin-bottom: 20px;">【CuePoint】${params.companyName}からメッセージが届いています</h1>
+
+    <p>${params.candidateName} 様</p>
+
+    <p>${params.companyName} 様からのメッセージが届きました。<br>
+    下記よりご確認ください。</p>
+
+    <div style="border: 2px solid #e5e7eb; padding: 20px; margin: 20px 0; background-color: #f9fafb;">
+      <p style="margin: 0 0 10px 0;"><strong>■ 企業名：</strong>${params.companyName}</p>
+      ${params.jobTitle ? `<p style="margin: 0 0 10px 0;"><strong>■ 求人タイトル：</strong>${params.jobTitle}</p>` : ''}
+      <p style="margin: 0;"><strong>■ メッセージ詳細：</strong><a href="${params.messagePageUrl}" style="color: #2563eb;">こちらをクリック</a></p>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <p style="margin: 0 0 10px 0;"><strong>CuePoint</strong><br>
+      <a href="https://cuepoint.jp/candidate" style="color: #2563eb;">https://cuepoint.jp/candidate</a></p>
+
+      <p style="margin: 20px 0 0 0; font-size: 12px; color: #666;">
+        <strong>【お問い合わせ先】</strong><br>
+        ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}<br><br>
+        運営会社：メルセネール株式会社<br>
+        東京都千代田区神田須田町１丁目３２番地 クレス不動産神田ビル
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `
+【CuePoint】${params.companyName}からメッセージが届いています
+
+
+${params.candidateName} 様
+
+${params.companyName} 様からのメッセージが届きました。
+下記よりご確認ください。
+
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+■ 企業名：${params.companyName}
+${params.jobTitle ? `■ 求人タイトル：${params.jobTitle}` : ''}
+■ メッセージ詳細：${params.messagePageUrl}
+＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+CuePoint
+https://cuepoint.jp/candidate
+
+【お問い合わせ先】
+${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}
+
+運営会社：メルセネール株式会社
+東京都千代田区神田須田町１丁目３２番地 クレス不動産神田ビル
+`;
+
+    return await sendEmailViaSendGrid({
+      to: params.candidateEmail,
+      subject,
+      html,
+      text,
+    });
+  } catch (error: any) {
+    logger.error('Failed to send message notification email:', {
+      error: error.message,
+      candidateEmail: params.candidateEmail.substring(0, 3) + '***',
+      companyName: params.companyName,
+    });
+
+    return {
+      success: false,
+      error: 'メッセージ通知メールの送信に失敗しました',
+    };
+  }
+}
+
+/**
  * SendGridを使用して一括メール送信
  * @param messages メール送信リスト
  */

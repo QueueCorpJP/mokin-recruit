@@ -761,90 +761,137 @@ async function getCandidatesDataFallback(
       uniqueCount: uniqueCandidatesData.length,
     });
 
-    // 各候補者の追加情報を並列取得（最小限に抑制）
-    const candidatesWithDetails = await Promise.all(
-      uniqueCandidatesData.map(async (app: any) => {
-        const candidateId = app.candidate_id;
+    // 全候補者のIDを取得
+    const candidateIds = uniqueCandidatesData.map(app => app.candidate_id);
+    const companyGroupIds = uniqueCandidatesData.map(app => ({
+      candidateId: app.candidate_id,
+      groupId: app.company_group_id,
+    }));
 
-        // 必要最小限のクエリのみ実行（RLS適用）
-        const [jobExperience, workExperience, careerStatus] = await Promise.all(
-          [
-            supabase
-              .from('job_type_experience')
-              .select('job_type_name')
-              .eq('candidate_id', candidateId),
-            supabase
-              .from('work_experience')
-              .select('industry_name')
-              .eq('candidate_id', candidateId),
-            supabase
-              .from('career_status_entries')
-              .select('company_name')
-              .eq('candidate_id', candidateId)
-              .limit(1),
-          ]
-        );
+    // バッチクエリで関連データを一括取得（N+1問題を解決）
+    const [
+      allJobExperience,
+      allWorkExperience,
+      allCareerStatus,
+      allSelectionProgress,
+    ] = await Promise.all([
+      supabase
+        .from('job_type_experience')
+        .select('candidate_id, job_type_name')
+        .in('candidate_id', candidateIds),
+      supabase
+        .from('work_experience')
+        .select('candidate_id, industry_name')
+        .in('candidate_id', candidateIds),
+      supabase
+        .from('career_status_entries')
+        .select('candidate_id, company_name')
+        .in('candidate_id', candidateIds),
+      supabase
+        .from('selection_progress')
+        .select('candidate_id, company_group_id, *')
+        .in('candidate_id', candidateIds),
+    ]);
 
-        const candidate = app.candidates;
-        const age = candidate.birth_date
-          ? calculateAge(candidate.birth_date)
-          : 0;
+    // データをcandidate_idでグループ化
+    const jobExpByCandidate = new Map();
+    const workExpByCandidate = new Map();
+    const careerStatusByCandidate = new Map();
+    const selectionProgressByCandidate = new Map();
 
-        // 担当者を取得
-        const assignedUsers = await getAssignedUsersForCandidate(
+    allJobExperience.data?.forEach(item => {
+      if (!jobExpByCandidate.has(item.candidate_id)) {
+        jobExpByCandidate.set(item.candidate_id, []);
+      }
+      jobExpByCandidate.get(item.candidate_id).push(item);
+    });
+
+    allWorkExperience.data?.forEach(item => {
+      if (!workExpByCandidate.has(item.candidate_id)) {
+        workExpByCandidate.set(item.candidate_id, []);
+      }
+      workExpByCandidate.get(item.candidate_id).push(item);
+    });
+
+    allCareerStatus.data?.forEach(item => {
+      if (!careerStatusByCandidate.has(item.candidate_id)) {
+        careerStatusByCandidate.set(item.candidate_id, []);
+      }
+      careerStatusByCandidate.get(item.candidate_id).push(item);
+    });
+
+    allSelectionProgress.data?.forEach(item => {
+      const key = `${item.candidate_id}_${item.company_group_id}`;
+      selectionProgressByCandidate.set(key, item);
+    });
+
+    // 担当者データを一括取得
+    const allAssignedUsers = await Promise.all(
+      companyGroupIds.map(async ({ candidateId, groupId }) => ({
+        candidateId,
+        groupId,
+        users: await getAssignedUsersForCandidate(
           supabase,
           candidateId,
-          app.company_group_id
-        );
-
-        // 選考進捗を取得
-        const { data: selectionProgress } = await supabase
-          .from('selection_progress')
-          .select('*')
-          .eq('candidate_id', candidateId)
-          .eq('company_group_id', app.company_group_id)
-          .single();
-
-        return {
-          id: candidateId,
-          name: `${candidate.first_name} ${candidate.last_name}`,
-          company:
-            candidate.recent_job_company_name ||
-            candidate.current_company ||
-            '',
-          location: candidate.prefecture || '',
-          age,
-          gender: candidate.gender || '',
-          experience:
-            jobExperience.data?.map(
-              (exp: { job_type_name: string }) => exp.job_type_name
-            ) || [],
-          industry:
-            workExperience.data?.map(
-              (ind: { industry_name: string }) => ind.industry_name
-            ) || [],
-          targetCompany: careerStatus.data?.[0]?.company_name || '',
-          targetJob: app.job_postings?.job_type || '',
-          jobPostingId: app.job_posting_id || '',
-          jobPostingTitle: app.job_postings?.title || '',
-          group: app.company_groups?.group_name || '',
-          groupId: app.company_group_id || '',
-          applicationDate: app.created_at
-            ? new Date(app.created_at).toLocaleDateString('ja-JP')
-            : '',
-          firstScreening:
-            app.status === 'document_screening' ? 'ready' : undefined,
-          secondScreening:
-            app.status === 'second_interview' ? 'ready' : undefined,
-          finalScreening:
-            app.status === 'final_interview' ? 'ready' : undefined,
-          offer: app.status === 'offer' ? 'ready' : undefined,
-          assignedUsers,
-          type: app.type || 'application',
-          selectionProgress: selectionProgress || null,
-        };
-      })
+          groupId
+        ),
+      }))
     );
+    const assignedUsersByCandidate = new Map();
+    allAssignedUsers.forEach(({ candidateId, groupId, users }) => {
+      const key = `${candidateId}_${groupId}`;
+      assignedUsersByCandidate.set(key, users);
+    });
+
+    // 各候補者の詳細情報をマッピング
+    const candidatesWithDetails = uniqueCandidatesData.map((app: any) => {
+      const candidateId = app.candidate_id;
+      const candidate = app.candidates;
+      const age = candidate.birth_date ? calculateAge(candidate.birth_date) : 0;
+
+      const jobExperience = jobExpByCandidate.get(candidateId) || [];
+      const workExperience = workExpByCandidate.get(candidateId) || [];
+      const careerStatus = careerStatusByCandidate.get(candidateId) || [];
+      const selectionProgressKey = `${candidateId}_${app.company_group_id}`;
+      const selectionProgress =
+        selectionProgressByCandidate.get(selectionProgressKey) || null;
+      const assignedUsers =
+        assignedUsersByCandidate.get(selectionProgressKey) || [];
+
+      return {
+        id: candidateId,
+        name: `${candidate.first_name} ${candidate.last_name}`,
+        company:
+          candidate.recent_job_company_name || candidate.current_company || '',
+        location: candidate.prefecture || '',
+        age,
+        gender: candidate.gender || '',
+        experience: jobExperience.map(
+          (exp: { job_type_name: string }) => exp.job_type_name
+        ),
+        industry: workExperience.map(
+          (ind: { industry_name: string }) => ind.industry_name
+        ),
+        targetCompany: careerStatus[0]?.company_name || '',
+        targetJob: app.job_postings?.job_type || '',
+        jobPostingId: app.job_posting_id || '',
+        jobPostingTitle: app.job_postings?.title || '',
+        group: app.company_groups?.group_name || '',
+        groupId: app.company_group_id || '',
+        applicationDate: app.created_at
+          ? new Date(app.created_at).toLocaleDateString('ja-JP')
+          : '',
+        firstScreening:
+          app.status === 'document_screening' ? 'ready' : undefined,
+        secondScreening:
+          app.status === 'second_interview' ? 'ready' : undefined,
+        finalScreening: app.status === 'final_interview' ? 'ready' : undefined,
+        offer: app.status === 'offer' ? 'ready' : undefined,
+        assignedUsers,
+        type: app.type || 'application',
+        selectionProgress,
+      };
+    });
 
     return candidatesWithDetails;
   } catch (error) {

@@ -189,15 +189,7 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
     }));
   };
 
-  // 業種の追加・削除
-  const _addIndustry = (industry: string) => {
-    if (!formData.industries.includes(industry)) {
-      setFormData(prev => ({
-        ...prev,
-        industries: [...prev.industries, industry],
-      }));
-    }
-  };
+  // 業種の削除
 
   const removeIndustry = (industry: string) => {
     setFormData(prev => ({
@@ -225,18 +217,6 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         i === index ? { ...attraction, [field]: value } : attraction
       ),
     }));
-  };
-
-  // 画像アップロード処理
-  const _handleImageUpload = (file: File, type: 'icon' | 'images') => {
-    if (type === 'icon') {
-      setFormData(prev => ({ ...prev, iconImage: file }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, file].slice(0, 3), // 最大3枚まで
-      }));
-    }
   };
 
   const handleSubmit = async () => {
