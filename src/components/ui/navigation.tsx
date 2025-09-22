@@ -251,22 +251,37 @@ export function Navigation({
   // ログアウト処理
   const handleLogout = useCallback(async () => {
     try {
+      // 1. まずクライアント側でSupabaseからログアウト
+      const createClient = await import('@/lib/supabase/client').then(
+        mod => mod.createClient
+      );
+      const supabase = createClient();
+      await supabase.auth.signOut();
+
+      // 2. サーバーサイドのログアウト処理
       const result = await logoutAction();
 
-      if (result.success) {
-        // すべてのUIを閉じる
-        setIsMenuOpen(false);
-        setOpenDropdown(null);
-        // 適切なログイン画面にリダイレクト
-        if (variant === 'company') {
-          router.push('/company/auth/login');
-        } else if (variant === 'candidate') {
-          router.push('/candidate/auth/login');
-        } else {
-          router.push('/');
-        }
+      // 3. UIの状態をクリア
+      setIsMenuOpen(false);
+      setOpenDropdown(null);
+
+      // 4. クライアントサイドのキャッシュをリフレッシュ
+      router.refresh();
+
+      // 5. 認証状態変更イベントを強制発火
+      window.dispatchEvent(new Event('auth-state-changed'));
+
+      // 6. 適切なログイン画面にリダイレクト
+      if (variant === 'company') {
+        router.push('/company/auth/login');
+      } else if (variant === 'candidate') {
+        router.push('/candidate/auth/login');
       } else {
-        console.error('❌ ログアウトに失敗しました:', result.error);
+        router.push('/');
+      }
+
+      if (!result.success) {
+        console.error('❌ サーバー側ログアウトに失敗しました:', result.error);
       }
     } catch (error) {
       console.error('❌ ログアウト処理でエラーが発生しました:', error);

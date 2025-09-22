@@ -3,6 +3,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
+import { saveCandidateDraft } from '@/lib/actions/candidate-draft';
 import {
   GENDER_OPTIONS,
   INCOME_RANGES,
@@ -111,6 +112,61 @@ export default function CandidateNewClient() {
     getModalInitialData,
   } = useCandidateModals();
 
+  // 下書き保存処理
+  const handleDraftSave = useCallback(async () => {
+    if (isSubmitting) return;
+
+    setSubmitting(true);
+    try {
+      const draftData = {
+        email: formData.email,
+        last_name: formData.last_name || null,
+        first_name: formData.first_name || null,
+        last_name_kana: formData.last_name_kana || null,
+        first_name_kana: formData.first_name_kana || null,
+        gender: formData.gender || null,
+        birth_year: formData.birth_year || null,
+        birth_month: formData.birth_month || null,
+        birth_day: formData.birth_day || null,
+        phone: formData.phone || null,
+        postal_code: formData.postal_code || null,
+        prefecture: formData.prefecture || null,
+        city: formData.city || null,
+        address: formData.address || null,
+        building: formData.building || null,
+        marital_status: formData.marital_status || null,
+        children_count: formData.children_count || 0,
+        education,
+        skills,
+        career_status: careerStatusEntries,
+        work_history: workHistoryEntries,
+        memo,
+      };
+
+      const result = await saveCandidateDraft(draftData);
+
+      if (result.success) {
+        alert(result.message || '下書きを保存しました');
+      } else {
+        alert(result.error || '下書きの保存に失敗しました');
+      }
+    } catch (error) {
+      console.error('下書き保存エラー:', error);
+      alert('下書きの保存に失敗しました');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [
+    isSubmitting,
+    formData,
+    education,
+    skills,
+    careerStatusEntries,
+    workHistoryEntries,
+    memo,
+    setSubmitting,
+  ]);
+
   // 確認ページへの遷移処理
   const handleSubmit = useCallback(async () => {
     if (isSubmitting) return;
@@ -147,25 +203,22 @@ export default function CandidateNewClient() {
   ]);
 
   useEffect(() => {
-    const handleDraftSave = () => {
-      // 下書き保存処理
-      console.log('Saving draft...');
-      alert('下書きを保存しました（実装予定）');
+    const handleDraftSaveEvent = () => {
+      handleDraftSave();
     };
 
     const handleConfirm = () => {
-      // 確認処理
       handleSubmit();
     };
 
-    window.addEventListener('candidate-new-draft', handleDraftSave);
+    window.addEventListener('candidate-new-draft', handleDraftSaveEvent);
     window.addEventListener('candidate-new-confirm', handleConfirm);
 
     return () => {
-      window.removeEventListener('candidate-new-draft', handleDraftSave);
+      window.removeEventListener('candidate-new-draft', handleDraftSaveEvent);
       window.removeEventListener('candidate-new-confirm', handleConfirm);
     };
-  }, [handleSubmit]);
+  }, [handleSubmit, handleDraftSave]);
 
   return (
     <>
@@ -1949,6 +2002,12 @@ export default function CandidateNewClient() {
 
             {/* Submit Buttons */}
             <div className='flex justify-center gap-4 pt-8'>
+              <AdminButton
+                text={isSubmitting ? '保存中...' : '下書き保存'}
+                variant='white'
+                onClick={handleDraftSave}
+                disabled={isSubmitting}
+              />
               <AdminButton
                 text={isSubmitting ? '確認中...' : '確認する'}
                 variant='green-gradient'
