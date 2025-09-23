@@ -140,7 +140,8 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
           });
         } catch (emailError) {
           console.error(
-            `招待メール送信エラー (${invitedMember.email}):`,
+            '招待メール送信エラー (%s):',
+            invitedMember.email,
             emailError
           );
         }
@@ -502,7 +503,8 @@ export async function inviteMembersToGroup(
           });
         } catch (emailError) {
           console.error(
-            `招待メール送信エラー (${invitedMember.email}):`,
+            '招待メール送信エラー (%s):',
+            invitedMember.email,
             emailError
           );
         }
