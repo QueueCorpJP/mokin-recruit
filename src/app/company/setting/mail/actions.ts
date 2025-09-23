@@ -178,7 +178,7 @@ export async function sendVerificationCode(email: string) {
       };
     }
 
-    console.log(`✅ メール送信成功! 送信先: ${currentUser.email}`);
+    console.log(`✅ メール送信成功! 送信先: ***`);
     console.log('メッセージID:', emailResult.messageId);
 
     console.log('=== sendVerificationCode完了 ===');

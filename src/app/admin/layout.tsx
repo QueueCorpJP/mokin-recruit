@@ -6,9 +6,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AdminLayoutClient>
-      {children}
-    </AdminLayoutClient>
-  );
+  // 認証チェックは各ページで個別に行う
+  // ログインページで無限リダイレクトを防ぐため
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

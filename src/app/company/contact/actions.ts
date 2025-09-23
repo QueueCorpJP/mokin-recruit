@@ -48,8 +48,11 @@ export async function sendContactForm(formData: {
     // SendGridでメール送信
     console.log('メール送信設定を確認中...');
     console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
-    console.log('SENDGRID_FROM_EMAIL:', process.env.SENDGRID_FROM_EMAIL);
-    console.log('SENT_EMAIL:', process.env.SENT_EMAIL);
+    console.log(
+      'SENDGRID_FROM_EMAIL exists:',
+      !!process.env.SENDGRID_FROM_EMAIL
+    );
+    console.log('SENT_EMAIL exists:', !!process.env.SENT_EMAIL);
 
     // 送信先メールアドレスを確認
     const sentToEmail = process.env.SENT_EMAIL || 'info@cuepoint.jp';

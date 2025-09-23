@@ -115,9 +115,8 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
 
     // 3) SendGrid 招待メール送信
     if (await isSendgridConfigured()) {
-      const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
-      const baseGroupJoinUrl = `${baseUrl}/signup/group?groupId=${newGroup.id}&companyId=${companyAccountId}`;
+      const groupJoinUrl = `${baseUrl}/signup/group?groupId=${newGroup.id}&companyId=${companyAccountId}`;
 
       // 企業名取得
       let companyName = '企業名';
@@ -130,29 +129,22 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
         if (companyRow?.company_name) companyName = companyRow.company_name;
       } catch {}
 
-      const messages = invited.map(m => {
-        const groupJoinUrl = `${baseGroupJoinUrl}&email=${encodeURIComponent(m.email)}`;
-        return {
-          to: m.email,
-          from,
-          subject: `【CuePoint】 ${payload.groupName}に招待されています`,
-          text: `【${companyName}】ご担当者様\n\nCuePointへの招待が届いています。\n招待リンクから企業グループに参加してください。\n\n=============================\n■ 企業名：${companyName}\n■ 企業グループ名：${payload.groupName}\n■ 招待リンク：${groupJoinUrl}\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`,
-          html: `
-          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
-            <p>【${companyName}】ご担当者様</p>
-            <p>CuePointへの招待が届いています。<br/>招待リンクから企業グループに参加してください。</p>
-            <p>=============================</p>
-            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${payload.groupName}<br/>■ 招待リンク：<a href="${groupJoinUrl}" target="_blank" rel="noopener noreferrer">${groupJoinUrl}</a></p>
-            <p>=============================</p>
-            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
-            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
-            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
-          </div>
-        `,
-        };
-      });
-
-      await sendBatch(messages);
+      // 各招待者に個別にメール送信（既存のsendInvitationEmail関数を使用）
+      for (const invitedMember of invited) {
+        try {
+          await sendInvitationEmail({
+            inviteeEmail: invitedMember.email,
+            companyName,
+            groupName: payload.groupName,
+            invitationUrl: groupJoinUrl,
+          });
+        } catch (emailError) {
+          console.error(
+            `招待メール送信エラー (${invitedMember.email}):`,
+            emailError
+          );
+        }
+      }
     }
 
     revalidateCompanyPaths('/company/account');

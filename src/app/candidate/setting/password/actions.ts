@@ -36,14 +36,14 @@ export async function changePassword(
     }
 
     const email = candidate.email;
-    console.log('取得したemail:', email);
+    console.log('取得したemail:', '***');
 
     // 現在のパスワード検証でSupabase AuthのユーザーIDを取得
     let supabaseAuthId: string | null = null;
 
     // まずSupabase Authで現在のパスワードを検証
     console.log('Supabase Authで現在のパスワードを検証中...');
-    console.log('検証対象のemail:', email);
+    console.log('検証対象のemail:', '***');
     try {
       const { data: authResult, error: authError } =
         await supabase.auth.signInWithPassword({

@@ -36,7 +36,7 @@ export async function softReauthorizeForCompany(
     }
 
     const user = data.user;
-    console.log(`[softReauth:${tag}] user=${user.id} email=${user.email}`);
+    console.log(`[softReauth:${tag}] user=${user.id} email=***`);
 
     if (opts.expectedCompanyUserId) {
       try {
