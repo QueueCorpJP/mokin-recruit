@@ -105,6 +105,20 @@ const navigationItems = [
   {
     icon: (
       <Image
+        src='/images/book.svg'
+        alt='industry'
+        width={20}
+        height={20}
+        style={{ filter: 'brightness(0)' }}
+      />
+    ),
+    title: 'オリジナル業種',
+    href: '/admin/industry',
+    subItems: [{ title: 'オリジナル業種一覧', href: '/admin/industry' }],
+  },
+  {
+    icon: (
+      <Image
         src='/images/admin/media.svg'
         alt='newspaper'
         width={20}
