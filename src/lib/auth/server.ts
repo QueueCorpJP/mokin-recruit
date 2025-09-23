@@ -233,9 +233,8 @@ export async function getServerAuth(
   }
 }
 
-// キャッシュによる認証状態の取り違いを避けるため、メモ化は無効化
-export const getCachedServerAuth =
-  getServerAuth as unknown as typeof getServerAuth;
+// リクエスト単位でのキャッシュを有効にして重複チェックを避ける
+export const getCachedServerAuth = cache(getServerAuth);
 
 /**
  * 静的レンダリング用の認証チェック（cookiesを使わない）
@@ -285,7 +284,7 @@ export async function getCachedCompanyUser(): Promise<User | null> {
  * レイアウトで認証済みの場合に使用（リダイレクトなし）
  */
 export async function getCachedAdminUser(): Promise<User | null> {
-  const auth = await getServerAuth(false, false); // 非キャッシュ
+  const auth = await getCachedServerAuth(false, false); // キャッシュ使用
   return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
 
@@ -303,7 +302,7 @@ export async function requireCompanyAuth(): Promise<User | null> {
  * 管理者認証チェック
  */
 export async function requireAdminAuth(): Promise<User | null> {
-  const auth = await getServerAuth(false, false); // キャッシュなし
+  const auth = await getCachedServerAuth(false, false); // キャッシュ使用
   return auth.isAuthenticated && auth.userType === 'admin' ? auth.user : null;
 }
 

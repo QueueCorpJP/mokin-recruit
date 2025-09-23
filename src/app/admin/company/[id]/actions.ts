@@ -308,7 +308,7 @@ export async function createNewGroup(
         if (existingUser) {
           // User already exists
           userId = existingUser.id;
-          console.log(`[Group Creation] User already exists: ${member.email}`);
+          console.log(`[Group Creation] User already exists: ***`);
         } else {
           // Create new user account
           const tempPassword = crypto.randomBytes(12).toString('hex'); // Generate temporary password

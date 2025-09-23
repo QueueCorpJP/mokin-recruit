@@ -88,7 +88,7 @@ export async function sendContactFormEmail(formData: {
       };
     }
 
-    console.log(`✅ メール送信成功! 送信先: ${formData.email}`);
+    console.log(`✅ メール送信成功! 送信先: ***`);
     console.log('管理者メッセージID:', adminEmailResult.messageId);
     console.log('顧客メッセージID:', customerEmailResult.messageId);
 

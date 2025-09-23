@@ -1,7 +1,15 @@
+import { redirect } from 'next/navigation';
 import AdminDashboardClient from './AdminDashboardClient';
 import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { requireAdminAuth } from '@/lib/auth/server';
 
 export default async function AdminPage() {
+  // 管理者認証チェック
+  const adminUser = await requireAdminAuth();
+  if (!adminUser) {
+    redirect('/admin/login');
+  }
+
   const supabase = getSupabaseAdminClient();
 
   // 求人: 承認待ち（PENDING_APPROVAL）の件数
