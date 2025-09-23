@@ -300,10 +300,8 @@ export default function SearchConditionForm({
                     <button
                       type='button'
                       onClick={() => {
-                        searchStore.setExperienceJobTypes(
-                          searchStore.experienceJobTypes.filter(
-                            j => j.id !== job.id
-                          )
+                        setExperienceJobTypes(
+                          experienceJobTypes.filter(j => j.id !== job.id)
                         );
                       }}
                       className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
@@ -349,10 +347,8 @@ export default function SearchConditionForm({
               </button>
               <div className='flex items-center gap-2'>
                 <Checkbox
-                  checked={searchStore.industryAndSearch}
-                  onChange={(checked: boolean) =>
-                    searchStore.setIndustryAndSearch(checked)
-                  }
+                  checked={industryAndSearch}
+                  onChange={handleIndustryAndSearchChange}
                 />
                 <label
                   className='text-[#323232] text-[14px] font-medium tracking-[1.4px]'
@@ -363,9 +359,9 @@ export default function SearchConditionForm({
               </div>
             </div>
 
-            {searchStore.experienceIndustries.length > 0 && (
+            {experienceIndustries.length > 0 && (
               <div className='flex flex-col items-start gap-2 mt-4'>
-                {searchStore.experienceIndustries.map(industry => (
+                {experienceIndustries.map(industry => (
                   <div
                     key={industry.id}
                     className='inline-flex items-center gap-1'
@@ -384,7 +380,7 @@ export default function SearchConditionForm({
                         }
                         onBlur={() => setOpenSelectId(null)}
                         onChange={e => {
-                          searchStore.updateExperienceIndustryYears(
+                          updateExperienceIndustryYears(
                             industry.id,
                             e.target.value
                           );
@@ -417,10 +413,8 @@ export default function SearchConditionForm({
                     <button
                       type='button'
                       onClick={() => {
-                        searchStore.setExperienceIndustries(
-                          searchStore.experienceIndustries.filter(
-                            i => i.id !== industry.id
-                          )
+                        setExperienceIndustries(
+                          experienceIndustries.filter(i => i.id !== industry.id)
                         );
                       }}
                       className='bg-[#d2f1da] flex items-center justify-center w-10 h-[40px] rounded-r-[10px]'
@@ -458,22 +452,18 @@ export default function SearchConditionForm({
           <div className='flex-1 py-6 flex items-center'>
             <div className='flex items-center gap-2 '>
               <SelectInput
-                value={searchStore.currentSalaryMin}
+                value={currentSalaryMin}
                 className='min-w-60'
-                onChange={(value: string) =>
-                  searchStore.setCurrentSalaryMin(value)
-                }
-                options={getFilteredMinOptions(searchStore.currentSalaryMax)}
+                onChange={handleCurrentSalaryMinChange}
+                options={getFilteredMinOptions(currentSalaryMax)}
                 placeholder='指定なし'
               />
               <span className='text-[#323232]'>〜</span>
               <SelectInput
-                value={searchStore.currentSalaryMax}
+                value={currentSalaryMax}
                 className='min-w-60'
-                onChange={(value: string) =>
-                  searchStore.setCurrentSalaryMax(value)
-                }
-                options={getFilteredMaxOptions(searchStore.currentSalaryMin)}
+                onChange={handleCurrentSalaryMaxChange}
+                options={getFilteredMaxOptions(currentSalaryMin)}
                 placeholder='指定なし'
               />
             </div>
@@ -493,8 +483,8 @@ export default function SearchConditionForm({
           <div className='flex-1 py-6 flex items-center w-full'>
             <input
               type='text'
-              value={searchStore.currentCompany}
-              onChange={e => searchStore.setCurrentCompany(e.target.value)}
+              value={currentCompany}
+              onChange={e => handleCurrentCompanyChange(e.target.value)}
               placeholder='在籍企業を入力'
               className='w-[400px] font-medium px-4 py-3 border border-[#999] rounded-[4px] text-[14px] tracking-[1.4px] text-[#323232] placeholder:text-[#999]'
               style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
@@ -515,9 +505,9 @@ export default function SearchConditionForm({
           <div className='flex-1 py-6 flex items-center'>
             <div className='flex items-center gap-2'>
               <SelectInput
-                value={searchStore.education}
+                value={education}
                 className=' w-[358px]'
-                onChange={(value: string) => searchStore.setEducation(value)}
+                onChange={handleEducationChange}
                 options={[
                   { value: '', label: '指定なし' },
                   { value: 'middle', label: '中学校卒業' },
@@ -553,9 +543,7 @@ export default function SearchConditionForm({
         onClose={() => setIsJobTypeModalOpen(false)}
         onConfirm={jobNames => {
           const jobTypes = jobNames.map(jobName => {
-            const existing = searchStore.experienceJobTypes.find(
-              j => j.name === jobName
-            );
+            const existing = experienceJobTypes.find(j => j.name === jobName);
             return {
               id: jobName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
               name: jobName,
@@ -563,10 +551,10 @@ export default function SearchConditionForm({
             };
           });
 
-          searchStore.setExperienceJobTypes(jobTypes);
+          setExperienceJobTypes(jobTypes);
           setIsJobTypeModalOpen(false);
         }}
-        initialSelected={searchStore.experienceJobTypes.map(j => j.name)}
+        initialSelected={experienceJobTypes.map(j => j.name)}
         maxSelections={3}
       />
 
@@ -581,10 +569,10 @@ export default function SearchConditionForm({
             id: industryName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
             name: industryName,
           }));
-          searchStore.setExperienceIndustries(industries);
+          setExperienceIndustries(industries);
           setIsIndustryModalOpen(false);
         }}
-        initialSelected={searchStore.experienceIndustries.map(i => i.name)}
+        initialSelected={experienceIndustries.map(i => i.name)}
         maxSelections={3}
       />
     </>
