@@ -141,7 +141,11 @@ export async function saveNotice(formData: FormData) {
     return { success: true, notice };
   } catch (error) {
     console.error('お知らせの保存に失敗:', error);
-    throw error;
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'お知らせの保存に失敗しました',
+    };
   }
 }
 
