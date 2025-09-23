@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import SharedBanner from '@/components/ui/SharedBanner';
 
 const TaskList = dynamic(() => import('./TaskList'), {
   loading: () => (
@@ -315,18 +316,14 @@ export default async function CandidateTaskPage() {
           </div>
 
           <div className='w-full md:max-w-[320px] md:flex-none'>
-            <Link
-              href='/candidate/account/resume'
-              className='block cursor-pointer mb-20'
-            >
-              <Image
-                src='/images/banner01.png'
-                alt='バナー画像1'
-                width={320}
-                height={200}
-                className='w-full h-auto block rounded-lg transition-opacity hover:opacity-90'
+            <div className='mb-20'>
+              <SharedBanner
+                width={1200}
+                height={300}
+                quality={85}
+                sizes='(max-width: 768px) 100vw, 320px'
               />
-            </Link>
+            </div>
             <div style={headingListStyle}>
               <SectionHeading
                 iconSrc='/images/question.svg'

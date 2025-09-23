@@ -6,6 +6,7 @@ import { useState, useTransition, lazy, Suspense } from 'react';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { useFavoriteToggleMutation } from '@/hooks';
+import SharedBanner from '@/components/ui/SharedBanner';
 
 // Dynamic imports for heavy components
 const FaqBox = lazy(() => import('@/components/ui/FaqBox'));
@@ -136,20 +137,12 @@ const FooterSection = lazy(() =>
             </div>
           </div>
           {/* バナー画像を表示 */}
-          <div
-            className='cursor-pointer'
-            onClick={() => router.push('/candidate/account/resume')}
-          >
-            <Image
-              src='/images/banner01.png'
-              alt='バナー画像01'
-              width={800}
-              height={200}
-              className='w-full h-auto block rounded-lg transition-opacity hover:opacity-90'
-              loading='lazy'
-              priority={false}
+          <div className=''>
+            <SharedBanner
+              width={1200}
+              height={300}
+              quality={85}
               sizes='(max-width: 768px) 100vw, 320px'
-              quality={75}
             />
           </div>
           {/* FAQ/QAセクション */}

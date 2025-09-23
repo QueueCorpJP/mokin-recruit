@@ -185,24 +185,28 @@ export async function sendScout(
     });
 
     let roomId: string | null = null;
-    const { data: existingRoom, error: roomSearchError } = await supabase
+    const { data: existingRooms, error: roomSearchError } = await supabase
       .from('rooms')
       .select('id')
       .eq('candidate_id', formData.candidateId)
       .eq('company_group_id', formData.group)
       .eq('type', 'direct')
-      .maybeSingle();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
     if (roomSearchError) {
       console.error('Room検索エラー:', roomSearchError);
       return { success: false, error: 'メッセージルームの検索に失敗しました' };
     }
 
+    const existingRoom =
+      existingRooms && existingRooms.length > 0 ? existingRooms[0] : null;
+
     if (existingRoom) {
       roomId = existingRoom.id;
       console.info('既存Room使用:', { roomId });
     } else {
-      // 新しいRoomを作成
+      // 新しいRoomを作成（重複防止のためupsert）
       console.info('新規Room作成中...');
       const roomData = {
         type: 'direct',
@@ -212,61 +216,114 @@ export async function sendScout(
       };
       console.info('Room作成データ:', roomData);
 
-      const { data: newRoom, error: roomInsertError } = await supabase
+      // 重複防止のため、再度検索してからupsert
+      const { data: doubleCheckRooms } = await supabase
         .from('rooms')
-        .insert(roomData)
         .select('id')
-        .single();
+        .eq('candidate_id', formData.candidateId)
+        .eq('company_group_id', formData.group)
+        .eq('type', 'direct')
+        .limit(1);
 
-      if (roomInsertError) {
-        console.error('ルーム作成エラー:', roomInsertError);
-        return {
-          success: false,
-          error: 'メッセージルームの作成に失敗しました',
-        };
+      if (doubleCheckRooms && doubleCheckRooms.length > 0) {
+        // 検索後に別処理で作成された場合は既存を使用
+        roomId = doubleCheckRooms[0].id;
+        console.info('並行処理により作成済みRoom使用:', { roomId });
+      } else {
+        const { data: newRoom, error: roomInsertError } = await supabase
+          .from('rooms')
+          .insert(roomData)
+          .select('id')
+          .single();
+
+        if (roomInsertError) {
+          console.error('ルーム作成エラー:', roomInsertError);
+
+          // 重複エラーの場合は既存Roomを取得して続行
+          if (roomInsertError.code === '23505') {
+            console.info('重複エラーのため既存Room検索中...');
+            const { data: fallbackRooms } = await supabase
+              .from('rooms')
+              .select('id')
+              .eq('candidate_id', formData.candidateId)
+              .eq('company_group_id', formData.group)
+              .eq('type', 'direct')
+              .limit(1);
+
+            if (fallbackRooms && fallbackRooms.length > 0) {
+              roomId = fallbackRooms[0].id;
+              console.info('重複エラー後に既存Room使用:', { roomId });
+            } else {
+              return {
+                success: false,
+                error: 'メッセージルームの作成に失敗しました',
+              };
+            }
+          } else {
+            return {
+              success: false,
+              error: 'メッセージルームの作成に失敗しました',
+            };
+          }
+        } else {
+          roomId = newRoom.id;
+          console.info('新規Room作成完了:', { roomId });
+        }
       }
-      roomId = newRoom.id;
-      console.info('新規Room作成完了:', { roomId });
 
-      // 新しいルームの場合、参加者を追加
-      const participantInserts = [
-        {
-          room_id: roomId,
-          participant_type: 'CANDIDATE',
-          candidate_id: formData.candidateId,
-          joined_at: new Date().toISOString(),
-        },
-      ];
+      // 新しいルームまたは既存ルームの場合、参加者が存在するかチェック
+      const { data: existingParticipants } = await supabase
+        .from('room_participants')
+        .select('id')
+        .eq('room_id', roomId)
+        .limit(1);
 
-      // 企業グループのユーザーも追加
-      const { data: groupUsers, error: groupUsersError } = await supabase
-        .from('company_user_group_permissions')
-        .select('company_user_id')
-        .eq('company_group_id', formData.group);
-
-      if (!groupUsersError && groupUsers && groupUsers.length > 0) {
-        groupUsers.forEach(groupUser => {
-          participantInserts.push({
+      if (!existingParticipants || existingParticipants.length === 0) {
+        console.info('Room参加者追加中...');
+        const participantInserts = [
+          {
             room_id: roomId,
-            participant_type: 'COMPANY_USER',
+            participant_type: 'CANDIDATE',
             candidate_id: formData.candidateId,
             joined_at: new Date().toISOString(),
+          },
+        ];
+
+        // 企業グループのユーザーも追加
+        const { data: groupUsers, error: groupUsersError } = await supabase
+          .from('company_user_group_permissions')
+          .select('company_user_id')
+          .eq('company_group_id', formData.group);
+
+        if (!groupUsersError && groupUsers && groupUsers.length > 0) {
+          groupUsers.forEach(groupUser => {
+            participantInserts.push({
+              room_id: roomId,
+              participant_type: 'COMPANY_USER',
+              company_user_id: groupUser.company_user_id,
+              joined_at: new Date().toISOString(),
+            });
           });
-        });
-      }
+        }
 
-      // 参加者を一括挿入
-      const { error: participantInsertError } = await supabase
-        .from('room_participants')
-        .insert(participantInserts);
+        // 参加者を一括挿入
+        const { error: participantInsertError } = await supabase
+          .from('room_participants')
+          .insert(participantInserts);
 
-      if (participantInsertError) {
-        console.error('Room participants作成エラー:', participantInsertError);
-        // 参加者追加失敗してもスカウト自体は成功とする
+        if (participantInsertError) {
+          console.error('Room participants作成エラー:', participantInsertError);
+          // 重複エラーの場合は警告のみ
+          if (participantInsertError.code === '23505') {
+            console.warn('参加者が既に存在しているため、スキップします');
+          }
+        } else {
+          console.info('Room participants作成完了:', {
+            count: participantInserts.length,
+          });
+        }
       } else {
-        console.info('Room participants作成完了:', {
-          count: participantInserts.length,
-        });
+        console.info('Room参加者は既に存在するためスキップ');
       }
     }
 
@@ -275,7 +332,6 @@ export async function sendScout(
     const messageData = {
       room_id: roomId,
       sender_type: 'COMPANY_USER',
-      sender_company_user_id: companyUser.companyUserId,
       sender_company_group_id: formData.group,
       message_type: 'SCOUT',
       subject: formData.title,

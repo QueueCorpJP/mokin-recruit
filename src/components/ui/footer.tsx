@@ -45,7 +45,7 @@ export function Footer({
         case 'お知らせ一覧':
           return '/candidate/news';
         case '求人管理':
-          return '/company/job';
+          return '/company/recruitment/detail';
         case '候補者検索':
           return '/company/search';
         case '企業設定':

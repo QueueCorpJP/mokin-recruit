@@ -103,11 +103,12 @@ export function ScoutConfirmForm({ candidateId }: ScoutConfirmFormProps) {
       if (result.success) {
         // 送信完了時はドラフトを破棄
         resetDraft(candidateId);
-        // メッセージルームに遷移
+        // メッセージルームに直接遷移
         if (result.roomId) {
-          router.push(`/company/message/${result.roomId}`);
+          router.push(`/company/message?room=${result.roomId}`);
         } else {
-          router.push('/company/search');
+          // roomIdが取得できない場合はメッセージ一覧へ
+          router.push('/company/message');
         }
       } else {
         alert((result as any).error || 'スカウト送信に失敗しました');
