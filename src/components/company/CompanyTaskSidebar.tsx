@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { SectionHeading } from '@/components/ui/SectionHeading';
 import { NoticeData, formatNoticeDate } from '@/lib/utils/noticeHelpers.client';
 import { tr } from 'zod/v4/locales';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { createClient as createBrowserSupabaseClient } from '@/lib/supabase/client';
 // TaskDataインターフェース（TaskListと同じ）
@@ -1033,27 +1034,14 @@ export function CompanyTaskSidebar({
 
           <div style={sectionTitleStyle}>スカウトがうまくいかない</div>
 
-          <div
-            style={supportBannerStyle}
-            onClick={() => router.push('/company/contact')}
-          >
-            <div style={freeTagStyle}>
-              <span style={freeTextStyle}>無料</span>
-            </div>
-            <div style={{ flex: 1 }}>
-              <span style={supportTextStyle}>
-                採用担当者が
-                <br />
-                無料でサポート
-              </span>
-            </div>
+          <Link href='/company/contact'>
             <Image
               src='/images/consult.svg'
               alt='お問い合わせ'
-              width={24}
-              height={24}
+              width={1300}
+              height={300}
             />
-          </div>
+          </Link>
         </div>
       </div>
     </div>
