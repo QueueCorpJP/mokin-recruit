@@ -18,7 +18,7 @@ interface BreadcrumbConfig {
 }
 
 const breadcrumbConfig: BreadcrumbConfig = {
-  '/admin': '管理者トップページ',
+  '/admin': '管理画面トップページ',
   '/admin/analytics': '分析',
   '/admin/article': '記事管理',
   '/admin/auth': '認証',
@@ -35,6 +35,8 @@ const breadcrumbConfig: BreadcrumbConfig = {
   '/admin/company/new/confirm': '企業登録確認',
   '/admin/company/user': '企業ユーザー',
   '/admin/company/withdraw': '企業退会',
+  '/admin/industry': 'オリジナル業種一覧',
+  '/admin/industry/delete-complete': 'オリジナル業種一覧',
   '/admin/job': '求人一覧',
   '/admin/job/new': '新規求人作成',
   '/admin/job/new/confirm': '求人作成確認',

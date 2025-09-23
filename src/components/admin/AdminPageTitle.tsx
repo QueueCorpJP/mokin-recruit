@@ -246,6 +246,18 @@ const pageTitleConfig: PageTitleConfig = {
     ],
   },
   '/admin/media/tag/new': { title: 'タグ作成' },
+  '/admin/industry': {
+    title: 'オリジナル業種一覧',
+    buttons: [
+      {
+        text: '新規オリジナル業種追加',
+        variant: 'green-gradient',
+        onClick: () =>
+          window.dispatchEvent(new CustomEvent('add-industry-modal')),
+      },
+    ],
+  },
+  '/admin/industry/delete-complete': { title: 'オリジナル業種削除完了' },
   '/admin/notice': { title: '運営からのお知らせ管理' },
   '/admin/notice/new': { title: '運営からのお知らせ' },
   '/admin/notice/new/complete': { title: '運営からのお知らせ' },
