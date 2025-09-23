@@ -247,6 +247,29 @@ const pageTitleConfig: PageTitleConfig = {
   },
   '/admin/media/tag/new': { title: 'タグ作成' },
   '/admin/notice': { title: '運営からのお知らせ管理' },
+  '/admin/notice/new': { title: '運営からのお知らせ' },
+  '/admin/notice/new/complete': { title: '運営からのお知らせ' },
+  '/admin/notice/edit': { title: '運営からのお知らせ' },
+  '/admin/notice/preview': {
+    title: '運営からのお知らせ',
+    buttons: [
+      {
+        text: '編集に戻る',
+        variant: 'green-outline',
+        onClick: () => window.dispatchEvent(new CustomEvent('cancel-preview')),
+      },
+      {
+        text: 'お知らせを下書き保存',
+        variant: 'green-gradient',
+        onClick: () => window.dispatchEvent(new CustomEvent('save-draft')),
+      },
+      {
+        text: 'お知らせを投稿する',
+        variant: 'green-gradient',
+        onClick: () => window.dispatchEvent(new CustomEvent('publish-notice')),
+      },
+    ],
+  },
   '/admin/analytics': { title: '分析' },
 };
 
@@ -327,6 +350,12 @@ export function AdminPageTitle() {
     }
 
     // 動的ルートのチェック
+    if (pathname.match(/^\/admin\/notice\/[^\/]+\/edit$/)) {
+      return { title: '運営からのお知らせ' };
+    }
+    if (pathname.match(/^\/admin\/notice\/[^\/]+$/)) {
+      return { title: '運営からのお知らせ' };
+    }
     if (pathname.match(/^\/admin\/message\/pending\/[\w-]+$/)) {
       return { title: 'メッセージ詳細' };
     }

@@ -6,7 +6,6 @@ import Image from 'next/image';
 import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
-import { AdminNotificationModal } from '@/components/admin/ui/AdminNotificationModal';
 import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import { createClient } from '@/lib/supabase/client';
 import { createNotice, uploadNoticeThumbnail } from '../actions';
@@ -78,8 +77,7 @@ export default function PreviewPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [savedNoticeId, setSavedNoticeId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSave = useCallback(
     async (status: 'DRAFT' | 'PUBLISHED') => {
@@ -98,6 +96,7 @@ export default function PreviewPage() {
       }
 
       setIsLoading(true);
+      setIsSubmitting(true);
       setError('');
 
       try {
@@ -149,10 +148,9 @@ export default function PreviewPage() {
         });
 
         if (result.success && result.data) {
-          setSavedNoticeId(result.data.id);
+          // 完了ページへリダイレクト（sessionStorage削除前に）
+          router.push('/admin/notice/new/complete');
           sessionStorage.removeItem('previewNotice');
-          // 公開・下書き保存時ともにモーダルを表示
-          setShowSuccessModal(true);
         } else {
           throw new Error(result.error || 'お知らせの保存に失敗しました');
         }
@@ -170,15 +168,12 @@ export default function PreviewPage() {
     [categories, categoryNames]
   );
 
-  const handleEdit = () => {
-    // プレビューデータをそのまま残して編集画面に戻る
-    router.push('/admin/notice/new');
-  };
-
   const handleCancel = useCallback(() => {
+    // 投稿中は戻れないように制御
+    if (isSubmitting) return;
     // プレビューデータをそのまま残して作成画面に戻る
     router.push('/admin/notice/new');
-  }, [router]);
+  }, [router, isSubmitting]);
 
   // データ読み込み用のuseEffect
   useEffect(() => {
@@ -280,20 +275,6 @@ export default function PreviewPage() {
       window.removeEventListener('publish-notice', handlePublishNotice);
     };
   }, [handleCancel, handleSave]);
-
-  const handleBackToList = () => {
-    setShowSuccessModal(false);
-    router.push('/admin/notice');
-  };
-
-  const handleViewNotice = () => {
-    setShowSuccessModal(false);
-    if (savedNoticeId) {
-      router.push(`/admin/notice/${savedNoticeId}`);
-    } else {
-      router.push('/admin/notice');
-    }
-  };
 
   if (!previewData) {
     return (
@@ -430,17 +411,6 @@ export default function PreviewPage() {
           </div>
         </div>
       </main>
-
-      {/* 成功通知モーダル */}
-      <AdminNotificationModal
-        isOpen={showSuccessModal}
-        onConfirm={handleBackToList}
-        onSecondaryAction={handleViewNotice}
-        title='お知らせ追加完了'
-        description='お知らせの投稿・保存をしました。'
-        confirmText='お知らせ一覧に戻る'
-        secondaryText='お知らせを確認する'
-      />
     </div>
   );
 }

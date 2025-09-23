@@ -107,8 +107,6 @@ export default function NoticeNewClient({
   const [thumbnailError, setThumbnailError] = useState('');
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
-  const [titleInput, setTitleInput] = useState('');
-  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
 
   const handlePreview = useCallback(() => {
     // バリデーションエラーをクリア
@@ -210,10 +208,11 @@ export default function NoticeNewClient({
 
         const result = await saveNotice(formData);
 
-        if (status === 'PUBLISHED' && result?.success) {
-          router.push('/admin/notice');
-        } else if (status === 'DRAFT' && result?.success) {
-          router.push('/admin/notice');
+        if (result?.success) {
+          router.push('/admin/notice/new/complete');
+        } else {
+          console.error('Save failed:', result?.error);
+          alert(result?.error || 'お知らせの保存に失敗しました');
         }
       } catch (error) {
         console.error('お知らせの保存に失敗:', error);
@@ -344,82 +343,19 @@ export default function NoticeNewClient({
         {/* タイトル */}
         <div>
           <FormFieldHeader>タイトル</FormFieldHeader>
-          <div className='relative'>
-            <input
-              type='text'
-              value={title}
-              onChange={e => {
-                const value = e.target.value;
-                if (value.length <= 60) {
-                  setTitle(value);
-                  setTitleError('');
-                  setShowTitleSuggestions(value.length > 0);
-                }
-              }}
-              onKeyDown={e => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const matchedTitle = existingTitles.find(
-                    existingTitle =>
-                      existingTitle
-                        .toLowerCase()
-                        .includes(title.toLowerCase()) &&
-                      existingTitle !== title
-                  );
-                  if (matchedTitle) {
-                    setTitle(matchedTitle);
-                    setShowTitleSuggestions(false);
-                  }
-                }
-              }}
-              onBlur={() => {
-                setTimeout(() => setShowTitleSuggestions(false), 200);
-              }}
-              onFocus={() => {
-                if (title.length > 0) {
-                  setShowTitleSuggestions(true);
-                }
-              }}
-              placeholder='お知らせのタイトルを入力してください'
-              className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]'
-            />
-            {showTitleSuggestions && title && (
-              <div className='absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto'>
-                {existingTitles
-                  .filter(
-                    existingTitle =>
-                      existingTitle
-                        .toLowerCase()
-                        .includes(title.toLowerCase()) &&
-                      existingTitle !== title
-                  )
-                  .slice(0, 10)
-                  .map((existingTitle, index) => (
-                    <button
-                      key={index}
-                      type='button'
-                      onClick={() => {
-                        setTitle(existingTitle);
-                        setShowTitleSuggestions(false);
-                        setTitleError('');
-                      }}
-                      className='w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0'
-                    >
-                      {existingTitle}
-                    </button>
-                  ))}
-                {existingTitles.filter(
-                  existingTitle =>
-                    existingTitle.toLowerCase().includes(title.toLowerCase()) &&
-                    existingTitle !== title
-                ).length === 0 && (
-                  <div className='px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
-                    一致するタイトルがありません
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <input
+            type='text'
+            value={title}
+            onChange={e => {
+              const value = e.target.value;
+              if (value.length <= 60) {
+                setTitle(value);
+                setTitleError('');
+              }
+            }}
+            placeholder='お知らせのタイトルを入力してください'
+            className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]'
+          />
           <div className='flex justify-between items-center mt-1'>
             <div>
               {titleError && (
@@ -469,22 +405,21 @@ export default function NoticeNewClient({
                 setTimeout(() => setShowCategorySuggestions(false), 200);
               }}
               onFocus={() => {
-                if (categoryInput.length > 0) {
-                  setShowCategorySuggestions(true);
-                }
+                setShowCategorySuggestions(true);
               }}
               placeholder='カテゴリ名を入力してください'
               className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]'
               disabled={selectedCategoryIds.length >= 3}
             />
-            {showCategorySuggestions && categoryInput && (
+            {showCategorySuggestions && (
               <div className='absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto'>
                 {categories
                   .filter(
                     category =>
-                      category.name
-                        .toLowerCase()
-                        .includes(categoryInput.toLowerCase()) &&
+                      (categoryInput === '' ||
+                        category.name
+                          .toLowerCase()
+                          .includes(categoryInput.toLowerCase())) &&
                       !selectedCategoryIds.includes(category.id)
                   )
                   .map(category => (
@@ -509,9 +444,10 @@ export default function NoticeNewClient({
                   ))}
                 {categories.filter(
                   category =>
-                    category.name
-                      .toLowerCase()
-                      .includes(categoryInput.toLowerCase()) &&
+                    (categoryInput === '' ||
+                      category.name
+                        .toLowerCase()
+                        .includes(categoryInput.toLowerCase())) &&
                     !selectedCategoryIds.includes(category.id)
                 ).length === 0 && (
                   <div className='px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
