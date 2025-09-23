@@ -406,25 +406,25 @@ export default function AccountClient({
         return;
       }
 
-      // 新しいメンバーをグループに追加
-      const newMembers = members.map((m, index) => ({
-        id: `member-${Date.now()}-${index}`,
-        name: m.email.split('@')[0], // 仮の名前
-        email: m.email,
-        permission: m.role as 'admin' | 'recruiter' | 'scout',
-      }));
+      // 新しいメンバーをグループに追加（リアルタイム表示を無効化）
+      // const newMembers = members.map((m, index) => ({
+      //   id: `member-${Date.now()}-${index}`,
+      //   name: m.email.split('@')[0], // 仮の名前
+      //   email: m.email,
+      //   permission: m.role as 'admin' | 'recruiter' | 'scout',
+      // }));
 
-      setGroups(prevGroups =>
-        prevGroups.map(group => {
-          if (group.id === inviteTarget.groupId) {
-            return {
-              ...group,
-              members: [...group.members, ...newMembers],
-            };
-          }
-          return group;
-        })
-      );
+      // setGroups(prevGroups =>
+      //   prevGroups.map(group => {
+      //     if (group.id === inviteTarget.groupId) {
+      //       return {
+      //         ...group,
+      //         members: [...group.members, ...newMembers],
+      //       };
+      //     }
+      //     return group;
+      //   })
+      // );
 
       setInviteTarget(null);
       setInviteCompleteOpen(true);

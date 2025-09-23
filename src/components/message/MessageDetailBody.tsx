@@ -14,18 +14,14 @@ export const MessageDetailBody: React.FC<MessageDetailBodyProps> = ({
 }) => {
   return (
     <div
-      id="message-detail-body"
+      id='message-detail-body'
       className={cn(
-        'flex flex-col gap-6 p-4 overflow-y-auto scrollbar-hide',
+        'flex flex-col gap-6 p-4',
         isCandidatePage ? 'bg-[#F9F9F9]' : 'bg-[#EFEFEF]', // 候補者画面は#F9F9F9、企業画面は#EFEFEF
         className
       )}
-      style={{ 
-        maxHeight: 'calc(100vh - 300px)',
+      style={{
         minHeight: '100%', // 親要素の高さいっぱいまで背景色を表示
-        scrollBehavior: 'smooth',
-        msOverflowStyle: 'none',  // IE and Edge
-        scrollbarWidth: 'none',    // Firefox
       }}
     >
       {children}

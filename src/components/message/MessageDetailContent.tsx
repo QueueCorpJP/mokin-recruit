@@ -131,8 +131,8 @@ export function MessageDetailContent({
                         ? messageCandidateName
                         : messageCompanyName
                       : isCandidatePage
-                      ? messageCompanyName
-                      : messageCandidateName}
+                        ? messageCompanyName
+                        : messageCandidateName}
                   </span>
                   <span className='font-["Noto_Sans_JP"] font-medium text-[14px] text-[#999999] tracking-[0.1em] leading-[1.6] text-right'>
                     {messageTime}
@@ -146,7 +146,9 @@ export function MessageDetailContent({
                       ? 'bg-white'
                       : `bg-[${isCandidatePage ? '#D2F1DA' : '#F0F9F3'}]`
                   } rounded-[5px] w-fit`}
-                  style={{ padding: '0px 16px 16px 16px' }}
+                  style={{
+                    padding: message.subject ? '16px' : '0px 16px 16px 16px',
+                  }}
                 >
                   {/* 件名がある場合は表示 */}
                   {message.subject && (

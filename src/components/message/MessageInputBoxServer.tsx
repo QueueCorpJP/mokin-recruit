@@ -166,8 +166,8 @@ export const MessageInputBoxServer: React.FC<{
     <div
       className='w-full py-4 bg-white border-t border-[#efefef] transition-all duration-200'
       style={{
-        paddingLeft: isExpanded ? '6px' : '24px',
-        paddingRight: isExpanded ? '6px' : '24px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
       }}
     >
       <div className='w-full flex flex-row flex-wrap md:flex-nowrap items-start mb-2 gap-x-2 gap-y-2'>
