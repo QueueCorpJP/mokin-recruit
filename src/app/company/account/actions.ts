@@ -8,6 +8,7 @@ import {
   getFromAddress,
   isSendgridConfigured,
   sendBatch,
+  sendInvitationEmail,
 } from '@/lib/email/sender';
 import { ok, fail } from '@/lib/server/actions/response';
 import { toDbPermission } from '@/lib/company/permissions';
@@ -96,9 +97,9 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
         companyUserId = newUser.id;
       }
 
-      // 権限付与（viewerはSCOUT_STAFFにマップ）
+      // グループ権限レコード作成
       const permission = toDbPermission(member.role);
-      const { error: permErr } = await supabase
+      const { error: inviteErr } = await supabase
         .from('company_user_group_permissions')
         .upsert({
           company_user_id: companyUserId!,
@@ -107,7 +108,7 @@ export async function createGroupAndInvite(payload: CreateGroupPayload) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-      if (permErr) continue;
+      if (inviteErr) continue;
 
       invited.push({ email, role: member.role });
     }
@@ -466,9 +467,9 @@ export async function inviteMembersToGroup(
         companyUserId = newUser.id;
       }
 
-      // 権限付与（admin→ADMINISTRATOR、scout/recruiter→SCOUT_STAFF）
+      // 招待ステータスでレコード作成（権限は後で付与）
       const permissionLevel = toDbPermission(member.role);
-      const { error: permErr } = await supabase
+      const { error: inviteErr } = await supabase
         .from('company_user_group_permissions')
         .upsert({
           company_user_id: companyUserId!,
@@ -477,14 +478,13 @@ export async function inviteMembersToGroup(
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-      if (permErr) continue;
+      if (inviteErr) continue;
 
       invited.push({ email, role: member.role });
     }
 
-    // SendGrid通知
+    // 招待メール送信
     if (await isSendgridConfigured()) {
-      const from = (await getFromAddress()) as string;
       const baseUrl = getBaseUrl();
       const groupJoinUrl = `${baseUrl}/signup/group?groupId=${groupRow.id}&companyId=${groupRow.company_account_id}`;
 
@@ -499,26 +499,22 @@ export async function inviteMembersToGroup(
         if (companyRow?.company_name) companyName = companyRow.company_name;
       } catch {}
 
-      const messages = invited.map(m => ({
-        to: m.email,
-        from,
-        subject: `【CuePoint】 ${groupRow.group_name}に招待されています`,
-        text: `【${companyName}】ご担当者様\n\nCuePointへの招待が届いています。\n招待リンクから企業グループに参加してください。\n\n=============================\n■ 企業名：${companyName}\n■ 企業グループ名：${groupRow.group_name}\n■ 招待リンク：${groupJoinUrl}\n=============================\n\nCuePoint\nhttps://cuepoint.jp/\n\n【お問い合わせ先】\n（メールアドレスが入ります）\n\n運営会社：メルセネール株式会社\n東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル`,
-        html: `
-          <div style="font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif; line-height: 1.8; color: #323232;">
-            <p>【${companyName}】ご担当者様</p>
-            <p>CuePointへの招待が届いています。<br/>招待リンクから企業グループに参加してください。</p>
-            <p>=============================</p>
-            <p>■ 企業名：${companyName}<br/>■ 企業グループ名：${groupRow.group_name}<br/>■ 招待リンク：<a href="${groupJoinUrl}" target="_blank" rel="noopener noreferrer">${groupJoinUrl}</a></p>
-            <p>=============================</p>
-            <p>CuePoint<br/><a href="https://cuepoint.jp/" target="_blank" rel="noopener noreferrer">https://cuepoint.jp/</a></p>
-            <p>【お問い合わせ先】<br/>（メールアドレスが入ります）</p>
-            <p>運営会社：メルセネール株式会社<br/>東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル</p>
-          </div>
-        `,
-      }));
-
-      await sendBatch(messages);
+      // 各招待者に個別にメール送信
+      for (const invitedMember of invited) {
+        try {
+          await sendInvitationEmail({
+            inviteeEmail: invitedMember.email,
+            companyName,
+            groupName: groupRow.group_name,
+            invitationUrl: groupJoinUrl,
+          });
+        } catch (emailError) {
+          console.error(
+            `招待メール送信エラー (${invitedMember.email}):`,
+            emailError
+          );
+        }
+      }
     }
 
     revalidateCompanyPaths('/company/account');

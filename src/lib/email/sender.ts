@@ -329,6 +329,108 @@ ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}
 }
 
 /**
+ * メンバー招待メールの送信パラメータ
+ */
+export interface InvitationParams {
+  inviteeEmail: string;
+  companyName: string;
+  groupName: string;
+  invitationUrl: string;
+}
+
+/**
+ * メンバー招待メールを送信
+ * @param params 招待メールパラメータ
+ * @returns 送信結果
+ */
+export async function sendInvitationEmail(
+  params: InvitationParams
+): Promise<EmailResult> {
+  try {
+    const subject = `【CuePoint】${params.companyName}様 ${params.groupName}に招待されています`;
+
+    const html = `
+<html>
+<body style="font-family: 'Hiragino Sans', 'ヒラギノ角ゴシック', 'Yu Gothic', 'メイリオ', Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h1 style="color: #2563eb; font-size: 18px; margin-bottom: 20px;">【CuePoint】${params.companyName}様 ${params.groupName}に招待されています</h1>
+
+    <p>${params.companyName}<br>
+    ご担当者様</p>
+
+    <p>CuePointへの招待が届いています。<br>
+    招待リンクから企業グループに参加してください。</p>
+
+    <div style="border: 2px solid #e5e7eb; padding: 20px; margin: 20px 0; background-color: #f9fafb;">
+      <p style="margin: 0 0 10px 0;"><strong>■ 企業名：</strong>${params.companyName}</p>
+      <p style="margin: 0 0 10px 0;"><strong>■ 企業グループ名：</strong>${params.groupName}</p>
+      <p style="margin: 0;"><strong>■ 招待リンク：</strong><a href="${params.invitationUrl}" style="color: #2563eb;">こちらをクリック</a></p>
+    </div>
+
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <p style="margin: 0 0 10px 0;"><strong>CuePoint</strong><br>
+      <a href="https://cuepoint.jp/" style="color: #2563eb;">https://cuepoint.jp/</a></p>
+
+      <p style="margin: 20px 0 0 0; font-size: 12px; color: #666;">
+        <strong>【お問い合わせ先】</strong><br>
+        ${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}<br><br>
+        運営会社：メルセネール株式会社<br>
+        東京都千代田区神田須田町１丁目３２番地 クレス不動産神田ビル
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    const text = `
+【CuePoint】${params.companyName}様 ${params.groupName}に招待されています
+
+${params.companyName}
+ご担当者様
+
+CuePointへの招待が届いています。
+招待リンクから企業グループに参加してください。
+
+──────────────────────────────
+■ 企業名 ： ${params.companyName}
+■ 企業グループ名 ： ${params.groupName}
+■ 招待リンク ： ${params.invitationUrl}
+──────────────────────────────
+
+===============================
+
+CuePoint
+https://cuepoint.jp/
+
+【お問い合わせ先】
+${process.env.SENDGRID_FROM_EMAIL || 'support@cuepoint.jp'}
+
+運営会社：メルセネール株式会社
+東京都千代田区神田須田町１丁目32番地 クレス不動産神田ビル
+`;
+
+    return await sendEmailViaSendGrid({
+      to: params.inviteeEmail,
+      subject,
+      html,
+      text,
+    });
+  } catch (error: any) {
+    logger.error('Failed to send invitation email:', {
+      error: error.message,
+      inviteeEmail: params.inviteeEmail.substring(0, 3) + '***',
+      companyName: params.companyName,
+      groupName: params.groupName,
+    });
+
+    return {
+      success: false,
+      error: '招待メールの送信に失敗しました',
+    };
+  }
+}
+
+/**
  * SendGridを使用して一括メール送信
  * @param messages メール送信リスト
  */

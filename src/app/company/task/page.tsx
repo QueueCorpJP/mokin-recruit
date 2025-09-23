@@ -1,11 +1,5 @@
-import { ChevronRightIcon } from 'lucide-react';
-import { FaqBox } from '@/components/ui/FaqBox';
 import { SectionHeading } from '@/components/ui/SectionHeading';
-import { Button } from '@/components/ui/button';
-import {
-  getCachedCompanyUser,
-  requireCompanyAuthForAction,
-} from '@/lib/auth/server';
+import { requireCompanyAuthForAction } from '@/lib/auth/server';
 import { getCompanyTaskData } from './action';
 import { getCompanyAccountData } from '@/lib/actions/company-task-data';
 import dynamic from 'next/dynamic';
@@ -56,12 +50,6 @@ const CompanyTaskSidebar = dynamic(
 
 import type { Room, LegacyTaskData } from '@/types';
 
-// TaskDataインターフェースはaction.tsからインポートされるため、ここでの定義は不要
-// ただし、旧形式との互換性のため、変換用のインターフェースを使用
-
-/**
- * 新しいaction.tsのデータを旧形式に変換
- */
 async function getTaskData(): Promise<LegacyTaskData> {
   // 新しいサーバーアクションを呼び出し
   const taskData = await getCompanyTaskData();

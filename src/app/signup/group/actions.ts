@@ -10,39 +10,13 @@ interface GroupSignupData {
   companyId: string;
 }
 
-// グループサインアップ用の認証テーブル作成が必要かチェックし、なければ既存のテーブルを流用
+// グループサインアップ用の認証処理（既存ユーザーでも新規グループに参加可能）
 export async function sendGroupSignupVerification(formData: GroupSignupData) {
   try {
     console.log('=== sendGroupSignupVerification開始 ===');
     console.log('フォームデータ:', { ...formData, password: '[HIDDEN]' });
 
     const supabase = getSupabaseAdminClient();
-
-    // 既存ユーザーが同じグループにすでに参加しているかチェック
-    console.log('グループ参加済みチェック中...');
-    const { data: existingPermission, error: permissionError } = await supabase
-      .from('company_user_group_permissions')
-      .select(
-        `
-        id,
-        company_users!inner(email)
-      `
-      )
-      .eq('company_users.email', formData.email)
-      .eq('company_group_id', formData.groupId)
-      .single();
-
-    if (permissionError && permissionError.code !== 'PGRST116') {
-      // PGRST116 = No rows found
-      console.error('グループ参加チェックエラー:', permissionError);
-      return { error: 'グループ参加状況の確認に失敗しました' };
-    }
-
-    if (existingPermission) {
-      console.log('ユーザーは既にこのグループに参加済み');
-      return { error: 'このグループには既に参加済みです' };
-    }
-    console.log('グループ参加チェック完了 - 参加可能');
 
     // グループとカンパニーの存在確認
     console.log('グループ存在チェック中...');
@@ -241,23 +215,28 @@ export async function verifyGroupSignupCode(email: string, code: string) {
       }
     } catch {}
 
-    // グループ権限を設定
-    console.log('グループ権限を設定中...');
-    const { error: permissionError } = await supabase
+    // グループ権限レコードを作成または更新
+    console.log('グループ権限レコードを作成中...');
+    const { error: upsertPermissionError } = await supabase
       .from('company_user_group_permissions')
-      .insert({
-        company_user_id: currentUser.id,
-        company_group_id: userData.group_id,
-        permission_level: 'SCOUT_STAFF', // デフォルトで一般スタッフ権限
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      .upsert(
+        {
+          company_user_id: currentUser.id,
+          company_group_id: userData.group_id,
+          permission_level: 'SCOUT_STAFF', // デフォルト権限
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'company_user_id,company_group_id',
+        }
+      );
 
-    if (permissionError) {
-      console.error('グループ権限設定エラー:', permissionError);
+    if (upsertPermissionError) {
+      console.error('グループ権限レコード作成エラー:', upsertPermissionError);
       return { error: 'グループ権限の設定に失敗しました' };
     } else {
-      console.log('グループ権限設定完了');
+      console.log('グループ権限レコード作成完了');
     }
 
     console.log('=== verifyGroupSignupCode完了（グループ参加完了） ===');

@@ -74,10 +74,11 @@ export function SavedSearchRecommendationsClient({
         setLoading(true);
 
         // 1) 保存済み検索履歴（上位3）: サーバーから初期値がある場合はそれを優先
-        if (!initialSavedSearches.length) {
+        if (!initialSavedSearches.length && companyGroupId) {
           const { data: histories, error: shError } = await supabase
             .from('search_history')
             .select('*')
+            .eq('group_id', companyGroupId) // グループIDでフィルタリング
             .order('searched_at', { ascending: false })
             .limit(20);
 
@@ -212,18 +213,28 @@ export function SavedSearchRecommendationsClient({
   const sections = useMemo(() => {
     return savedSearches.map(history => {
       const conditions = normalizeConditions(history.search_conditions || {});
-      let matched = searchCandidatesWithMockData(conditions, candidates).slice(
-        0,
-        3
+      console.log(
+        `[おすすめ候補者] グループ: ${history.group_name}, 検索条件:`,
+        conditions
       );
-      if (!matched.length) {
-        matched = candidates.slice(0, 3);
+
+      let matched = searchCandidatesWithMockData(conditions, candidates);
+      console.log(`[おすすめ候補者] 条件マッチ結果: ${matched.length}件`);
+
+      // 条件にマッチした候補者を優先し、足りない場合は最新ログイン順で補填
+      if (matched.length < 3) {
+        const matchedIds = new Set(matched.map(c => c.candidateId));
+        const additional = candidates
+          .filter(c => !matchedIds.has(c.candidateId))
+          .slice(0, 3 - matched.length);
+        matched = [...matched, ...additional];
       }
+
       return {
         id: history.id,
         groupName: history.group_name,
         title: history.search_title,
-        candidates: matched,
+        candidates: matched.slice(0, 3),
       };
     });
   }, [savedSearches, candidates]);

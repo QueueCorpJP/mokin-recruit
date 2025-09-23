@@ -17,11 +17,14 @@ interface RoomMessagesDisplayProps {
   isMobile?: boolean;
 }
 
-export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessagesDisplayProps) {
+export function RoomMessagesDisplay({
+  messages,
+  isMobile = false,
+}: RoomMessagesDisplayProps) {
   if (messages.length === 0) {
     return (
       <MessageDetailBody>
-        <div className="text-center text-gray-500 p-8">
+        <div className='text-center text-gray-500 p-8'>
           このルームにはまだメッセージがありません
         </div>
       </MessageDetailBody>
@@ -32,10 +35,10 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
     <MessageDetailBody>
       {messages.map((message, index) => {
         const isCompany = message.senderType === 'COMPANY_USER';
-        
+
         return (
-          <div 
-            key={message.id} 
+          <div
+            key={message.id}
             className={`flex w-full pl-0 pr-0 md:pl-12 md:pr-12 gap-2 ${
               index > 0 ? 'mt-6' : ''
             } ${isCompany ? 'justify-end' : 'justify-start'}`}
@@ -45,12 +48,12 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                 40×40
               </div>
             )}
-            
+
             <div
               className={`flex flex-col ${isCompany ? 'items-end' : 'items-start'}`}
-              style={{ 
+              style={{
                 maxWidth: isMobile ? '80%' : '70%',
-                minWidth: '200px'
+                minWidth: '200px',
               }}
             >
               <div className='flex flex-row items-center w-full mb-2'>
@@ -81,8 +84,13 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                   </>
                 )}
               </div>
-              
-              <div className={`rounded-[5px] w-fit ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`} style={{padding: '8px 16px 16px 16px'}}>
+
+              <div
+                className={`rounded-[5px] w-fit ${isCompany ? 'bg-white' : 'bg-[#D2F1DA]'}`}
+                style={{
+                  padding: message.subject ? '16px' : '8px 16px 16px 16px',
+                }}
+              >
                 {/* 件名がある場合は表示 */}
                 {message.subject && (
                   <>
@@ -109,14 +117,14 @@ export function RoomMessagesDisplay({ messages, isMobile = false }: RoomMessages
                     />
                   </>
                 )}
-                
+
                 {/* メッセージ本文は常に表示 */}
                 <div className='font-["Noto_Sans_JP"] font-medium text-[16px] text-[#323232] tracking-[0.1em] leading-[2] whitespace-pre-line mt-2 max-w-full overflow-hidden'>
                   {message.content}
                 </div>
               </div>
             </div>
-            
+
             {isCompany && !isMobile && (
               <div className='w-10 h-10 rounded-full bg-[#eee] flex items-center justify-center text-xs text-[#999999] flex-shrink-0 mt-[27px]'>
                 40×40
