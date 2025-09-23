@@ -40,7 +40,8 @@ export async function getArticle(id: string): Promise<Article | null> {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('articles')
-      .select(`
+      .select(
+        `
         id, title, excerpt, content, thumbnail_url, published_at, created_at, updated_at, status, slug,
         article_category_relations(
           article_categories(name)
@@ -48,7 +49,8 @@ export async function getArticle(id: string): Promise<Article | null> {
         article_tag_relations(
           article_tags(name)
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single();
 
@@ -68,8 +70,14 @@ export async function getArticle(id: string): Promise<Article | null> {
       updated_at: data.updated_at,
       status: data.status,
       slug: data.slug,
-      categories: data.article_category_relations?.map(rel => (rel.article_categories as any)?.name) || [],
-      tags: data.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
+      categories:
+        data.article_category_relations?.map(
+          rel => (rel.article_categories as any)?.name
+        ) || [],
+      tags:
+        data.article_tag_relations?.map(
+          rel => (rel.article_tags as any)?.name
+        ) || [],
     };
   } catch (error) {
     console.error('記事取得エラー:', error);
@@ -77,12 +85,16 @@ export async function getArticle(id: string): Promise<Article | null> {
   }
 }
 
-export async function getAllArticles(limit: number = 50, offset: number = 0): Promise<Article[]> {
+export async function getAllArticles(
+  limit: number = 50,
+  offset: number = 0
+): Promise<Article[]> {
   try {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
       .from('articles')
-      .select(`
+      .select(
+        `
         id, title, excerpt, content, thumbnail_url, published_at, created_at, updated_at, status, slug,
         article_category_relations(
           article_categories(name)
@@ -90,26 +102,35 @@ export async function getAllArticles(limit: number = 50, offset: number = 0): Pr
         article_tag_relations(
           article_tags(name)
         )
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) throw error;
 
-    return data?.map(article => ({
-      id: article.id,
-      title: article.title,
-      excerpt: article.excerpt || '',
-      content: article.content,
-      thumbnail_url: article.thumbnail_url,
-      published_at: article.published_at,
-      created_at: article.created_at,
-      updated_at: article.updated_at,
-      status: article.status,
-      slug: article.slug,
-      categories: article.article_category_relations?.map(rel => (rel.article_categories as any)?.name) || [],
-      tags: article.article_tag_relations?.map(rel => (rel.article_tags as any)?.name) || []
-    })) || [];
+    return (
+      data?.map(article => ({
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt || '',
+        content: article.content,
+        thumbnail_url: article.thumbnail_url,
+        published_at: article.published_at,
+        created_at: article.created_at,
+        updated_at: article.updated_at,
+        status: article.status,
+        slug: article.slug,
+        categories:
+          article.article_category_relations?.map(
+            rel => (rel.article_categories as any)?.name
+          ) || [],
+        tags:
+          article.article_tag_relations?.map(
+            rel => (rel.article_tags as any)?.name
+          ) || [],
+      })) || []
+    );
   } catch (error) {
     console.error('記事一覧取得エラー:', error);
     return [];
@@ -133,7 +154,9 @@ export async function getCategories(): Promise<ArticleCategory[]> {
   }
 }
 
-export async function createCategory(name: string): Promise<ArticleCategory | null> {
+export async function createCategory(
+  name: string
+): Promise<ArticleCategory | null> {
   try {
     const supabase = getSupabaseAdminClient();
     const { data, error } = await supabase
@@ -142,7 +165,14 @@ export async function createCategory(name: string): Promise<ArticleCategory | nu
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error(
+          `カテゴリー「${name}」は既に存在します。別の名前を入力してください。`
+        );
+      }
+      throw error;
+    }
     return data;
   } catch (error) {
     console.error('カテゴリー作成エラー:', error);
@@ -168,13 +198,13 @@ export async function updateCategory(id: string, name: string): Promise<void> {
 export async function deleteCategory(id: string): Promise<void> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     // 関連付けも削除
     await supabase
       .from('article_category_relations')
       .delete()
       .eq('category_id', id);
-    
+
     const { error } = await supabase
       .from('article_categories')
       .delete()
@@ -187,7 +217,9 @@ export async function deleteCategory(id: string): Promise<void> {
   }
 }
 
-export async function getCategoryArticleCount(categoryId: string): Promise<number> {
+export async function getCategoryArticleCount(
+  categoryId: string
+): Promise<number> {
   try {
     const supabase = getSupabaseAdminClient();
     const { count, error } = await supabase
@@ -229,7 +261,14 @@ export async function createTag(name: string): Promise<ArticleTag | null> {
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') {
+        throw new Error(
+          `タグ「${name}」は既に存在します。別の名前を入力してください。`
+        );
+      }
+      throw error;
+    }
     return data;
   } catch (error) {
     console.error('タグ作成エラー:', error);
@@ -255,17 +294,11 @@ export async function updateTag(id: string, name: string): Promise<void> {
 export async function deleteTag(id: string): Promise<void> {
   try {
     const supabase = getSupabaseAdminClient();
-    
+
     // 関連付けも削除
-    await supabase
-      .from('article_tag_relations')
-      .delete()
-      .eq('tag_id', id);
-    
-    const { error } = await supabase
-      .from('article_tags')
-      .delete()
-      .eq('id', id);
+    await supabase.from('article_tag_relations').delete().eq('tag_id', id);
+
+    const { error } = await supabase.from('article_tags').delete().eq('id', id);
 
     if (error) throw error;
   } catch (error) {

@@ -79,9 +79,17 @@ export function Footer({
         case '運営会社':
           return '/about-company';
         case '利用規約':
-          return variant === 'candidate' ? '/candidate/terms' : '/terms';
+          return variant === 'candidate'
+            ? '/candidate/terms'
+            : variant === 'company'
+              ? '/company/terms'
+              : '/terms';
         case 'プライバシーポリシー':
-          return variant === 'candidate' ? '/candidate/privacy' : '/privacy';
+          return variant === 'candidate'
+            ? '/candidate/privacy'
+            : variant === 'company'
+              ? '/company/privacy'
+              : '/privacy';
         case '法令に基づく表記':
           return variant === 'candidate' ? '/candidate/legal' : '/legal';
         default:
