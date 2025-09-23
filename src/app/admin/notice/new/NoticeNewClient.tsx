@@ -86,11 +86,13 @@ interface NoticeCategory {
 
 interface NewNoticeFormProps {
   categories: NoticeCategory[];
+  existingTitles: string[];
   saveNotice: (formData: FormData) => Promise<any>;
 }
 
 export default function NoticeNewClient({
   categories,
+  existingTitles,
   saveNotice,
 }: NewNoticeFormProps) {
   const router = useRouter();
@@ -105,6 +107,8 @@ export default function NoticeNewClient({
   const [thumbnailError, setThumbnailError] = useState('');
   const [categoryInput, setCategoryInput] = useState('');
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [titleInput, setTitleInput] = useState('');
+  const [showTitleSuggestions, setShowTitleSuggestions] = useState(false);
 
   const handlePreview = useCallback(() => {
     // バリデーションエラーをクリア
@@ -340,18 +344,82 @@ export default function NoticeNewClient({
         {/* タイトル */}
         <div>
           <FormFieldHeader>タイトル</FormFieldHeader>
-          <AdminTextarea
-            value={title}
-            onChange={value => {
-              if (value.length <= 60) {
-                setTitle(value);
-                setTitleError('');
-              }
-            }}
-            placeholder='お知らせのタイトルを入力してください'
-            height='h-20'
-            rows={2}
-          />
+          <div className='relative'>
+            <input
+              type='text'
+              value={title}
+              onChange={e => {
+                const value = e.target.value;
+                if (value.length <= 60) {
+                  setTitle(value);
+                  setTitleError('');
+                  setShowTitleSuggestions(value.length > 0);
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const matchedTitle = existingTitles.find(
+                    existingTitle =>
+                      existingTitle
+                        .toLowerCase()
+                        .includes(title.toLowerCase()) &&
+                      existingTitle !== title
+                  );
+                  if (matchedTitle) {
+                    setTitle(matchedTitle);
+                    setShowTitleSuggestions(false);
+                  }
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowTitleSuggestions(false), 200);
+              }}
+              onFocus={() => {
+                if (title.length > 0) {
+                  setShowTitleSuggestions(true);
+                }
+              }}
+              placeholder='お知らせのタイトルを入力してください'
+              className='w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] placeholder:text-[#999999]'
+            />
+            {showTitleSuggestions && title && (
+              <div className='absolute z-10 w-full mt-1 bg-white border border-[#999999] rounded-[5px] shadow-lg max-h-60 overflow-y-auto'>
+                {existingTitles
+                  .filter(
+                    existingTitle =>
+                      existingTitle
+                        .toLowerCase()
+                        .includes(title.toLowerCase()) &&
+                      existingTitle !== title
+                  )
+                  .slice(0, 10)
+                  .map((existingTitle, index) => (
+                    <button
+                      key={index}
+                      type='button'
+                      onClick={() => {
+                        setTitle(existingTitle);
+                        setShowTitleSuggestions(false);
+                        setTitleError('');
+                      }}
+                      className='w-full px-[11px] py-[8px] text-left text-[16px] text-[#323232] font-medium tracking-[1.6px] hover:bg-[#f5f5f5] border-b border-[#f0f0f0] last:border-b-0'
+                    >
+                      {existingTitle}
+                    </button>
+                  ))}
+                {existingTitles.filter(
+                  existingTitle =>
+                    existingTitle.toLowerCase().includes(title.toLowerCase()) &&
+                    existingTitle !== title
+                ).length === 0 && (
+                  <div className='px-[11px] py-[8px] text-[16px] text-[#999999] font-medium tracking-[1.6px]'>
+                    一致するタイトルがありません
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className='flex justify-between items-center mt-1'>
             <div>
               {titleError && (

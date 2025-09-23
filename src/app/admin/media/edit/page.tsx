@@ -1,12 +1,7 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useAdminAuth } from '@/hooks/useClientAuth';
-import { AccessRestricted } from '@/components/AccessRestricted';
 import { createServerAdminClient } from '@/lib/supabase/server-admin';
 import EditMediaForm from './EditMediaForm';
 import { saveArticle } from './actions';
+import EditMediaPageClient from './EditMediaPageClient';
 
 interface Category {
   id: string;
@@ -27,36 +22,44 @@ interface ArticleData {
   thumbnail_url?: string;
   created_at: string;
   updated_at: string;
-  article_categories: { id: string; name: string; }[];
-  article_tags: { id: string; name: string; }[];
+  article_categories: { id: string; name: string }[];
+  article_tags: { id: string; name: string }[];
 }
 
 // 画像URL変数を実際のURLに変換する関数
 function replaceImageVariables(content: string): string {
   if (!content) return content;
-  
+
   let processedContent = content;
-  
+
   // 既にSupabase URLが含まれている場合はそのまま返す
   if (processedContent.includes('/storage/v1/object/public/blog/')) {
     return processedContent;
   }
-  
+
   // ハードコードされたSupabase URL（client.tsと同じ値を使用）
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mjhqeagxibsklugikyma.supabase.co';
-  
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://mjhqeagxibsklugikyma.supabase.co';
+
   // src属性内の{{image:filename}}形式の変数を実際のURLに変換
-  processedContent = processedContent.replace(/src=["']?\{\{image:([^}]+)\}\}["']?/g, (match, filename) => {
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
-    return `src="${publicUrl}"`;
-  });
-  
+  processedContent = processedContent.replace(
+    /src=["']?\{\{image:([^}]+)\}\}["']?/g,
+    (match, filename) => {
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
+      return `src="${publicUrl}"`;
+    }
+  );
+
   // 単体の{{image:filename}} 形式の変数を実際のURLに変換
-  processedContent = processedContent.replace(/\{\{image:([^}]+)\}\}/g, (match, filename) => {
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
-    return publicUrl;
-  });
-  
+  processedContent = processedContent.replace(
+    /\{\{image:([^}]+)\}\}/g,
+    (match, filename) => {
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/blog/content/images/${filename}`;
+      return publicUrl;
+    }
+  );
+
   return processedContent;
 }
 
@@ -66,11 +69,11 @@ async function fetchDataForEdit(articleId?: string): Promise<{
   articleData: ArticleData | null;
 }> {
   const supabase = createServerAdminClient();
-  
+
   // カテゴリとタグを取得
   const [categoriesResult, tagsResult] = await Promise.all([
     supabase.from('article_categories').select('*').order('name'),
-    supabase.from('article_tags').select('*').order('name')
+    supabase.from('article_tags').select('*').order('name'),
   ]);
 
   if (categoriesResult.error) {
@@ -103,21 +106,25 @@ async function fetchDataForEdit(articleId?: string): Promise<{
         supabase
           .from('article_tag_relations')
           .select('tag_id, article_tags(id, name)')
-          .eq('article_id', articleId)
+          .eq('article_id', articleId),
       ]);
-      
+
       const categoryRelations = categoryRelationsResult.data;
       const tagRelations = tagRelationsResult.data;
 
       // データを整形
       const processedContent = replaceImageVariables(article.content || '');
-      
+
       articleData = {
         ...article,
-        article_categories: categoryRelations?.map(rel => rel.article_categories).filter(Boolean) || [],
-        article_tags: tagRelations?.map(rel => rel.article_tags).filter(Boolean) || [],
+        article_categories:
+          categoryRelations
+            ?.map(rel => rel.article_categories)
+            .filter(Boolean) || [],
+        article_tags:
+          tagRelations?.map(rel => rel.article_tags).filter(Boolean) || [],
         // コンテンツ内の画像変数を実際のURLに変換
-        content: processedContent
+        content: processedContent,
       };
     }
   }
@@ -125,56 +132,23 @@ async function fetchDataForEdit(articleId?: string): Promise<{
   return {
     categories: categoriesResult.data || [],
     tags: tagsResult.data || [],
-    articleData
+    articleData,
   };
 }
 
-export default function EditMediaPage() {
-  const { isAdmin, loading } = useAdminAuth();
-  const searchParams = useSearchParams();
-  const articleId = searchParams.get('id');
-  
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [articleData, setArticleData] = useState<ArticleData | null>(null);
-  const [dataLoading, setDataLoading] = useState(true);
+interface EditMediaPageProps {
+  searchParams: { id?: string };
+}
 
-  useEffect(() => {
-    if (isAdmin) {
-      fetchDataForEdit(articleId || undefined)
-        .then(({ categories, tags, articleData }) => {
-          setCategories(categories);
-          setTags(tags);
-          setArticleData(articleData);
-        })
-        .catch(console.error)
-        .finally(() => setDataLoading(false));
-    }
-  }, [isAdmin, articleId]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">認証状態を確認中...</div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return <AccessRestricted userType="admin" />;
-  }
-
-  if (dataLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">データを読み込み中...</div>
-      </div>
-    );
-  }
+export default async function EditMediaPage({
+  searchParams,
+}: EditMediaPageProps) {
+  const articleId = searchParams.id;
+  const { categories, tags, articleData } = await fetchDataForEdit(articleId);
 
   return (
-    <EditMediaForm 
-      categories={categories} 
+    <EditMediaPageClient
+      categories={categories}
       tags={tags}
       saveArticle={saveArticle}
       initialArticle={articleData}

@@ -4,6 +4,8 @@ import { AdminPageTitle } from '@/components/admin/AdminPageTitle';
 import AddNGKeywordButton from './AddNGKeywordButton';
 import NGKeywordListClient from './NGKeywordListClient';
 
+export const dynamic = 'force-dynamic';
+
 // NGキーワード型
 interface NGKeywordItem {
   id: string;
@@ -30,9 +32,9 @@ export default async function NGWordPage() {
   const ngKeywords = await fetchNGKeywords();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="bg-white rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
+    <div className='min-h-screen bg-gray-50 p-6'>
+      <div className='bg-white rounded-lg overflow-hidden'>
+        <div className='overflow-x-auto'>
           <NGKeywordListClient ngKeywords={ngKeywords} />
         </div>
       </div>
