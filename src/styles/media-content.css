@@ -3,14 +3,14 @@
 /* h2スタイル */
 .prose h2,
 .media-content-editor h2 {
-  color: #0F9058 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  color: #0f9058 !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 24px !important;
   font-style: normal !important;
   font-weight: 700 !important;
   line-height: 160% !important; /* 38.4px */
   letter-spacing: 2.4px !important;
-  border-bottom: 2px solid #0F9058 !important;
+  border-bottom: 2px solid #0f9058 !important;
   padding-bottom: 8px !important;
   margin-bottom: 16px !important;
 }
@@ -18,13 +18,13 @@
 /* h3スタイル */
 .prose h3,
 .media-content-editor h3 {
-  color: #0F9058 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  color: #0f9058 !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 20px !important;
   font-style: normal !important;
   font-weight: 700 !important;
   line-height: 160% !important;
-  letter-spacing: 2.0px !important;
+  letter-spacing: 2px !important;
   border-bottom: none !important;
   padding-bottom: 0 !important;
   margin-bottom: 14px !important;
@@ -34,7 +34,7 @@
 .prose li,
 .media-content-editor li {
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -55,12 +55,24 @@
 .prose ul li,
 .media-content-editor ul li {
   list-style-type: disc !important;
+  color: #323232 !important;
+}
+
+.prose ul li::marker,
+.media-content-editor ul li::marker {
+  color: #323232 !important;
 }
 
 /* 番号付きリスト（ol）のliスタイル */
 .prose ol li,
 .media-content-editor ol li {
   list-style-type: decimal !important;
+  color: #323232 !important;
+}
+
+.prose ol li::marker,
+.media-content-editor ol li::marker {
+  color: #323232 !important;
 }
 
 /* 目次スタイル */
@@ -73,7 +85,7 @@
   gap: 8px !important;
   align-self: stretch !important;
   border-radius: 24px !important;
-  border: 2px solid #0F9058 !important;
+  border: 2px solid #0f9058 !important;
   margin: 16px 0 !important;
 }
 
@@ -97,8 +109,8 @@
 
 .prose .table-of-contents .toc-title,
 .media-content-editor .table-of-contents .toc-title {
-  color: #0F9058 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  color: #0f9058 !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 18px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -110,7 +122,7 @@
 .prose .table-of-contents .toc-item,
 .media-content-editor .table-of-contents .toc-item {
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 700 !important;
@@ -124,7 +136,7 @@
 .prose p,
 .media-content-editor p {
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -136,13 +148,13 @@
 /* 線のスタイル */
 .prose hr,
 .media-content-editor hr {
-  fill: #0F9058 !important;
+  fill: #0f9058 !important;
   stroke-width: 2px !important;
-  stroke: #0F9058 !important;
+  stroke: #0f9058 !important;
   height: 0 !important;
   align-self: stretch !important;
   border: none !important;
-  border-top: 2px solid #0F9058 !important;
+  border-top: 2px solid #0f9058 !important;
   margin: 24px 0 !important;
 }
 
@@ -174,14 +186,14 @@
   padding: 8px 12px !important;
   text-align: center !important;
   vertical-align: middle !important;
-  border: 1px solid #DCDCDC !important;
-  background: #EFEFEF !important;
+  border: 1px solid #dcdcdc !important;
+  background: #efefef !important;
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 1.0 !important;
+  line-height: 1 !important;
   letter-spacing: 1.4px !important;
 }
 
@@ -194,13 +206,13 @@
   padding: 8px 12px !important;
   text-align: center !important;
   vertical-align: middle !important;
-  border: 1px solid #DCDCDC !important;
+  border: 1px solid #dcdcdc !important;
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 14px !important;
   font-style: normal !important;
   font-weight: 500 !important;
-  line-height: 1.0 !important;
+  line-height: 1 !important;
   letter-spacing: 1.4px !important;
 }
 
@@ -217,9 +229,9 @@
   gap: 10px !important;
   margin: 16px 0 !important;
   border: none !important;
-  border-top: 1px solid #0F9058 !important;
-  border-bottom: 1px solid #0F9058 !important;
-  background: #F0F9F3 !important;
+  border-top: 1px solid #0f9058 !important;
+  border-bottom: 1px solid #0f9058 !important;
+  background: #f0f9f3 !important;
 }
 
 /* 引用コンテナスタイル（監修者デザインを参考） */
@@ -233,8 +245,8 @@
   padding: 20px !important;
   margin: 16px 0 !important;
   border: none !important;
-  border-left: 2px solid #DCDCDC !important;
-  background: #EFEFEF !important;
+  border-left: 2px solid #dcdcdc !important;
+  background: #efefef !important;
   white-space: pre-wrap !important;
   overflow: visible !important;
   word-wrap: break-word !important;
@@ -246,7 +258,7 @@
 .prose .author-container p,
 .media-content-editor .author-container p {
   color: #323232 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: normal !important;
   font-weight: 500 !important;
@@ -259,7 +271,7 @@
 .prose .quote-container,
 .media-content-editor .quote-container {
   color: #666666 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: italic !important;
   font-weight: 500 !important;
@@ -281,7 +293,7 @@
 .prose .quote-container p,
 .media-content-editor .quote-container p {
   color: #666666 !important;
-  font-family: var(--font-noto-sans-jp, "Noto Sans JP") !important;
+  font-family: var(--font-noto-sans-jp, 'Noto Sans JP') !important;
   font-size: 16px !important;
   font-style: italic !important;
   font-weight: 500 !important;
@@ -290,8 +302,6 @@
   margin: 0 !important;
   padding: 0 !important;
 }
-
-
 
 /* 画像のスタイル（サムネと同じデザイン） */
 .prose img,

@@ -2,14 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from '@/components/admin/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/admin/ui/select';
 import dynamic from 'next/dynamic';
 
 const RichTextEditor = dynamic(
