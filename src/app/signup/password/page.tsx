@@ -127,21 +127,25 @@ export default function SignupPasswordPage() {
 
   const validatePasswords = useCallback((): boolean => {
     if (!password) {
-      setError('パスワードは必須です');
+      setError('パスワードを入力してください。');
       return false;
     }
     if (password.length < 8) {
-      setError('パスワードは8文字以上で入力してください');
+      setError('パスワードは8文字以上で入力してください。');
       return false;
     }
     // 半角英数字・記号のみチェック
     const validCharRegex = /^[\x20-\x7E]*$/;
     if (!validCharRegex.test(password)) {
-      setError('半角英数字・記号のみで入力してください');
+      setError('パスワードは半角英数字・記号を含めて入力してください。');
+      return false;
+    }
+    if (!confirmPassword) {
+      setError('確認用パスワードを入力してください。');
       return false;
     }
     if (password !== confirmPassword) {
-      setError('パスワードが一致しません');
+      setError('新規パスワードと一致しません。');
       return false;
     }
     setError('');

@@ -606,11 +606,15 @@ export default function SearchClient({
           companyName: (safeResults[0] as any)?.companyName,
           position: (safeResults[0] as any)?.position,
         });
+        setCandidates(safeResults as any);
       } else {
         console.log('⚠️ [SearchClient] 検索結果が0件です');
+        setCandidates([]);
+        // 検索結果が0件の場合はエラーメッセージを表示
+        setError(
+          '検索条件に一致する候補者が見つかりませんでした。条件を変更して再度お試しください。'
+        );
       }
-
-      setCandidates(safeResults as any);
 
       // 検索ボックスを閉じる
       setIsSearchBoxOpen(false);
@@ -814,7 +818,17 @@ export default function SearchClient({
         setError(null);
 
         // 初期候補者データを設定
+        console.log(
+          '[DEBUG SearchClient] initialCandidates.length:',
+          initialCandidates.length
+        );
+
         if (initialCandidates.length > 0) {
+          console.log(
+            '✅ [SearchClient] サーバーから受信した初期データを使用:',
+            initialCandidates.length,
+            '件'
+          );
           setAllCandidates(initialCandidates);
           setCandidates(initialCandidates);
         } else {
@@ -837,6 +851,10 @@ export default function SearchClient({
               companyName: (candidatesData[0] as any)?.companyName,
               position: (candidatesData[0] as any)?.position,
             });
+          } else {
+            console.warn(
+              '⚠️ [SearchClient] 候補者データが0件です。データベース接続を確認してください。'
+            );
           }
 
           setAllCandidates(candidatesData);
@@ -930,12 +948,19 @@ export default function SearchClient({
 
     if (hasUrlParams) {
       // 外部パラメータがある場合は自動検索実行
-      console.log('[DEBUG] URLパラメータを検出、自動検索を実行します');
+      console.log('[DEBUG] URLパラメータを検出、自動検索を実行します', {
+        hasParams: true,
+        paramsCount: Array.from(searchParams.entries()).length,
+      });
       handleSearch();
     } else {
       // パラメータがない場合は全候補者を表示
+      console.log('[DEBUG] URLパラメータなし、全候補者を表示します', {
+        allCandidatesLength: allCandidates.length,
+      });
       setCandidates(allCandidates);
       setCurrentPage(1);
+      setError(null); // エラー状態をクリア
     }
   }, [isHydrated, allCandidates, handleSearch, searchParams]); // 依存関係を最小限に
 
@@ -2861,16 +2886,18 @@ export default function SearchClient({
         maxSelections={6}
       />
 
-      {/* サイドバー表示 */}
-      <CandidateSlideMenu
-        isOpen={isSlidePanelOpen}
-        onClose={() => {
-          setIsSlidePanelOpen(false);
-          setSelectedCandidateId(null);
-        }}
-        candidateId={selectedCandidateId || undefined}
-        companyGroupId={searchStore.searchGroup}
-      />
+      {/* サイドバー表示 - 候補者が選択されている場合のみレンダリング */}
+      {selectedCandidateId && (
+        <CandidateSlideMenu
+          isOpen={isSlidePanelOpen}
+          onClose={() => {
+            setIsSlidePanelOpen(false);
+            setSelectedCandidateId(null);
+          }}
+          candidateId={selectedCandidateId}
+          companyGroupId={searchStore.searchGroup}
+        />
+      )}
     </>
   );
 }

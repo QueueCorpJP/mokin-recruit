@@ -61,3 +61,6 @@ Thumbs.db
 
 # MCP Server
 postman/postman-mcp-server
+
+# Serena directory
+.serena/

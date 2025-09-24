@@ -10,6 +10,7 @@ import { getRoomIdAction } from '@/lib/actions/get-room-id';
 import {
   updateSelectionProgressAction,
   getSelectionProgressAction,
+  getAllSelectionProgressAction,
 } from '@/lib/actions/selection-progress';
 import type { CandidateDetailData } from '@/lib/server/candidate/recruitment-queries';
 import {
@@ -103,6 +104,15 @@ export function CandidateSlideMenu({
   jobOptions = [],
   onJobChange,
 }: CandidateSlideMenuProps) {
+  // 必要なpropsがない場合は早期リターン
+  if (!candidateId || !companyGroupId) {
+    console.warn('[CandidateSlideMenu] 必要なpropsが不足しています:', {
+      candidateId,
+      companyGroupId,
+    });
+    return null;
+  }
+
   console.log('[DEBUG] CandidateSlideMenu props:', {
     candidateId,
     companyGroupId,
@@ -119,7 +129,7 @@ export function CandidateSlideMenu({
   const [isHidden, setIsHidden] = useState(false);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [selectedStage, setSelectedStage] = useState<string>('');
-  const [selectionProgress, setSelectionProgress] = useState<any>(null);
+  const [selectionProgress, setSelectionProgress] = useState<any[]>([]);
 
   // 同じグループの求人のみをフィルタリング（CandidateCardと同じロジック）
   const filteredJobOptions = jobOptions.filter(
@@ -278,7 +288,7 @@ export function CandidateSlideMenu({
       Promise.all([
         getSavedCandidatesAction(companyGroupId),
         getHiddenCandidatesAction(companyGroupId),
-        getSelectionProgressAction(candidateId, companyGroupId),
+        getAllSelectionProgressAction(candidateId),
       ])
         .then(([savedResult, hiddenResult, progressResult]) => {
           // 保存状態（ピックアップ）の設定
@@ -291,11 +301,11 @@ export function CandidateSlideMenu({
             setIsHidden(hiddenResult.data.includes(candidateId));
           }
 
-          // 選考進捗の設定
+          // 選考進捗の設定（複数の進捗を配列で設定）
           if (progressResult.success && progressResult.data) {
             setSelectionProgress(progressResult.data);
           } else {
-            setSelectionProgress(null);
+            setSelectionProgress([]);
           }
         })
         .catch(error => {
@@ -493,21 +503,25 @@ export function CandidateSlideMenu({
     setShowSelectionModal(true);
   };
 
-  if (!isOpen) return null;
-
+  // 常にレンダリングして、isOpenでポインターイベントを制御
   return (
     <>
       {/* 半透明のオーバーレイ */}
-      <div
-        className='fixed inset-0 bg-black/30 z-40 transition-opacity duration-300'
-        onClick={onClose}
-      />
+      {isOpen && (
+        <div
+          className='fixed inset-0 bg-black/30 z-40 transition-opacity duration-300'
+          onClick={onClose}
+        />
+      )}
 
       {/* スライドメニュー */}
       <div
         className={`fixed top-0 right-0 h-full w-[1000px] bg-white z-50 shadow-xl transform transition-transform duration-300 ease-in-out flex flex-col ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen
+            ? 'translate-x-0 pointer-events-auto'
+            : 'translate-x-full pointer-events-none'
         }`}
+        style={{ visibility: isOpen ? 'visible' : 'hidden' }}
       >
         {/* ヘッダーセクション */}
         <div className='bg-white px-10 py-6 border-b border-[#efefef] flex-shrink-0'>
@@ -1606,345 +1620,182 @@ export function CandidateSlideMenu({
                       </div>
 
                       {candidateData ? (
-                        <div className='flex flex-col gap-4'>
-                          {/* Group and Job - CandidateCardと完全に同じ構造 */}
-                          <div className='flex flex-col sm:flex-row gap-[18px] items-stretch sm:items-center w-full h-auto sm:h-[38px]'>
-                            <div className='bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-5 py-0 w-full sm:w-[240px] h-[38px] flex items-center justify-center flex-shrink-0'>
-                              <span
-                                className='text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] text-center w-full sm:w-[200px] h-[22px] truncate'
-                                style={{
-                                  fontFamily: 'Noto Sans JP, sans-serif',
-                                }}
+                        <div className='flex flex-col gap-6'>
+                          {/* 複数の選考進捗を表示 */}
+                          {!selectionProgress ||
+                          selectionProgress.length === 0 ? (
+                            <div className='text-center text-[#999] py-4'>
+                              選考進捗はありません
+                            </div>
+                          ) : (
+                            selectionProgress.map((progress, index) => (
+                              <div
+                                key={progress.id || index}
+                                className='flex flex-col gap-4 border-b border-[#E5E5E5] pb-6 last:border-b-0 last:pb-0'
                               >
-                                {selectionProgress?.group_name ||
-                                  candidateData.group}
-                              </span>
-                            </div>
-                            <div
-                              className='flex-1 flex gap-4 items-center w-full sm:w-[602px] h-[38px]'
-                              onClick={e => e.stopPropagation()}
-                            >
-                              <SelectInput
-                                options={filteredJobOptions}
-                                value={
-                                  selectionProgress?.job_posting_id ||
-                                  candidateData.jobPostingId
-                                }
-                                onChange={value =>
-                                  onJobChange &&
-                                  onJobChange(candidateData.id, value)
-                                }
-                                placeholder='求人を選択'
-                                className='w-full h-[38px]'
-                              />
-                            </div>
-                          </div>
-
-                          {/* 進捗ステップ */}
-                          <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2'>
-                            {/* 応募 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                応募
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              <div className='text-[#323232] text-[10px] font-bold tracking-[1px]'>
-                                yyyy/mm/dd
-                              </div>
-                            </div>
-
-                            {/* 書類選考 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                書類選考
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              {(() => {
-                                const progress = selectionProgress;
-                                if (
-                                  progress?.document_screening_result === 'pass'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      通過
-                                    </div>
-                                  );
-                                } else if (
-                                  progress?.document_screening_result === 'fail'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      見送り
-                                    </div>
-                                  );
-                                }
-                                // 書類選考段階で合否登録ボタンを表示
-                                if (true) {
-                                  return (
-                                    <button
-                                      className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
+                                {/* Group and Job */}
+                                <div className='flex flex-col sm:flex-row gap-[18px] items-stretch sm:items-center w-full h-auto sm:h-[38px]'>
+                                  <div className='bg-gradient-to-l from-[#86c36a] to-[#65bdac] rounded-[8px] px-5 py-0 w-full sm:w-[240px] h-[38px] flex items-center justify-center flex-shrink-0'>
+                                    <span
+                                      className='text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] text-center w-full sm:w-[200px] h-[22px] truncate'
                                       style={{
-                                        background:
-                                          'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
                                         fontFamily: 'Noto Sans JP, sans-serif',
                                       }}
-                                      onClick={e => {
-                                        e.stopPropagation();
-                                        handleModalOpen('書類選考');
-                                      }}
                                     >
-                                      合否登録
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      -
-                                    </div>
-                                  );
-                                }
-                              })()}
-                            </div>
-
-                            {/* 一次面接 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                一次面接
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              {(() => {
-                                const progress = selectionProgress;
-                                // 書類選考で見送りになった場合は何も表示しない
-                                if (
-                                  progress?.document_screening_result === 'fail'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      -
-                                    </div>
-                                  );
-                                }
-                                // 書類選考が通過している場合のみ一次面接の判定を表示
-                                if (
-                                  progress?.document_screening_result === 'pass'
-                                ) {
-                                  if (
-                                    progress?.first_interview_result === 'pass'
-                                  ) {
-                                    return (
-                                      <div className='text-[#0f9058] text-[14px] font-bold h-[35px] flex items-center'>
-                                        通過
-                                      </div>
-                                    );
-                                  } else if (
-                                    progress?.first_interview_result === 'fail'
-                                  ) {
-                                    return (
-                                      <div className='text-[#ff5b5b] text-[14px] font-bold h-[35px] flex items-center'>
-                                        見送り
-                                      </div>
-                                    );
-                                  } else {
-                                    return (
-                                      <button
-                                        onClick={() =>
-                                          handleSelectionResult('一次面接')
-                                        }
-                                        className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
-                                        style={{
-                                          background:
-                                            'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
-                                          fontFamily:
-                                            'Noto Sans JP, sans-serif',
-                                        }}
-                                      >
-                                        合否登録
-                                      </button>
-                                    );
-                                  }
-                                }
-                                return (
-                                  <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                    -
+                                      {progress.group_name ||
+                                        candidateData.group}
+                                    </span>
                                   </div>
-                                );
-                              })()}
-                            </div>
+                                  <div className='flex-1 flex gap-4 items-center w-full sm:w-[602px] h-[38px]'>
+                                    <span className='text-[#323232] text-[14px] font-medium'>
+                                      {progress.job_title || '求人未設定'}
+                                    </span>
+                                  </div>
+                                </div>
 
-                            {/* 二次以降 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                二次以降
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              {(() => {
-                                const progress = selectionProgress;
-                                if (
-                                  progress?.secondary_interview_result ===
-                                  'pass'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      通過
+                                {/* 進捗ステップ */}
+                                <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2'>
+                                  {/* 応募 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      応募
                                     </div>
-                                  );
-                                } else if (
-                                  progress?.secondary_interview_result ===
-                                  'fail'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      見送り
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    <div className='text-[#323232] text-[10px] font-bold tracking-[1px]'>
+                                      {progress.created_at
+                                        ? new Date(
+                                            progress.created_at
+                                          ).toLocaleDateString('ja-JP')
+                                        : 'yyyy/mm/dd'}
                                     </div>
-                                  );
-                                }
-                                // 一次面接を通過している場合のみ合否登録ボタンを表示
-                                if (
-                                  progress?.first_interview_result === 'pass'
-                                ) {
-                                  return (
-                                    <button
-                                      onClick={() =>
-                                        handleSelectionResult('二次以降')
+                                  </div>
+
+                                  {/* 書類選考 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      書類選考
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    {(() => {
+                                      if (
+                                        progress.document_screening_result ===
+                                        'pass'
+                                      ) {
+                                        return (
+                                          <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                            通過
+                                          </div>
+                                        );
+                                      } else if (
+                                        progress.document_screening_result ===
+                                        'fail'
+                                      ) {
+                                        return (
+                                          <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                            見送り
+                                          </div>
+                                        );
                                       }
-                                      className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
-                                      style={{
-                                        background:
-                                          'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
-                                        fontFamily: 'Noto Sans JP, sans-serif',
-                                      }}
-                                    >
-                                      合否登録
-                                    </button>
-                                  );
-                                } else {
-                                  return (
+                                      return (
+                                        <button
+                                          className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
+                                          style={{
+                                            background:
+                                              'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
+                                            fontFamily:
+                                              'Noto Sans JP, sans-serif',
+                                          }}
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            handleModalOpen('書類選考');
+                                          }}
+                                        >
+                                          合否登録
+                                        </button>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* 一次面接 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      一次面接
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                      {progress.first_interview_result ===
+                                      'pass'
+                                        ? '通過'
+                                        : progress.first_interview_result ===
+                                            'fail'
+                                          ? '見送り'
+                                          : '-'}
+                                    </div>
+                                  </div>
+
+                                  {/* 二次面接 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      二次面接
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                      {progress.secondary_interview_result ===
+                                      'pass'
+                                        ? '通過'
+                                        : progress.secondary_interview_result ===
+                                            'fail'
+                                          ? '見送り'
+                                          : '-'}
+                                    </div>
+                                  </div>
+
+                                  {/* 最終面接 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      最終面接
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                      {progress.final_interview_result ===
+                                      'pass'
+                                        ? '通過'
+                                        : progress.final_interview_result ===
+                                            'fail'
+                                          ? '見送り'
+                                          : '-'}
+                                    </div>
+                                  </div>
+
+                                  {/* 内定 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      内定
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
+                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
+                                      {progress.offer_result === 'accepted'
+                                        ? '承諾'
+                                        : progress.offer_result === 'declined'
+                                          ? '辞退'
+                                          : '-'}
+                                    </div>
+                                  </div>
+
+                                  {/* 入社 */}
+                                  <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
+                                    <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
+                                      入社
+                                    </div>
+                                    <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
                                     <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
                                       -
                                     </div>
-                                  );
-                                }
-                              })()}
-                            </div>
-
-                            {/* 最終面接 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                最終面接
+                                  </div>
+                                </div>
                               </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              {(() => {
-                                const progress = selectionProgress;
-                                if (
-                                  progress?.final_interview_result === 'pass'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      通過
-                                    </div>
-                                  );
-                                } else if (
-                                  progress?.final_interview_result === 'fail'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      見送り
-                                    </div>
-                                  );
-                                }
-                                // 二次面接を通過している場合のみ合否登録ボタンを表示
-                                if (
-                                  progress?.secondary_interview_result ===
-                                  'pass'
-                                ) {
-                                  return (
-                                    <button
-                                      onClick={() =>
-                                        handleSelectionResult('最終面接')
-                                      }
-                                      className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
-                                      style={{
-                                        background:
-                                          'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
-                                        fontFamily: 'Noto Sans JP, sans-serif',
-                                      }}
-                                    >
-                                      合否登録
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      -
-                                    </div>
-                                  );
-                                }
-                              })()}
-                            </div>
-
-                            {/* 内定 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                内定
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              {(() => {
-                                const progress = selectionProgress;
-                                if (progress?.offer_result === 'accepted') {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      通過
-                                    </div>
-                                  );
-                                } else if (
-                                  progress?.offer_result === 'declined'
-                                ) {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      見送り
-                                    </div>
-                                  );
-                                }
-                                // 最終面接を通過している場合のみ合否登録ボタンを表示
-                                if (
-                                  progress?.final_interview_result === 'pass'
-                                ) {
-                                  return (
-                                    <button
-                                      onClick={() =>
-                                        handleSelectionResult('内定')
-                                      }
-                                      className='w-[84px] h-[38px] bg-gradient-to-r from-[#26AF94] to-[#3A93CB] rounded-[32px] flex items-center justify-center text-white text-[14px] font-bold leading-[160%] tracking-[1.4px] transition-all duration-200 ease-in-out hover:opacity-90'
-                                      style={{
-                                        background:
-                                          'linear-gradient(263.02deg, #26AF94 0%, #3A93CB 100%)',
-                                        fontFamily: 'Noto Sans JP, sans-serif',
-                                      }}
-                                    >
-                                      合否登録
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                      -
-                                    </div>
-                                  );
-                                }
-                              })()}
-                            </div>
-
-                            {/* 入社 */}
-                            <div className='bg-[#f9f9f9] rounded-[5px] p-4 flex flex-col gap-4 items-center'>
-                              <div className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
-                                入社
-                              </div>
-                              <div className='w-full h-[1px] bg-[#dcdcdc]'></div>
-                              <div className='text-[#323232] text-[14px] font-bold h-[35px] flex items-center'>
-                                -
-                              </div>
-                            </div>
-                          </div>
+                            ))
+                          )}
 
                           {/* 担当者情報 */}
                           <div className='h-[66px] flex items-center justify-between gap-10'>

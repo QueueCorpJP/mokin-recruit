@@ -179,7 +179,8 @@ export default async function CompanyMypage() {
       ? (defaultGroupResult.data as any).id
       : undefined);
 
-  // おすすめ候補者セクション用にサーバー側で検索履歴（保存済みが0件なら直近履歴でフォールバック）を取得
+  // おすすめ候補者セクション用にサーバー側で全グループの保存済み検索履歴を取得
+  // 条件一つに対してグループ一つになるよう、グループごとに保存済み条件を1つずつ取得
   let initialSavedSearches: Array<{
     id: string;
     group_name: string;
@@ -187,13 +188,21 @@ export default async function CompanyMypage() {
     search_conditions: any;
   }> = [];
   try {
-    const savedHistoryResult = await getSearchHistory(companyGroupId, 20, 0);
-    if (savedHistoryResult.success) {
-      const all = (savedHistoryResult.data as any[]) || [];
-      const saved = all.filter(
-        h => h.is_saved === true || String(h.is_saved).toLowerCase() === 'true'
-      );
-      initialSavedSearches = (saved.length > 0 ? saved : all).slice(0, 3);
+    // 各グループから保存済み検索条件を1つずつ取得
+    for (const group of companyGroups) {
+      const savedHistoryResult = await getSearchHistory(group.value, 20, 0);
+      if (savedHistoryResult.success) {
+        const all = (savedHistoryResult.data as any[]) || [];
+        const saved = all.filter(
+          h =>
+            h.is_saved === true || String(h.is_saved).toLowerCase() === 'true'
+        );
+        // 各グループから保存済み条件を1つ取得（なければ直近履歴から1つ）
+        const groupCondition = saved.length > 0 ? saved[0] : all[0];
+        if (groupCondition) {
+          initialSavedSearches.push(groupCondition);
+        }
+      }
     }
   } catch (_) {
     // エラー時は初期化処理をスキップ

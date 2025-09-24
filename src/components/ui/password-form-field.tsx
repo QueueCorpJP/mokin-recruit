@@ -45,23 +45,27 @@ export function PasswordFormField({
   const isPasswordValid = validatePassword(value);
 
   const getValidationMessage = () => {
-    if (!value) return '';
-
     // 確認フィールドの場合はパスワード一致チェック
     if (isConfirmField) {
+      if (!value) {
+        return '確認用パスワードを入力してください。';
+      }
       if (value !== confirmTarget) {
-        return 'パスワードが一致しません';
+        return '新規パスワードと一致しません。';
       }
       return '';
     }
 
     // 通常のパスワードフィールドの場合
+    if (!value) {
+      return 'パスワードを入力してください。';
+    }
     if (value.length < minLength) {
-      return `パスワードは${minLength}文字以上で入力してください`;
+      return 'パスワードは8文字以上で入力してください。';
     }
     const validCharRegex = /^[\x20-\x7E]*$/;
     if (!validCharRegex.test(value)) {
-      return '半角英数字・記号のみで入力してください';
+      return 'パスワードは半角英数字・記号を含めて入力してください。';
     }
     return '';
   };

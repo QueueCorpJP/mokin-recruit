@@ -123,22 +123,27 @@ export async function markRoomMessagesAsRead(
     }
 
     // unread_notificationsテーブルのread_atを更新
-    const { error: notificationUpdateError } = await supabase
-      .from('unread_notifications')
-      .update({
-        read_at: new Date().toISOString(),
-      })
-      .eq(
-        'message_id',
-        (
-          await supabase
-            .from('messages')
-            .select('id')
-            .eq('room_id', roomId)
-            .eq('status', 'SENT')
-            .eq('sender_type', 'CANDIDATE')
-        ).data?.map(m => m.id) || []
-      );
+    // まず該当するメッセージIDを取得
+    const { data: messagesToUpdate } = await supabase
+      .from('messages')
+      .select('id')
+      .eq('room_id', roomId)
+      .eq('status', 'SENT')
+      .eq('sender_type', 'CANDIDATE');
+
+    const messageIds = messagesToUpdate?.map(m => m.id) || [];
+
+    // メッセージIDが存在する場合のみ通知を更新
+    let notificationUpdateError = null;
+    if (messageIds.length > 0) {
+      const { error } = await supabase
+        .from('unread_notifications')
+        .update({
+          read_at: new Date().toISOString(),
+        })
+        .in('message_id', messageIds);
+      notificationUpdateError = error;
+    }
 
     if (notificationUpdateError) {
       console.warn(

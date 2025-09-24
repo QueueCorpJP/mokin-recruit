@@ -73,7 +73,8 @@ export function SavedSearchRecommendationsClient({
       try {
         setLoading(true);
 
-        // 1) 保存済み検索履歴（上位3）: サーバーから初期値がある場合はそれを優先
+        // 1) サーバーから初期値がない場合のみクライアント側で取得
+        // すでにサーバー側でグループごとに1つずつ取得済みなので、通常は不要
         if (!initialSavedSearches.length && companyGroupId) {
           const { data: histories, error: shError } = await supabase
             .from('search_history')
@@ -99,7 +100,7 @@ export function SavedSearchRecommendationsClient({
                 String(v).toLowerCase() === 'true'
               );
             })
-            .slice(0, 3);
+            .slice(0, 1); // 各グループから1つのみ
 
           if (mounted) setSavedSearches(saved);
         }
@@ -207,11 +208,21 @@ export function SavedSearchRecommendationsClient({
     return () => {
       mounted = false;
     };
-  }, [initialSavedSearches.length]);
+  }, [initialSavedSearches.length, companyGroupId]);
 
   // クライアント側でマッチングして先出（フック順を安定させるため、条件分岐より前に配置）
+  // 条件一つに対してグループ一つ：グループ名で重複除去
   const sections = useMemo(() => {
-    return savedSearches.map(history => {
+    const uniqueByGroup = new Map<string, any>();
+
+    // グループ名で重複除去（最初に見つかったもののみ保持）
+    savedSearches.forEach(history => {
+      if (!uniqueByGroup.has(history.group_name)) {
+        uniqueByGroup.set(history.group_name, history);
+      }
+    });
+
+    return Array.from(uniqueByGroup.values()).map(history => {
       const conditions = normalizeConditions(history.search_conditions || {});
       console.log(
         `[おすすめ候補者] グループ: ${history.group_name}, 検索条件:`,

@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 export interface CompanyAccountData {
   plan: string;
   scoutLimit: number;
+  remainingTickets?: number;
   nextUpdateDate: string;
 }
 
@@ -24,6 +25,7 @@ export async function getCompanyAccountData(
           company_name,
           plan,
           scout_limit,
+          remaining_tickets,
           created_at
         )
       `
@@ -45,18 +47,30 @@ export async function getCompanyAccountData(
       return null;
     }
 
+    // 残りチケット数を直接取得
+    const remainingTickets = account.remaining_tickets || 0;
+    const nextMonthStart = new Date();
+    nextMonthStart.setMonth(nextMonthStart.getMonth() + 1, 1);
+    nextMonthStart.setHours(0, 0, 0, 0);
+
+    console.log('[getCompanyAccountData] Data from database:', {
+      companyUserId,
+      accountId: account.id,
+      scoutLimit: account.scout_limit,
+      remainingTickets,
+    });
+
     return {
       plan: account.plan,
       scoutLimit: account.scout_limit,
-      nextUpdateDate: new Date(
-        new Date(account.created_at).setMonth(
-          new Date(account.created_at).getMonth() + 1
-        )
-      ).toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-      }),
+      remainingTickets,
+      nextUpdateDate: nextMonthStart
+        .toLocaleDateString('ja-JP', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\//g, '-'),
     };
   } catch (error) {
     console.error('Error in getCompanyAccountData:', error);

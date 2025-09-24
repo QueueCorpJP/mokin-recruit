@@ -127,7 +127,7 @@ export async function updateSelectionProgressAction({
 }
 
 /**
- * 選考進捗を取得するaction
+ * 選考進捗を取得するaction（単一グループ）
  */
 export async function getSelectionProgressAction(
   candidateId: string,
@@ -185,6 +185,96 @@ export async function getSelectionProgressAction(
     };
   } catch (error) {
     console.error('進捗取得エラー:', error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : '不明なエラーが発生しました',
+    };
+  }
+}
+
+/**
+ * 候補者の全ての選考進捗を取得するaction
+ */
+export async function getAllSelectionProgressAction(candidateId: string) {
+  // 非破壊の再認可チェック（現状はログのみ）
+  try {
+    const { softReauthorizeForCompany } = await import(
+      '@/lib/server/utils/soft-auth-check'
+    );
+    await softReauthorizeForCompany('getAllSelectionProgressAction', {});
+  } catch {}
+
+  try {
+    const supabase = await getSupabaseServerClient();
+
+    // 企業の認証情報を取得（アクセス可能なグループのみに制限）
+    const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
+    const authResult = await requireCompanyAuthForAction();
+
+    if (!authResult.success) {
+      return {
+        success: false,
+        error: '認証が必要です',
+      };
+    }
+
+    // ユーザーがアクセス可能なグループを取得
+    const { data: userPermissions } = await supabase
+      .from('company_user_group_permissions')
+      .select('company_group_id')
+      .eq('company_user_id', authResult.data.companyUserId);
+
+    if (!userPermissions || userPermissions.length === 0) {
+      return {
+        success: true,
+        data: [],
+      };
+    }
+
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
+
+    // 候補者の選考進捗を、アクセス可能なグループに限定して取得
+    const { data, error } = await supabase
+      .from('selection_progress')
+      .select(
+        `
+        *,
+        company_groups (
+          group_name
+        ),
+        job_postings (
+          title
+        )
+      `
+      )
+      .eq('candidate_id', candidateId)
+      .in('company_group_id', accessibleGroupIds)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('全進捗取得エラー:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // データを整形して返す
+    const formattedData = (data || []).map(item => ({
+      ...item,
+      group_name: item.company_groups?.group_name || '',
+      job_title: item.job_postings?.title || '',
+    }));
+
+    return {
+      success: true,
+      data: formattedData,
+    };
+  } catch (error) {
+    console.error('全進捗取得エラー:', error);
     return {
       success: false,
       error:

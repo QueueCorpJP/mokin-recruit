@@ -62,7 +62,7 @@ export async function sendScout(
     // アカウント情報とスカウトチケット残数をチェック（送信前）
     const { data: accountData, error: accountError } = await supabase
       .from('company_accounts')
-      .select('scout_limit')
+      .select('scout_limit, remaining_tickets')
       .eq('id', companyUser.companyAccountId)
       .single();
 
@@ -74,27 +74,7 @@ export async function sendScout(
       };
     }
 
-    // 今月のスカウト送信数をカウント
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
-
-    const { data: scoutSends, error: countError } = await supabase
-      .from('scout_sends')
-      .select('id', { count: 'exact' })
-      .eq('company_account_id', companyUser.companyAccountId)
-      .gte('sent_at', startOfMonth.toISOString());
-
-    if (countError) {
-      console.error('スカウト送信数取得エラー:', countError);
-      return {
-        success: false,
-        error: 'スカウト送信数の確認に失敗しました',
-      };
-    }
-
-    const usedThisMonth = scoutSends?.length || 0;
-    const remainingTickets = (accountData.scout_limit || 0) - usedThisMonth;
+    const remainingTickets = accountData.remaining_tickets || 0;
 
     if (remainingTickets <= 0) {
       console.warn('スカウト送信制限に達しています');
@@ -102,6 +82,20 @@ export async function sendScout(
         success: false,
         error:
           'スカウト送信制限に達しています。チケットを追加購入してください。',
+      };
+    }
+
+    // チケットを1つ減らす（送信前に確保）
+    const { error: ticketError } = await supabase
+      .from('company_accounts')
+      .update({ remaining_tickets: remainingTickets - 1 })
+      .eq('id', companyUser.companyAccountId);
+
+    if (ticketError) {
+      console.error('チケット更新エラー:', ticketError);
+      return {
+        success: false,
+        error: 'チケットの更新に失敗しました',
       };
     }
 
@@ -514,8 +508,13 @@ export async function sendScout(
 
     // スカウト送信が成功したため、チケット消費が完了
     // チケット消費は scout_sends テーブルへの記録で自動的にカウントされる
+    console.info('=== スカウトチケット消費ログ ===');
     console.info('スカウト送信完了。チケットが1つ消費されました。');
-    console.info('残りチケット数:', remainingTickets - 1);
+    console.info('送信前の残りチケット数:', remainingTickets);
+    console.info('送信後の残りチケット数:', remainingTickets - 1);
+    console.info('企業アカウントID:', companyUser.companyAccountId);
+    console.info('スカウト送信ID:', scoutSend.id);
+    console.info('================================');
 
     revalidateCompanyPaths(
       '/company/search/scout',
@@ -691,10 +690,10 @@ export async function getScoutTicketsRemaining(): Promise<number> {
 
     const { companyAccountId } = authResult.data;
 
-    // 月次上限と今月の使用済みスカウト数を取得
+    // 残りチケット数を直接取得
     const { data: accountData, error: accountError } = await supabase
       .from('company_accounts')
-      .select('scout_limit')
+      .select('remaining_tickets')
       .eq('id', companyAccountId)
       .single();
 
@@ -703,26 +702,14 @@ export async function getScoutTicketsRemaining(): Promise<number> {
       return 0;
     }
 
-    // 今月のスカウト送信数をカウント
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    const remaining = accountData?.remaining_tickets || 0;
 
-    const { data: scoutSends, error: countError } = await supabase
-      .from('scout_sends')
-      .select('id', { count: 'exact' })
-      .eq('company_account_id', companyAccountId)
-      .gte('sent_at', startOfMonth.toISOString());
+    console.info('=== チケット残数取得ログ ===');
+    console.info('企業アカウントID:', companyAccountId);
+    console.info('残りチケット数:', remaining);
+    console.info('===============================');
 
-    if (countError) {
-      console.error('スカウト送信数取得エラー:', countError);
-      return accountData?.scout_limit || 0; // エラー時は上限をそのまま返す
-    }
-
-    const usedThisMonth = scoutSends?.length || 0;
-    const remaining = (accountData?.scout_limit || 0) - usedThisMonth;
-
-    return Math.max(0, remaining); // 負数にならないよう調整
+    return Math.max(0, remaining);
   } catch (error) {
     console.error('チケット残数取得エラー:', error);
     return 0;

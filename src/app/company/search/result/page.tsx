@@ -26,6 +26,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
   // サーバーサイドでデータを取得
   const candidates = await getCandidatesFromDatabase();
+  console.log(
+    '[DEBUG page.tsx] Server-side candidates count:',
+    candidates.length
+  );
 
   // グループ情報をサーバーサイドで取得
   const companyGroupsResult = await getCompanyGroups();

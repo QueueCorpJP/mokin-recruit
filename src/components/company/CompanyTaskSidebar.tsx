@@ -104,10 +104,7 @@ export function CompanyTaskSidebar({
 
     const fetchSidebarData = async () => {
       try {
-        // ユーザー情報取得（RLS用に認証ユーザーで実行）
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        console.log('[CompanyTaskSidebar] Starting fetchSidebarData...');
 
         // お知らせ（公開済み）最新3件
         if (!notices || notices.length === 0) {
@@ -124,29 +121,40 @@ export function CompanyTaskSidebar({
         }
 
         // プラン情報（company_users 経由で company_accounts を参照）
-        if (!companyAccountData && user) {
+        if (!companyAccountData) {
+          console.log('[CompanyTaskSidebar] Fetching company account data...');
           const { data: companyAccountRow, error } = await supabase
             .from('company_users')
             .select(
               `
+              id,
               company_account_id,
-              company_accounts!company_account_id (
+              company_accounts!company_users_company_account_id_fkey (
                 id,
                 company_name,
                 plan,
                 scout_limit,
+                remaining_tickets,
                 created_at
               )
             `
             )
-            .eq('email', user.email as string)
             .single();
 
-          if (!error) {
-            const account: any = companyAccountRow;
-            if (account && mounted) {
+          console.log('[CompanyTaskSidebar] Company users query result:', {
+            data: companyAccountRow,
+            error,
+          });
+
+          if (!error && companyAccountRow) {
+            const companyAccount = companyAccountRow.company_accounts;
+            console.log(
+              '[CompanyTaskSidebar] Company account data:',
+              companyAccount
+            );
+            if (companyAccount && mounted) {
               // サイクル算出
-              const createdAt = new Date(account.created_at);
+              const createdAt = new Date(companyAccount.created_at);
               const addMonths = (date: Date, months: number) => {
                 const d = new Date(date.getTime());
                 const targetMonth = d.getMonth() + months;
@@ -166,25 +174,18 @@ export function CompanyTaskSidebar({
               }
               const nextCycleStart = addMonths(cycleStart, 1);
 
-              // 当サイクルの使用数集計
-              let usedThisCycle = 0;
-              {
-                const { count } = await supabase
-                  .from('scout_sends')
-                  .select('id', { count: 'exact', head: true })
-                  .eq('company_account_id', account.id)
-                  .gte('sent_at', cycleStart.toISOString())
-                  .lt('sent_at', nextCycleStart.toISOString());
-                usedThisCycle = typeof count === 'number' ? count : 0;
-              }
-              const remainingTickets = Math.max(
-                0,
-                (account.scout_limit as number) - usedThisCycle
-              );
+              // 残りチケット数を直接取得
+              const remainingTickets = companyAccount.remaining_tickets || 0;
+
+              console.log('[CompanyTaskSidebar] Data from database:', {
+                accountId: companyAccount.id,
+                scoutLimit: companyAccount.scout_limit,
+                remainingTickets,
+              });
 
               setFetchedCompanyAccountData({
-                plan: account.plan,
-                scoutLimit: account.scout_limit,
+                plan: companyAccount.plan,
+                scoutLimit: companyAccount.scout_limit,
                 remainingTickets,
                 nextUpdateDate: nextCycleStart
                   .toLocaleDateString('ja-JP', {
@@ -195,11 +196,28 @@ export function CompanyTaskSidebar({
                   .replace(/\//g, '-'),
               });
             }
+          } else {
+            console.error(
+              '[CompanyTaskSidebar] Error fetching company account or no data:',
+              { error, companyAccountRow }
+            );
+            if (error) {
+              console.error(
+                '[CompanyTaskSidebar] Supabase error details:',
+                error.message,
+                error.details,
+                error.hint
+              );
+            }
           }
         }
       } catch (e) {
         // 取得失敗時は静かに無視（サイドバーは表示継続）
         console.error('[CompanyTaskSidebar] Failed to fetch sidebar data', e);
+        console.error(
+          '[CompanyTaskSidebar] Error stack:',
+          e instanceof Error ? e.stack : 'No stack trace'
+        );
       }
     };
 
@@ -562,6 +580,13 @@ export function CompanyTaskSidebar({
   const resolvedNotices =
     notices && notices.length > 0 ? notices : fetchedNotices;
 
+  console.log('[CompanyTaskSidebar] Resolved data for render:', {
+    companyAccountDataFromProps: companyAccountData,
+    fetchedCompanyAccountData,
+    resolvedCompanyAccountData,
+    remainingTickets: resolvedCompanyAccountData?.remainingTickets,
+  });
+
   return (
     <div className={cn('w-full max-w-[320px]', className)}>
       {/* プラン情報セクション */}
@@ -585,7 +610,7 @@ export function CompanyTaskSidebar({
               <div>
                 <span style={remainingTextStyle}>残数：</span>
                 <span style={remainingNumberStyle}>
-                  {resolvedCompanyAccountData?.scoutLimit ?? 0}
+                  {resolvedCompanyAccountData?.remainingTickets ?? 0}
                 </span>
               </div>
               <div style={nextUpdateStyle}>
