@@ -9,6 +9,7 @@ interface AdminTableRowProps {
     className?: string;
   }[];
   actions?: React.ReactNode[];
+  actionsAlign?: 'left' | 'center' | 'right';
   onClick?: () => void;
   children?: React.ReactNode;
   className?: string;
@@ -17,9 +18,10 @@ interface AdminTableRowProps {
 export const AdminTableRow: React.FC<AdminTableRowProps> = ({
   columns,
   actions,
+  actionsAlign = 'right',
   onClick,
   children,
-  className = ''
+  className = '',
 }) => {
   // If children are provided, render them as-is (for table row usage)
   if (children) {
@@ -33,15 +35,15 @@ export const AdminTableRow: React.FC<AdminTableRowProps> = ({
   // If columns are provided, render the flex layout
   if (columns) {
     return (
-      <div 
+      <div
         className={`flex items-center px-5 py-4 bg-white hover:bg-gray-50 transition-colors rounded-lg ${onClick ? 'cursor-pointer' : ''}`}
         style={{ boxShadow: '0 2px 20px 0 rgba(0, 0, 0, 0.05)' }}
         onClick={onClick}
       >
         {/* Data Columns */}
         {columns.map((column, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={`${column.width || 'flex-1'} px-3 ${column.className || ''}`}
           >
             {typeof column.content === 'string' ? (
@@ -56,12 +58,17 @@ export const AdminTableRow: React.FC<AdminTableRowProps> = ({
 
         {/* Actions Column */}
         {actions && actions.length > 0 && (
-          <div className="w-[200px] flex-shrink-0 flex items-center justify-end gap-3">
+          <div
+            className={`w-[200px] flex-shrink-0 flex items-center gap-3 ${
+              actionsAlign === 'left'
+                ? 'justify-start'
+                : actionsAlign === 'center'
+                  ? 'justify-center'
+                  : 'justify-end'
+            }`}
+          >
             {actions.map((action, index) => (
-              <div
-                key={index}
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div key={index} onClick={e => e.stopPropagation()}>
                 {action}
               </div>
             ))}

@@ -1,48 +1,14 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { signupRequestAction, SignupResult } from './actions';
-import { checkRegistrationProgress } from './checkRegistrationProgress';
 
 interface SignupClientProps {
   onSubmit?: (email: string) => void;
-}
-
-// Check if user has valid Supabase session
-function checkSupabaseSession(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  try {
-    // Check for various Supabase session cookies
-    const cookies = document.cookie.split('; ');
-
-    // Check for sb-access-token
-    const accessTokenCookie = cookies.find(c =>
-      c.startsWith('sb-access-token=')
-    );
-    if (accessTokenCookie) return true;
-
-    // Check for sb-*-auth-token.0 pattern
-    const authTokenCookie = cookies.find(c => /sb-.*-auth-token\.0=/.test(c));
-    if (authTokenCookie) return true;
-
-    // Check for legacy supabase-auth-token
-    const legacyCookie = cookies.find(c =>
-      c.startsWith('supabase-auth-token=')
-    );
-    if (legacyCookie) {
-      const token = legacyCookie.split('=')[1];
-      return token && token.split('.').length === 3;
-    }
-
-    return false;
-  } catch (error) {
-    return false;
-  }
 }
 
 export function SignupClient({ onSubmit }: SignupClientProps) {
@@ -55,66 +21,6 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   >('idle');
   const [message, setMessage] = useState('');
   const [isPending, startTransition] = useTransition();
-  const [isCheckingProgress, setIsCheckingProgress] = useState(false);
-
-  // Check if user has existing progress on component mount
-  useEffect(() => {
-    const checkExistingProgress = async () => {
-      // まず認証済みかチェック
-      const hasSupabaseSession = checkSupabaseSession();
-
-      if (hasSupabaseSession) {
-        // 既に認証済みの場合は候補者マイページにリダイレクト
-        router.push('/candidate/mypage');
-        return;
-      }
-
-      // クッキーから認証済みユーザーIDを確認
-      const signupUserId = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('signup_user_id='))
-        ?.split('=')[1];
-
-      if (signupUserId) {
-        setIsCheckingProgress(true);
-        try {
-          // クッキーからメールアドレスを取得
-          const cookieEmail = document.cookie
-            .split('; ')
-            .find(row => row.startsWith('signup_email='))
-            ?.split('=')[1];
-
-          // クッキーまたはlocalStorageからメールアドレスを取得
-          const emailToCheck =
-            cookieEmail || localStorage.getItem('signup_email');
-
-          if (emailToCheck) {
-            const progress = await checkRegistrationProgress(emailToCheck);
-            if (progress.exists) {
-              // 登録進捗がある場合は適切なステップに遷移
-              localStorage.setItem('signup_email', emailToCheck); // localStorageにも保存
-              // サインアップ画面以外の場合、または既にパスワード設定済みの場合は次のステップへ
-              if (progress.nextStep !== '/signup') {
-                router.push(progress.nextStep);
-                return;
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Progress check error:', error);
-        } finally {
-          setIsCheckingProgress(false);
-        }
-      }
-
-      // 認証済みユーザーでない場合、localStorageをクリア
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('signup_email');
-      }
-    };
-
-    checkExistingProgress();
-  }, [router]);
 
   const validateEmail = (email: string): boolean => {
     if (!email) {
@@ -168,42 +74,6 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
 
     startTransition(async () => {
       try {
-        // First check if this email already has progress
-        const progress = await checkRegistrationProgress(email.trim());
-
-        // すでに本登録済み（全ステップ完了）の場合はエラー表示して弾く
-        if (progress.exists && progress.completedSteps.expectationCompleted) {
-          setSubmitStatus('error');
-          setMessage(
-            'このメールアドレスは既に本登録済みです。ログインしてください。'
-          );
-          return;
-        }
-
-        // 途中ステップが未完了の場合のみ途中から再開
-        if (progress.exists && progress.nextStep !== '/signup') {
-          localStorage.setItem('signup_email', email.trim());
-          router.push(progress.nextStep);
-          return;
-        }
-
-        // クッキーに認証済みユーザーIDがある場合の処理
-        const signupUserId = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('signup_user_id='))
-          ?.split('=')[1];
-
-        if (signupUserId && progress.exists) {
-          localStorage.setItem('signup_email', email.trim());
-          // パスワード未設定の場合のみパスワード画面へ、設定済みの場合は次のステップへ
-          if (!progress.completedSteps.passwordSet) {
-            router.push('/signup/password');
-          } else {
-            router.push(progress.nextStep);
-          }
-          return;
-        }
-
         const result: SignupResult = await signupRequestAction({
           email: email.trim(),
         });
@@ -243,15 +113,6 @@ export function SignupClient({ onSubmit }: SignupClientProps) {
   };
 
   const isFormValid = email && agreed;
-
-  // Show loading state while checking progress
-  if (isCheckingProgress) {
-    return (
-      <div className='flex flex-col gap-6 items-center w-full text-center'>
-        <p className='text-[#323232] text-[16px]'>...登録状況を確認中</p>
-      </div>
-    );
-  }
 
   return (
     <>

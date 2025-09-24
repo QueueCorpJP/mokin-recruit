@@ -83,18 +83,9 @@ export function LoginClient({ userType }: LoginClientProps) {
           return;
         }
 
-        // エラーオブジェクトの詳細な情報を取得
-        const errorInfo = {
-          name: err instanceof Error ? err.name : 'Unknown',
-          message:
-            err instanceof Error ? err.message : 'ログインに失敗しました',
-          stack: err instanceof Error ? err.stack : undefined,
-          cause: err instanceof Error ? err.cause : undefined,
-          originalError: err,
-        };
-
-        const errorMessage = errorInfo.message;
-        setError(errorMessage);
+        // その他のエラーのみを表示
+        console.error('Unexpected login error:', err);
+        setError('ログインに失敗しました');
       }
     });
   };

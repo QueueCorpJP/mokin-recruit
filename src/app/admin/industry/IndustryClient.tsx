@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminTableRow } from '@/components/admin/ui/AdminTableRow';
 import { MediaTableHeader } from '@/components/admin/ui/MediaTableHeader';
-import { ActionButton } from '@/components/admin/ui/ActionButton';
+import { Button } from '@/components/ui/button';
 import { IndustryAddModal } from '@/components/admin/IndustryAddModal';
 import { IndustryDeleteModal } from '@/components/admin/IndustryDeleteModal';
 import { addIndustry, updateIndustry, deleteIndustry } from './actions';
@@ -25,6 +25,10 @@ export default function IndustryClient({ industries }: Props) {
     useState<IndustryListItem | null>(null);
   const [newIndustryName, setNewIndustryName] = useState('');
   const [isPending, startTransition] = useTransition();
+  const [sortColumn, setSortColumn] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
+    null
+  );
 
   useEffect(() => {
     const handleAddIndustryModal = () => {
@@ -60,6 +64,20 @@ export default function IndustryClient({ industries }: Props) {
   const handleCancel = () => {
     setEditingId(null);
     setEditingValue('');
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else if (sortDirection === 'desc') {
+        setSortDirection(null);
+        setSortColumn('');
+      }
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
   };
 
   const handleAddIndustry = () => {
@@ -105,16 +123,33 @@ export default function IndustryClient({ industries }: Props) {
     {
       key: 'name',
       label: '業種（候補者数/企業数）',
-      sortable: false,
+      sortable: true,
       width: 'w-[400px]',
     },
-    {
-      key: 'actions',
-      label: 'アクション',
-      sortable: false,
-      width: 'w-[200px]',
-    },
   ];
+
+  // ソート処理
+  const sortedIndustries = [...industries].sort((a, b) => {
+    if (!sortColumn || !sortDirection) return 0;
+
+    let aValue: string;
+    let bValue: string;
+
+    switch (sortColumn) {
+      case 'name':
+        aValue = a.name;
+        bValue = b.name;
+        break;
+      default:
+        return 0;
+    }
+
+    if (sortDirection === 'asc') {
+      return aValue.localeCompare(bValue);
+    } else {
+      return bValue.localeCompare(aValue);
+    }
+  });
 
   return (
     <div className='min-h-screen bg-gray-50 p-6'>
@@ -122,14 +157,15 @@ export default function IndustryClient({ industries }: Props) {
         <div className='min-w-max'>
           <MediaTableHeader
             columns={columns}
-            sortColumn=''
-            sortDirection='desc'
-            onSort={() => {}}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
           />
           <div className='mt-2 space-y-2'>
-            {industries.map(industry => (
+            {sortedIndustries.map(industry => (
               <AdminTableRow
                 key={industry.id}
+                actionsAlign='left'
                 columns={[
                   {
                     content:
@@ -159,37 +195,45 @@ export default function IndustryClient({ industries }: Props) {
                 actions={
                   editingId === industry.id
                     ? [
-                        <ActionButton
+                        <Button
                           key='save'
-                          text={isPending ? '保存中...' : '保存'}
-                          variant='primary'
+                          variant='green-gradient'
+                          size='figma-default'
+                          className='py-2.5'
                           onClick={() => handleSave(industry.id)}
-                          size='small'
                           disabled={isPending}
-                        />,
-                        <ActionButton
+                        >
+                          {isPending ? '保存中...' : '保存'}
+                        </Button>,
+                        <Button
                           key='cancel'
-                          text='キャンセル'
                           variant='secondary'
+                          size='figma-default'
+                          className='py-2.5'
                           onClick={handleCancel}
-                          size='small'
-                        />,
+                        >
+                          キャンセル
+                        </Button>,
                       ]
                     : [
-                        <ActionButton
+                        <Button
                           key='edit'
-                          text='編集'
-                          variant='primary'
+                          variant='green-gradient'
+                          size='figma-default'
+                          className='py-2.5'
                           onClick={() => handleEdit(industry)}
-                          size='small'
-                        />,
-                        <ActionButton
+                        >
+                          編集
+                        </Button>,
+                        <Button
                           key='delete'
-                          text='削除'
-                          variant='destructive'
+                          variant='green-outline'
+                          size='figma-outline'
+                          className='py-2.5'
                           onClick={() => handleDeleteIndustry(industry)}
-                          size='small'
-                        />,
+                        >
+                          削除
+                        </Button>,
                       ]
                 }
               />

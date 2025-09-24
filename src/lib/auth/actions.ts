@@ -167,7 +167,6 @@ export async function signInAction(
     return {
       success: true,
       user: userInfo,
-      message: 'ログインに成功しました',
     };
   } catch (error) {
     console.error('Sign in action error:', error);
