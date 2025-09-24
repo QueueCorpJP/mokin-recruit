@@ -180,11 +180,31 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     // 検索条件が存在し、ユーザーがグループを明示的に選択している場合のみ履歴保存（重複は別途チェック）
     // 手動保存済みの場合は自動保存を無効にする
     const hasKeywordOrFilters =
-      keyword.trim().length > 0 ||
+      searchConditions.keywords.some(k => k.trim().length > 0) ||
       searchConditions.job_types.length > 0 ||
       searchConditions.industries.length > 0 ||
+      searchConditions.locations.length > 0 ||
+      searchConditions.work_styles.length > 0 ||
+      searchConditions.education_levels.length > 0 ||
+      searchConditions.skills.length > 0 ||
+      searchConditions.desired_job_types?.length > 0 ||
+      searchConditions.desired_industries?.length > 0 ||
       searchConditions.age_min ||
-      searchConditions.age_max;
+      searchConditions.age_max ||
+      searchConditions.salary_min ||
+      searchConditions.salary_max ||
+      searchConditions.desired_salary_min ||
+      searchConditions.desired_salary_max ||
+      (searchConditions.current_company &&
+        searchConditions.current_company.trim().length > 0) ||
+      (searchConditions.english_level &&
+        searchConditions.english_level.trim().length > 0) ||
+      (searchConditions.other_language &&
+        searchConditions.other_language.trim().length > 0) ||
+      (searchConditions.transfer_time &&
+        searchConditions.transfer_time.trim().length > 0) ||
+      (searchConditions.selection_status &&
+        searchConditions.selection_status.trim().length > 0);
     const isManualSave = urlParams.get('saved') === 'true';
     // search_group がURLに無い場合はサーバで取得した defaultGroupId を保存時に使用
     const groupForSave = urlParams.get('search_group') || defaultGroupId;

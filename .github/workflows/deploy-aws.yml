@@ -10,15 +10,177 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create source archive
-        run: tar -czf source.tar.gz package.json package-lock.json next.config.js public src
-
-      - name: Upload source to EC2
+      - name: Debug Environment
         run: |
+          echo "========================================="
+          echo "🔍 ENVIRONMENT DIAGNOSTICS"
+          echo "========================================="
+          echo "📅 Current Date: $(date)"
+          echo "🏃 Runner: $RUNNER_NAME"
+          echo "🖥️ Runner OS: $RUNNER_OS"
+          echo "📁 Current Directory: $(pwd)"
+          echo "👤 Current User: $(whoami)"
+          echo "🏠 Home Directory: $HOME"
+          echo ""
+          echo "🔐 GitHub Secrets Check (existence only):"
+          echo "EC2_HOST: ${{ secrets.EC2_HOST != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "EC2_USER: ${{ secrets.EC2_USER != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY != '' && '✅ Set' || '❌ Not Set' }}"
+          echo "EC2_SSH_PRIVATE_KEY length: $(echo '${{ secrets.EC2_SSH_PRIVATE_KEY }}' | wc -c)"
+          echo ""
+          echo "🌐 Network Diagnostics:"
+          echo "Public IP: $(curl -s ifconfig.me || echo 'Failed to get IP')"
+          echo ""
+          echo "📦 Available Tools:"
+          ssh -V 2>&1 || echo "SSH not found"
+          scp 2>&1 | head -1 || echo "SCP not found"
+          echo "========================================="
+
+      - name: Create source archive
+        run: |
+          echo "📦 [STEP 1/3] Creating source archive..."
+          echo "🔍 Files to include:"
+          ls -la package.json package-lock.json next.config.js 2>/dev/null || echo "⚠️  Some base files missing"
+          ls -la public/ src/ 2>/dev/null || echo "⚠️  Some directories missing"
+          tar -czf source.tar.gz package.json package-lock.json next.config.js public src
+          echo "✅ Archive created: $(du -h source.tar.gz)"
+          echo "📊 Archive details:"
+          tar -tzf source.tar.gz | head -20
+          echo "... (showing first 20 files)"
+
+      - name: Test EC2 Connectivity
+        run: |
+          echo "========================================="
+          echo "🧪 TESTING EC2 CONNECTIVITY"
+          echo "========================================="
+          echo "📡 Testing DNS resolution for EC2_HOST..."
+          nslookup ${{ secrets.EC2_HOST }} || echo "⚠️ DNS lookup failed"
+          echo ""
+          echo "🏓 Testing ping to EC2_HOST (may fail due to ICMP blocking)..."
+          ping -c 3 -W 2 ${{ secrets.EC2_HOST }} || echo "⚠️ Ping failed (might be normal)"
+          echo ""
+          echo "🔌 Testing port 22 connectivity..."
+          timeout 5 bash -c "cat < /dev/null > /dev/tcp/${{ secrets.EC2_HOST }}/22" && echo "✅ Port 22 is reachable" || echo "❌ Port 22 is not reachable"
+          echo ""
+          echo "🔎 Testing with nc (if available)..."
+          which nc && nc -zv -w5 ${{ secrets.EC2_HOST }} 22 || echo "nc not available or connection failed"
+          echo "========================================="
+
+      - name: Setup and Validate SSH Key
+        run: |
+          echo "========================================="
+          echo "🔑 SSH KEY SETUP AND VALIDATION"
+          echo "========================================="
+          echo "📝 Writing SSH key to file..."
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > queuepoint.pem
           chmod 600 queuepoint.pem
-          scp -i queuepoint.pem -o StrictHostKeyChecking=no \
-            source.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+          echo "🔍 Key file details:"
+          ls -la queuepoint.pem
+          file queuepoint.pem
+
+          echo ""
+          echo "🔐 Key format check:"
+          head -1 queuepoint.pem
+          tail -1 queuepoint.pem
+
+          echo ""
+          echo "📊 Key statistics:"
+          echo "Lines: $(wc -l < queuepoint.pem)"
+          echo "Characters: $(wc -c < queuepoint.pem)"
+          echo "Words: $(wc -w < queuepoint.pem)"
+
+          echo ""
+          echo "🔧 SSH key validation:"
+          ssh-keygen -y -e -f queuepoint.pem > /dev/null 2>&1 && echo "✅ Key format is valid" || echo "❌ Key format is invalid"
+
+          echo ""
+          echo "📋 SSH config setup:"
+          mkdir -p ~/.ssh
+          cat > ~/.ssh/config << EOF
+          Host ec2-instance
+            HostName ${{ secrets.EC2_HOST }}
+            User ${{ secrets.EC2_USER }}
+            IdentityFile $(pwd)/queuepoint.pem
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel DEBUG3
+            ConnectTimeout 30
+            ServerAliveInterval 60
+            ServerAliveCountMax 3
+          EOF
+          cat ~/.ssh/config
+          echo "========================================="
+
+      - name: Test SSH Connection with Verbose Logging
+        continue-on-error: true
+        run: |
+          echo "========================================="
+          echo "🔗 TESTING SSH CONNECTION"
+          echo "========================================="
+          echo "🧪 Test 1: Basic SSH with verbose output"
+          ssh -vvv -i queuepoint.pem -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo '✅ SSH connection successful'" 2>&1 | tee ssh_test.log || {
+            echo "❌ SSH test failed with exit code: $?"
+            echo ""
+            echo "📋 Error Analysis:"
+            grep -i "error\|fail\|refused\|denied\|timeout" ssh_test.log || echo "No specific errors found"
+          }
+
+          echo ""
+          echo "🧪 Test 2: Using SSH config"
+          ssh -vvv ec2-instance "echo '✅ SSH via config successful'" 2>&1 || echo "❌ SSH via config failed"
+
+          echo ""
+          echo "🧪 Test 3: Alternative SSH command formats"
+          timeout 10 ssh -i queuepoint.pem -o BatchMode=yes -o ConnectTimeout=5 \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} exit 0 && echo "✅ Batch mode SSH successful" || echo "❌ Batch mode SSH failed"
+          echo "========================================="
+
+      - name: Upload source to EC2 with Enhanced Logging
+        run: |
+          echo "🚀 [STEP 2/3] Uploading source to EC2..."
+          echo "========================================="
+          echo "📤 SCP UPLOAD WITH FULL DEBUG"
+          echo "========================================="
+
+          echo "📊 Upload details:"
+          echo "Source file: source.tar.gz ($(du -h source.tar.gz | cut -f1))"
+          echo "Destination: ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/"
+          echo ""
+
+          echo "🔄 Starting SCP with maximum verbosity..."
+          scp -vvv -i queuepoint.pem \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o ConnectTimeout=30 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -o TCPKeepAlive=yes \
+            -o LogLevel=DEBUG3 \
+            source.tar.gz ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/ 2>&1 | tee scp_upload.log || {
+            EXIT_CODE=$?
+            echo "❌ SCP failed with exit code: $EXIT_CODE"
+            echo ""
+            echo "📋 SCP Error Analysis:"
+            echo "Connection errors:"
+            grep -i "connection\|connect" scp_upload.log | tail -10
+            echo ""
+            echo "Authentication errors:"
+            grep -i "auth\|permission\|denied" scp_upload.log | tail -10
+            echo ""
+            echo "Timeout errors:"
+            grep -i "timeout" scp_upload.log | tail -10
+            echo ""
+            echo "Other errors:"
+            grep -i "error\|fail" scp_upload.log | tail -10
+            echo ""
+            echo "🔍 Last 50 lines of SCP log:"
+            tail -50 scp_upload.log
+            exit $EXIT_CODE
+          }
+          echo "✅ Upload completed successfully"
+          echo "========================================="
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v0.1.10
@@ -29,35 +191,46 @@ jobs:
           port: 22
           timeout: 30m
           command_timeout: 30m
+          debug: true
           script: |
             set -euo pipefail
-            echo "[INFO] Deploy start on $(hostname)"
+            echo "🚀 [STEP 3/3] Starting deployment on $(hostname) at $(date)"
 
             # Ensure nvm and Node.js 22.12.0 (vite requires ^20.19.0 || >=22.12.0)
+            echo "📋 [NODE] Checking Node.js environment..."
             if [ ! -d "$HOME/.nvm" ]; then
-              echo "[INFO] Installing nvm..."
+              echo "⚙️  [NODE] Installing nvm..."
               curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
             fi
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
             [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
-            echo "[INFO] Installing Node 22.12.0..."
+            echo "⚙️  [NODE] Installing Node 22.12.0..."
             nvm install 22.12.0
             nvm use 22.12.0
-            node -v
-            npm -v
+            echo "✅ [NODE] Node version: $(node -v)"
+            echo "✅ [NODE] npm version: $(npm -v)"
 
             TARGET_DIR="/home/${{ secrets.EC2_USER }}/mokin-recruit"
             SOURCE_TARBALL="/home/${{ secrets.EC2_USER }}/source.tar.gz"
 
+            echo "📁 [FILES] Setting up directories..."
+            echo "📁 [FILES] Target directory: $TARGET_DIR"
+            echo "📁 [FILES] Source tarball: $SOURCE_TARBALL"
+
             # ディレクトリ準備
             mkdir -p "$TARGET_DIR"
+            echo "📦 [FILES] Extracting source archive..."
             tar -xzf "$SOURCE_TARBALL" -C "$TARGET_DIR"
+            ls -la "$TARGET_DIR" || echo "⚠️  [FILES] Failed to list target directory"
             rm -f "$SOURCE_TARBALL"
+            echo "✅ [FILES] Source extraction completed"
 
             cd "$TARGET_DIR"
+            echo "📍 [FILES] Current directory: $(pwd)"
 
             # .env.production を Secrets から生成
+            echo "⚙️  [ENV] Creating environment file..."
             cat > .env.production << 'EOF'
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -66,19 +239,49 @@ jobs:
             SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
             NODE_ENV=production
             EOF
+            echo "✅ [ENV] Environment file created"
 
             # 依存関係インストール & ビルド
-            echo "[INFO] Installing dependencies..."
-            npm ci --no-audit --no-fund --prefer-offline
+            echo "📦 [NPM] Installing dependencies..."
+            echo "📦 [NPM] Package.json exists: $(test -f package.json && echo 'YES' || echo 'NO')"
+            echo "📦 [NPM] Package-lock.json exists: $(test -f package-lock.json && echo 'YES' || echo 'NO')"
 
-            echo "[INFO] Building Next.js..."
+            npm ci --no-audit --no-fund --prefer-offline || {
+              echo "❌ [NPM] Dependency installation failed with exit code $?"
+              echo "🔍 [NPM] Debug info:"
+              ls -la package*
+              cat package.json | head -20
+              exit 1
+            }
+            echo "✅ [NPM] Dependencies installed successfully"
+
+            echo "🏗️  [BUILD] Building Next.js application..."
             export NEXT_TELEMETRY_DISABLED=1
-            NODE_OPTIONS='--max-old-space-size=4096' npm run build
+            NODE_OPTIONS='--max-old-space-size=4096' npm run build || {
+              echo "❌ [BUILD] Build failed with exit code $?"
+              echo "🔍 [BUILD] Debug info:"
+              ls -la .next/ 2>/dev/null || echo "No .next directory found"
+              tail -50 ~/.npm/_logs/*.log 2>/dev/null || echo "No npm logs found"
+              exit 1
+            }
+            echo "✅ [BUILD] Build completed successfully"
 
             # pm2 で再起動
+            echo "🔄 [PM2] Managing PM2 process..."
             if ! command -v pm2 >/dev/null 2>&1; then
+              echo "⚙️  [PM2] Installing PM2..."
               npm install -g pm2
             fi
-            pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start
 
-            echo "[INFO] Deploy completed!"
+            echo "🔄 [PM2] Restarting application..."
+            pm2 restart mokin-recruit || pm2 start npm --name mokin-recruit -- start || {
+              echo "❌ [PM2] PM2 operation failed with exit code $?"
+              pm2 list
+              pm2 logs mokin-recruit --lines 50
+              exit 1
+            }
+            echo "✅ [PM2] Application restarted successfully"
+
+            echo "🎉 [SUCCESS] Deploy completed at $(date)!"
+            echo "🔍 [STATUS] Final PM2 status:"
+            pm2 list

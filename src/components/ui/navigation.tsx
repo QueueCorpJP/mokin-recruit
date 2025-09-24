@@ -393,7 +393,7 @@ export function Navigation({
           },
           {
             label: 'スカウト履歴',
-            href: '/company/candidates/scout-history',
+            href: '/company/scout-template',
             prefetch: false,
           },
         ],

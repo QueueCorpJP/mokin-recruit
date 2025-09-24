@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { SelectInput } from '@/components/ui/select-input';
@@ -434,10 +440,8 @@ export default function SearchClient({
   const paginatedCandidates = sortedCandidates.slice(startIndex, endIndex);
 
   // 検索条件表示テキスト生成 - searchStoreの値が変更されたら再計算
-  const [searchConditionText, setSearchConditionText] = useState('');
-
-  useEffect(() => {
-    setSearchConditionText(generateSearchConditionText(searchStore));
+  const searchConditionText = useMemo(() => {
+    return generateSearchConditionText(searchStore);
   }, [
     searchStore.experienceJobTypes,
     searchStore.experienceIndustries,
@@ -446,11 +450,28 @@ export default function SearchClient({
     searchStore.keyword,
     searchStore.desiredLocations,
     searchStore.workStyles,
+    searchStore.currentSalaryMin,
+    searchStore.currentSalaryMax,
+    searchStore.desiredSalaryMin,
+    searchStore.desiredSalaryMax,
+    searchStore.ageMin,
+    searchStore.ageMax,
+    searchStore.education,
+    searchStore.englishLevel,
+    searchStore.qualifications,
+    searchStore.currentCompany,
+    searchStore.otherLanguage,
+    searchStore.otherLanguageLevel,
+    searchStore.transferTime,
+    searchStore.selectionStatus,
+    searchStore.similarCompanyIndustry,
+    searchStore.similarCompanyLocation,
+    searchStore.lastLoginMin,
   ]);
 
-  // 検索実行ハンドラー
-  const handleSearch = useCallback(async () => {
-    console.log('🔍 [SearchClient] 検索実行を開始');
+  // ボタンクリック時の検索ハンドラー（URL更新のみ）
+  const handleSearchButtonClick = useCallback(async () => {
+    console.log('🔍 [SearchClient] 検索ボタンクリック - URL更新を開始');
 
     if (!user) {
       console.log('⚠️ [SearchClient] 認証されたユーザーが存在しません');
@@ -461,21 +482,18 @@ export default function SearchClient({
     try {
       setLoading(true);
       setError(null);
-      setCurrentPage(1); // ページを最初に戻す
 
       // URLパラメータを構築
       const params = new URLSearchParams();
 
       // 検索グループを必ず含める
       if (searchStore.searchGroup) {
-        if (searchStore.searchGroup) {
-          params.set('search_group', searchStore.searchGroup);
-        }
+        params.set('search_group', searchStore.searchGroup);
       }
 
       // 検索条件をURLパラメータに追加
       if (searchStore.keyword?.trim()) {
-        params.set('keyword', (searchStore.keyword ?? '').trim());
+        params.set('keyword', searchStore.keyword.trim());
       }
 
       if (searchStore.experienceJobTypes?.length > 0) {
@@ -497,27 +515,19 @@ export default function SearchClient({
       }
 
       if (searchStore.currentSalaryMin) {
-        if (searchStore.currentSalaryMin) {
-          params.set('current_salary_min', searchStore.currentSalaryMin);
-        }
+        params.set('current_salary_min', searchStore.currentSalaryMin);
       }
 
       if (searchStore.currentSalaryMax) {
-        if (searchStore.currentSalaryMax) {
-          params.set('current_salary_max', searchStore.currentSalaryMax);
-        }
+        params.set('current_salary_max', searchStore.currentSalaryMax);
       }
 
       if (searchStore.ageMin) {
-        if (searchStore.ageMin) {
-          params.set('age_min', searchStore.ageMin);
-        }
+        params.set('age_min', searchStore.ageMin);
       }
 
       if (searchStore.ageMax) {
-        if (searchStore.ageMax) {
-          params.set('age_max', searchStore.ageMax);
-        }
+        params.set('age_max', searchStore.ageMax);
       }
 
       if (searchStore.desiredJobTypes?.length > 0) {
@@ -548,73 +558,21 @@ export default function SearchClient({
       }
 
       if (searchStore.education) {
-        if (searchStore.education) {
-          params.set('education', searchStore.education);
-        }
+        params.set('education', searchStore.education);
       }
 
       if (searchStore.englishLevel) {
-        if (searchStore.englishLevel) {
-          params.set('english_level', searchStore.englishLevel);
-        }
+        params.set('english_level', searchStore.englishLevel);
       }
 
       if (searchStore.qualifications) {
-        if (searchStore.qualifications) {
-          params.set('qualifications', searchStore.qualifications);
-        }
+        params.set('qualifications', searchStore.qualifications);
       }
 
-      // URLを更新
+      // URLを更新（これによってuseEffectが再実行され、検索が実行される）
       const newUrl = `${window.location.pathname}?${params.toString()}`;
+      console.log('🔗 [SearchClient] URL更新:', newUrl);
       router.replace(newUrl);
-
-      // 検索条件を構築
-      const searchConditions = {
-        keyword: searchStore.keyword,
-        experienceJobTypes: searchStore.experienceJobTypes,
-        experienceIndustries: searchStore.experienceIndustries,
-        currentSalaryMin: searchStore.currentSalaryMin,
-        currentSalaryMax: searchStore.currentSalaryMax,
-        ageMin: searchStore.ageMin,
-        ageMax: searchStore.ageMax,
-        desiredJobTypes: searchStore.desiredJobTypes,
-        desiredIndustries: searchStore.desiredIndustries,
-        desiredLocations: searchStore.desiredLocations,
-        education: searchStore.education,
-        englishLevel: searchStore.englishLevel,
-        qualifications: searchStore.qualifications,
-      };
-
-      console.log('🔍 [SearchClient] 検索条件:', searchConditions);
-      console.log(
-        '📡 [SearchClient] searchCandidatesWithConditionsを呼び出し中...'
-      );
-
-      const results = await searchCandidatesWithConditions(searchConditions);
-
-      const safeResults = Array.isArray(results) ? results : [];
-      console.log(
-        '✅ [SearchClient] 検索結果を受信:',
-        safeResults.length,
-        '件'
-      );
-
-      if (safeResults.length > 0) {
-        console.log('👥 [SearchClient] 検索結果サンプル:', {
-          id: safeResults[0]?.id,
-          companyName: (safeResults[0] as any)?.companyName,
-          position: (safeResults[0] as any)?.position,
-        });
-        setCandidates(safeResults as any);
-      } else {
-        console.log('⚠️ [SearchClient] 検索結果が0件です');
-        setCandidates([]);
-        // 検索結果が0件の場合はエラーメッセージを表示
-        setError(
-          '検索条件に一致する候補者が見つかりませんでした。条件を変更して再度お試しください。'
-        );
-      }
 
       // 検索ボックスを閉じる
       setIsSearchBoxOpen(false);
@@ -624,10 +582,62 @@ export default function SearchClient({
     } catch (err) {
       setError('検索に失敗しました。もう一度お試しください。');
       console.error('❌ [SearchClient] 検索エラー:', err);
-    } finally {
       setLoading(false);
     }
   }, [user, searchStore, router]);
+
+  // 検索条件を構築する関数（server-actions.tsの SearchConditions 型に合わせる）
+  const buildSearchConditions = useCallback((store: any) => {
+    return {
+      keyword: store.keyword || '',
+      experienceJobTypes: store.experienceJobTypes || [],
+      experienceIndustries: store.experienceIndustries || [],
+      currentSalaryMin: store.currentSalaryMin || '',
+      currentSalaryMax: store.currentSalaryMax || '',
+      ageMin: store.ageMin || '',
+      ageMax: store.ageMax || '',
+      desiredJobTypes: store.desiredJobTypes || [],
+      desiredIndustries: store.desiredIndustries || [],
+      desiredLocations: store.desiredLocations || [],
+      education: store.education || '',
+      englishLevel: store.englishLevel || '',
+      qualifications: store.qualifications || '',
+    };
+  }, []);
+
+  // 直接検索実行（初期レンダリング時のURLパラメータ処理用）
+  const executeSearch = useCallback(async (searchConditions: any) => {
+    console.log('🔍 [SearchClient] 直接検索実行を開始');
+
+    try {
+      const results = await searchCandidatesWithConditions(searchConditions);
+      const safeResults = Array.isArray(results) ? results : [];
+      console.log(
+        '✅ [SearchClient] 検索結果を受信:',
+        safeResults.length,
+        '件'
+      );
+
+      if (safeResults.length > 0) {
+        setCandidates(safeResults as any);
+        setCurrentPage(1);
+        setError(null);
+      } else {
+        console.log('⚠️ [SearchClient] 検索結果が0件です');
+        setCandidates([]);
+        setError(
+          '検索条件に一致する候補者が見つかりませんでした。条件を変更して再度お試しください。'
+        );
+      }
+
+      // 検索ボックスを閉じる
+      setIsSearchBoxOpen(false);
+    } catch (error) {
+      console.error('❌ [SearchClient] 検索実行エラー:', error);
+      setError('検索に失敗しました。もう一度お試しください。');
+      setCandidates([]);
+    }
+  }, []);
 
   // Hydration完了のマーク
   useEffect(() => {
@@ -785,11 +795,15 @@ export default function SearchClient({
 
     loadSavedCandidates();
     loadHiddenCandidates();
-  }, [isHydrated, searchStore.searchGroup, companyGroups]);
+  }, [isHydrated, searchStore.searchGroup]); // companyGroupsを削除（不要な依存関係）
 
   // 候補者データが変更された際に保存状態を反映
+  const candidatesRef = useRef(candidates);
+  candidatesRef.current = candidates;
+
   useEffect(() => {
-    if (savedCandidateIds.length === 0 || candidates.length === 0) return;
+    if (savedCandidateIds.length === 0 || candidatesRef.current.length === 0)
+      return;
 
     setCandidates(prev =>
       prev.map(candidate => ({
@@ -797,11 +811,13 @@ export default function SearchClient({
         isPickup: savedCandidateIds.includes(String(candidate.id)),
       }))
     );
-  }, [savedCandidateIds, candidates.length]);
+  }, [savedCandidateIds]); // candidates.lengthを削除して循環参照を防ぐ
 
-  // 初期データ読み込み
+  // 初期データ読み込みと検索実行を統合（1回のuseEffectで処理）
+  const hasExecutedInitialSearch = useRef(false);
+
   useEffect(() => {
-    if (!isHydrated || authLoading) return;
+    if (!isHydrated || authLoading || hasExecutedInitialSearch.current) return;
 
     // 認証が必要だが、ユーザーが存在しない場合は処理を停止
     if (!user) {
@@ -812,10 +828,14 @@ export default function SearchClient({
 
     console.log('✅ [SearchClient] 認証済みユーザーを確認:', user.id);
 
-    const loadInitialData = async () => {
+    const loadInitialDataAndSearch = async () => {
       try {
         setLoading(true);
         setError(null);
+        hasExecutedInitialSearch.current = true; // 実行済みマークを最初に設定
+
+        // URLパラメータから検索条件をストアに復元（データ読み込み前に実行）
+        loadSearchParamsToStore(searchParams, searchStore);
 
         // 初期候補者データを設定
         console.log(
@@ -823,20 +843,20 @@ export default function SearchClient({
           initialCandidates.length
         );
 
+        let candidatesData = [];
         if (initialCandidates.length > 0) {
           console.log(
             '✅ [SearchClient] サーバーから受信した初期データを使用:',
             initialCandidates.length,
             '件'
           );
-          setAllCandidates(initialCandidates);
-          setCandidates(initialCandidates);
+          candidatesData = initialCandidates;
         } else {
           console.log(
             '📊 [SearchClient] 初期データがないため、getCandidatesFromDatabaseを呼び出し中...'
           );
           const candidatesDataRaw = await getCandidatesFromDatabase();
-          const candidatesData = Array.isArray(candidatesDataRaw)
+          candidatesData = Array.isArray(candidatesDataRaw)
             ? candidatesDataRaw
             : [];
           console.log(
@@ -856,10 +876,9 @@ export default function SearchClient({
               '⚠️ [SearchClient] 候補者データが0件です。データベース接続を確認してください。'
             );
           }
-
-          setAllCandidates(candidatesData);
-          setCandidates(candidatesData);
         }
+
+        setAllCandidates(candidatesData);
 
         // グループIDが設定されていない場合、ユーザーのデフォルトグループIDを取得
         if (!searchStore.searchGroup) {
@@ -896,73 +915,65 @@ export default function SearchClient({
           }
         }
 
-        // グループ情報は初期データで設定済み
+        // URLパラメータに検索条件がある場合は検索実行、なければ全候補者表示
+        // search_groupは検索条件ではなくグループ選択のためのパラメータなので除外
+        const hasUrlParams =
+          searchParams.get('keyword') ||
+          searchParams.get('experience_job_types') ||
+          searchParams.get('experience_industries') ||
+          searchParams.get('current_salary_min') ||
+          searchParams.get('current_salary_max') ||
+          searchParams.get('age_min') ||
+          searchParams.get('age_max') ||
+          searchParams.get('education') ||
+          searchParams.get('desired_salary_min') ||
+          searchParams.get('desired_salary_max') ||
+          searchParams.get('desired_job_types') ||
+          searchParams.get('desired_industries') ||
+          searchParams.get('desired_locations') ||
+          searchParams.get('work_styles') ||
+          searchParams.get('qualifications') ||
+          searchParams.get('current_company') ||
+          searchParams.get('english_level') ||
+          searchParams.get('other_language') ||
+          searchParams.get('other_language_level') ||
+          searchParams.get('transfer_time') ||
+          searchParams.get('selection_status') ||
+          searchParams.get('similar_company_industry') ||
+          searchParams.get('similar_company_location') ||
+          searchParams.get('last_login_min') ||
+          searchParams.get('job_type_and_search') ||
+          searchParams.get('industry_and_search');
+
+        if (hasUrlParams) {
+          // 外部パラメータがある場合は検索実行（検索条件は既にストアに設定済み）
+          console.log('[DEBUG] URLパラメータを検出、検索を実行します', {
+            hasParams: true,
+            paramsCount: Array.from(searchParams.entries()).length,
+          });
+
+          // executeSearchを呼び出して直接検索実行
+          const searchConditions = buildSearchConditions(searchStore);
+          await executeSearch(searchConditions);
+        } else {
+          // パラメータがない場合は全候補者を表示
+          console.log('[DEBUG] URLパラメータなし、全候補者を表示します', {
+            allCandidatesLength: candidatesData.length,
+          });
+          setCandidates(candidatesData);
+          setCurrentPage(1);
+          setError(null);
+        }
       } catch (error) {
-        console.error('Failed to load initial data:', error);
+        console.error('Failed to load initial data and search:', error);
         setError('データの読み込みに失敗しました');
       } finally {
         setLoading(false);
       }
     };
 
-    // URLパラメータから検索条件をストアに復元
-    loadSearchParamsToStore(searchParams, searchStore);
-    loadInitialData();
+    loadInitialDataAndSearch();
   }, [isHydrated, authLoading, user, initialCandidates, searchParams]);
-
-  // URLパラメータが変更された時の処理は上記のメインuseEffectで処理されるため削除
-
-  // 初回のみ外部パラメータで検索実行
-  useEffect(() => {
-    if (!isHydrated || allCandidates.length === 0) return;
-
-    // URLパラメータに検索条件がある場合（外部ページからのリンク）のみ自動検索
-    const hasUrlParams =
-      searchParams.get('keyword') ||
-      searchParams.get('experience_job_types') ||
-      searchParams.get('experience_industries') ||
-      searchParams.get('current_salary_min') ||
-      searchParams.get('current_salary_max') ||
-      searchParams.get('age_min') ||
-      searchParams.get('age_max') ||
-      searchParams.get('education') ||
-      searchParams.get('desired_salary_min') ||
-      searchParams.get('desired_salary_max') ||
-      searchParams.get('desired_job_types') ||
-      searchParams.get('desired_industries') ||
-      searchParams.get('desired_locations') ||
-      searchParams.get('work_styles') ||
-      searchParams.get('qualifications') ||
-      searchParams.get('current_company') ||
-      searchParams.get('english_level') ||
-      searchParams.get('other_language') ||
-      searchParams.get('other_language_level') ||
-      searchParams.get('transfer_time') ||
-      searchParams.get('selection_status') ||
-      searchParams.get('similar_company_industry') ||
-      searchParams.get('similar_company_location') ||
-      searchParams.get('last_login_min') ||
-      searchParams.get('job_type_and_search') ||
-      searchParams.get('industry_and_search') ||
-      searchParams.get('search_group'); // 検索履歴からの遷移を判定
-
-    if (hasUrlParams) {
-      // 外部パラメータがある場合は自動検索実行
-      console.log('[DEBUG] URLパラメータを検出、自動検索を実行します', {
-        hasParams: true,
-        paramsCount: Array.from(searchParams.entries()).length,
-      });
-      handleSearch();
-    } else {
-      // パラメータがない場合は全候補者を表示
-      console.log('[DEBUG] URLパラメータなし、全候補者を表示します', {
-        allCandidatesLength: allCandidates.length,
-      });
-      setCandidates(allCandidates);
-      setCurrentPage(1);
-      setError(null); // エラー状態をクリア
-    }
-  }, [isHydrated, allCandidates, handleSearch, searchParams]); // 依存関係を最小限に
 
   const togglePickup = async (candidateId: string) => {
     const currentGroupId = searchStore.searchGroup;
@@ -2138,6 +2149,11 @@ export default function SearchClient({
                       size='figma-default'
                       style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       onClick={async () => {
+                        console.log(
+                          '[DEBUG] 検索ボタンクリック - 現在のsearchStore.searchGroup:',
+                          searchStore.searchGroup
+                        );
+
                         // タッチ済みにしてバリデーションをトリガー
                         searchStore.setSearchGroupTouched(true);
 
@@ -2160,8 +2176,19 @@ export default function SearchClient({
                             });
                           }
                         } else {
-                          // 検索実行処理
-                          await handleSearch();
+                          // 検索実行処理（直接検索実行）
+                          console.log('[DEBUG] 検索実行 - searchStore:', {
+                            searchGroup: searchStore.searchGroup,
+                            keyword: searchStore.keyword,
+                            currentSalaryMin: searchStore.currentSalaryMin,
+                          });
+                          const searchConditions =
+                            buildSearchConditions(searchStore);
+                          console.log(
+                            '[DEBUG] 構築された検索条件:',
+                            searchConditions
+                          );
+                          await executeSearch(searchConditions);
                         }
                       }}
                     >

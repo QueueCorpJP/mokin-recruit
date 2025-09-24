@@ -380,12 +380,8 @@ export function ScoutSendForm({ candidateId }: ScoutSendFormProps) {
 
   // チケット購入処理
   const handleTicketPurchase = () => {
-    // 実際の実装では、チケット購入ページに遷移またはAPI呼び出し
-    console.log('チケット購入処理を開始');
-    // 仮の実装: モーダルを閉じて購入完了として扱う
-    setIsTicketModalOpen(false);
-    // 実際には購入が完了した時点でチケット数を更新
-    setScoutTicketsRemaining(prev => prev + 10);
+    // /company/contactページに遷移
+    router.push('/company/contact');
   };
 
   const handleModalClose = () => {
