@@ -125,60 +125,60 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // admin配下のルートをチェック
+  // admin配下のルートをチェック（認証必須・auth配下は除外）
+  // 判定はサーバー側レイアウトに委譲するため、ここでは
+  // セッション（アクセストークン）の存在のみを確認
   if (path.startsWith('/admin') && !path.startsWith('/admin/login')) {
-    // クッキーから認証情報をチェック
-    const authToken = request.cookies.get('auth_token')?.value;
+    // まずはadmin専用のクッキーをチェック
     const adminUser = request.cookies.get('admin_user')?.value;
+    const authToken = request.cookies.get('auth_token')?.value;
+    const userId = request.cookies.get('user_id')?.value;
 
-    if (process.env.NODE_ENV !== 'production') {
-      const cookieNames = request.cookies.getAll().map(c => c.name);
-      console.log('[MW:admin] path=', path, 'cookies=', cookieNames);
-      console.log(
-        '[MW:admin] authToken exists=',
-        !!authToken,
-        'adminUser=',
-        adminUser
-      );
+    // admin専用のクッキーがある場合は認証済みとみなす
+    if (adminUser === 'true' && authToken && userId) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[MW:/admin] admin session found, continue');
+      }
+      const response = NextResponse.next({
+        request: { headers: requestHeaders },
+      });
+      response.headers.set('x-nonce', nonce);
+      return response;
     }
 
-    // auth_tokenがある場合は、それがSupabaseのアクセストークンとして有効かチェック
-    // ADMIN_JWT_SECRETがない場合は、adminUserクッキーの存在で判定
-    let isAuthorized = false;
+    // Supabaseのセッションクッキーを確認（優先: sb-access-token）
+    let accessToken = request.cookies.get('sb-access-token')?.value;
+    let hasSupabaseSession = false;
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const names = request.cookies.getAll().map(c => c.name);
+        console.log('[MW:/admin] path=', path, 'cookies=', names);
+      } catch {}
+    }
 
-    if (authToken) {
-      // auth_tokenが存在する場合は、Supabaseのセッションとして扱う
-      // JWTの構造（3つのドット区切り）を持つかチェック
-      if (authToken.split('.').length === 3) {
-        try {
-          // JWTペイロードをデコード（署名検証なし）
-          const parts = authToken.split('.');
-          const payload = JSON.parse(atob(parts[1]));
-          // 有効期限をチェック
-          const exp = payload.exp;
-          const now = Math.floor(Date.now() / 1000);
-          if (exp && exp > now) {
-            isAuthorized = true;
-          }
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('[MW:admin] JWT check:', {
-              exp,
-              now,
-              isValid: exp > now,
-            });
-          }
-        } catch (error) {
-          if (process.env.NODE_ENV !== 'production') {
-            console.log('[MW:admin] JWT decode error:', error);
-          }
+    // 次に sb-<project-ref>-auth-token.0（base64 JSON）を探す
+    if (!accessToken) {
+      try {
+        const all = request.cookies.getAll();
+        // v2 cookieの存在自体をセッション有りとみなす（デコードは不要）
+        const hasV2 = all.some(c => /sb-.*-auth-token\.(0|1)/.test(c.name));
+        if (hasV2) {
+          hasSupabaseSession = true;
         }
+      } catch {}
+    }
+
+    // 最後にレガシーな supabase-auth-token（JWT文字列）を確認
+    if (!accessToken) {
+      const legacy = request.cookies.get('supabase-auth-token')?.value;
+      if (legacy && legacy.split('.').length === 3) {
+        accessToken = legacy;
       }
     }
 
-    // adminUserクッキーも併せてチェック（後方互換性）
-    if (!isAuthorized && adminUser !== 'true') {
+    if (!accessToken && !hasSupabaseSession) {
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[MW:admin] redirect -> /admin/login (not authorized)');
+        console.log('[MW:/admin] redirect -> /admin/login (no accessToken)');
       }
       const redirectResponse = NextResponse.redirect(
         new URL('/admin/login', request.url)
@@ -188,7 +188,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[MW:admin] authorization success, continue');
+      console.log('[MW:/admin] session found, continue');
     }
   }
 

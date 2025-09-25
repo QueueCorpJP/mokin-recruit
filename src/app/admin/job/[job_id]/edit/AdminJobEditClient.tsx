@@ -42,7 +42,7 @@ interface JobDetail {
   overtime_info: string | null;
   holidays: string | null;
   selection_process: string | null;
-  appeal_points: string[] | null;
+  company_attractions: string[] | null;
   smoking_policy: string | null;
   smoking_policy_note: string | null;
   required_documents: string[] | null;
@@ -108,7 +108,7 @@ export default function AdminJobEditClient({
   );
   const [holidays, setHolidays] = useState(jobDetail.holidays || '');
   const [appealPoints, setAppealPoints] = useState(
-    jobDetail.appeal_points || []
+    jobDetail.company_attractions || []
   );
   const [smoke, setSmoke] = useState(jobDetail.smoking_policy || '屋内禁煙');
   const [smokeNote, setSmokeNote] = useState(
@@ -157,7 +157,7 @@ export default function AdminJobEditClient({
         job_type: jobTypes,
         industry: industries,
         selection_process: selectionProcess,
-        appeal_points: appealPoints,
+        company_attractions: appealPoints,
         smoking_policy: smoke,
         smoking_policy_note: smokeNote,
         required_documents: resumeRequired,

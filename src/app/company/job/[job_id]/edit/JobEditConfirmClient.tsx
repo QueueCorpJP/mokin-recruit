@@ -135,7 +135,7 @@ interface JobEditData {
   job_types: string[];
   industries: string[];
   selection_process: string;
-  appeal_points: string[];
+  company_attractions: string[];
   smoking_policy: string;
   smoking_policy_note: string;
   required_documents: string[];
@@ -778,8 +778,8 @@ export default function JobEditConfirmClient({
                     {appealPointCategories.map((category, idx) => {
                       const selected = category.points.filter(
                         p =>
-                          editData.appeal_points &&
-                          editData.appeal_points.includes(p)
+                          editData.company_attractions &&
+                          editData.company_attractions.includes(p)
                       );
                       return (
                         <div

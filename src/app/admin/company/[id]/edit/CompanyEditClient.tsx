@@ -2,13 +2,19 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { IndustryModal } from '@/app/company/job/IndustryModal';
-// import { industryCategories } from '@/app/company/job/types';
+import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import type { CompanyEditData } from './page';
 import CompanyEditCompleteModal from '@/components/admin/CompanyEditCompleteModal';
 import { updateCompanyData } from './actions';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
+import {
+  PLAN_OPTIONS,
+  PREFECTURE_OPTIONS,
+  COMPANY_PHASE_OPTIONS,
+  CAPITAL_UNIT_OPTIONS,
+} from '@/lib/constants/company';
+import { SelectInput } from '@/components/ui/select-input';
 
 // フォームデータの型定義
 interface CompanyFormData {
@@ -38,74 +44,6 @@ interface CompanyFormData {
   }>;
 }
 
-// プランのオプション
-const planOptions = [
-  { value: 'プラン加入なし', label: 'プラン加入なし' },
-  { value: 'スタンダード', label: 'スタンダード' },
-  { value: 'ストラテジック', label: 'ストラテジック' },
-];
-
-// 都道府県のオプション
-const prefectureOptions = [
-  '北海道',
-  '青森県',
-  '岩手県',
-  '宮城県',
-  '秋田県',
-  '山形県',
-  '福島県',
-  '茨城県',
-  '栃木県',
-  '群馬県',
-  '埼玉県',
-  '千葉県',
-  '東京都',
-  '神奈川県',
-  '新潟県',
-  '富山県',
-  '石川県',
-  '福井県',
-  '山梨県',
-  '長野県',
-  '岐阜県',
-  '静岡県',
-  '愛知県',
-  '三重県',
-  '滋賀県',
-  '京都府',
-  '大阪府',
-  '兵庫県',
-  '奈良県',
-  '和歌山県',
-  '鳥取県',
-  '島根県',
-  '岡山県',
-  '広島県',
-  '山口県',
-  '徳島県',
-  '香川県',
-  '愛媛県',
-  '高知県',
-  '福岡県',
-  '佐賀県',
-  '長崎県',
-  '熊本県',
-  '大分県',
-  '宮崎県',
-  '鹿児島県',
-  '沖縄県',
-];
-
-// 企業フェーズのオプション
-const companyPhaseOptions = [
-  'スタートアップ',
-  'アーリーステージ',
-  'グロースステージ',
-  'レイターステージ',
-  '上場企業',
-  '大手企業',
-];
-
 interface CompanyEditClientProps {
   company: CompanyEditData;
 }
@@ -126,41 +64,96 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
     companyId: company.id,
     plan: company.plan || '',
     companyName: company.company_name,
-    urls:
-      company.company_urls && company.company_urls.length > 0
-        ? company.company_urls.map((url: any) => ({
-            title: url.title || '',
-            url: url.url || '',
-          }))
-        : [{ title: '', url: '' }],
+    urls: (() => {
+      try {
+        if (company.company_urls) {
+          let urlsData;
+          // JSON文字列の場合はパース
+          if (typeof company.company_urls === 'string') {
+            urlsData = JSON.parse(company.company_urls);
+          } else {
+            urlsData = company.company_urls;
+          }
+
+          if (Array.isArray(urlsData) && urlsData.length > 0) {
+            return urlsData.map((url: any) => ({
+              title: url.title || '',
+              url: url.url || '',
+            }));
+          }
+        }
+        return [{ title: '', url: '' }];
+      } catch (error) {
+        console.error('Error parsing company_urls:', error);
+        return [{ title: '', url: '' }];
+      }
+    })(),
     iconImage: null,
     representativePosition:
       company.representative_position ||
       company.company_users[0]?.position_title ||
       '',
     representativeName: company.representative_name || '',
-    establishedYear: company.established_year || '',
-    capital: company.capital_amount || '',
+    establishedYear: company.established_year
+      ? String(company.established_year)
+      : '',
+    capital: company.capital_amount ? String(company.capital_amount) : '',
     capitalUnit: company.capital_unit || '万円',
-    employeeCount: company.employees_count || '',
-    industries:
-      company.industries && company.industries.length > 0
-        ? company.industries
-        : company.industry
-          ? [company.industry]
-          : [],
+    employeeCount: company.employees_count
+      ? String(company.employees_count)
+      : '',
+    industries: (() => {
+      try {
+        if (company.industries) {
+          let industriesData;
+          // JSON文字列の場合はパース
+          if (typeof company.industries === 'string') {
+            industriesData = JSON.parse(company.industries);
+          } else {
+            industriesData = company.industries;
+          }
+
+          if (Array.isArray(industriesData) && industriesData.length > 0) {
+            return industriesData.map(
+              (industry: any) => industry.name || industry.id || industry
+            );
+          }
+        }
+        return company.industry ? [company.industry] : [];
+      } catch (error) {
+        console.error('Error parsing industries:', error);
+        return company.industry ? [company.industry] : [];
+      }
+    })(),
     businessContent: company.business_content || company.company_overview || '',
     prefecture: company.prefecture || '',
     address: company.address || company.headquarters_address || '',
     companyPhase: company.company_phase || '',
     images: [],
-    attractions:
-      company.company_attractions && company.company_attractions.length > 0
-        ? company.company_attractions.map((attraction: any) => ({
-            title: attraction.title || '',
-            description: attraction.description || '',
-          }))
-        : [{ title: '', description: '' }],
+    attractions: (() => {
+      try {
+        if (company.company_attractions) {
+          let attractionsData;
+          // JSON文字列の場合はパース
+          if (typeof company.company_attractions === 'string') {
+            attractionsData = JSON.parse(company.company_attractions);
+          } else {
+            attractionsData = company.company_attractions;
+          }
+
+          if (Array.isArray(attractionsData) && attractionsData.length > 0) {
+            return attractionsData.map((attraction: any) => ({
+              title: attraction.title || '',
+              description: attraction.description || attraction.content || '',
+            }));
+          }
+        }
+        return [{ title: '', description: '' }];
+      } catch (error) {
+        console.error('Error parsing company_attractions:', error);
+        return [{ title: '', description: '' }];
+      }
+    })(),
   });
 
   // URL管理
@@ -270,20 +263,12 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
           プラン
         </label>
-        <select
+        <SelectInput
+          options={PLAN_OPTIONS}
           value={formData.plan}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, plan: e.target.value }))
-          }
-          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-        >
-          <option value=''>プランを選択してください</option>
-          {planOptions.map(plan => (
-            <option key={plan.value} value={plan.value}>
-              {plan.label}
-            </option>
-          ))}
-        </select>
+          onChange={value => setFormData(prev => ({ ...prev, plan: value }))}
+          className='flex-1'
+        />
       </div>
 
       <hr className='border-gray-300' />
@@ -358,11 +343,19 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40">
           アイコン画像
         </label>
-        <div className='w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer'>
-          <div className='text-center'>
-            <div className='text-sm font-bold text-white'>画像を</div>
-            <div className='text-sm font-bold text-white'>変更</div>
-          </div>
+        <div className='w-32 h-32 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer overflow-hidden'>
+          {company.icon_image_url ? (
+            <img
+              src={company.icon_image_url}
+              alt={company.company_name}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <div className='text-center'>
+              <div className='text-sm font-bold text-white'>画像を</div>
+              <div className='text-sm font-bold text-white'>変更</div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -444,25 +437,15 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             placeholder='500'
             className="w-24 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] text-center focus:outline-none focus:border-[#0F9058]"
           />
-          <div className='flex items-center px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px]'>
-            <label htmlFor='capital-unit' className='sr-only'>
-              資本金単位
-            </label>
-            <select
-              id='capital-unit'
-              value={formData.capitalUnit}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, capitalUnit: e.target.value }))
-              }
-              className="text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] bg-transparent border-none outline-none focus:outline-none"
-            >
-              <option value='万円'>万円</option>
-              <option value='円'>円</option>
-              <option value='千円'>千円</option>
-              <option value='億円'>億円</option>
-            </select>
-            <span className='ml-2'>▼</span>
-          </div>
+          <SelectInput
+            id='capital-unit'
+            options={CAPITAL_UNIT_OPTIONS}
+            value={formData.capitalUnit}
+            onChange={value =>
+              setFormData(prev => ({ ...prev, capitalUnit: value }))
+            }
+            style={{ width: 'auto', minWidth: '120px' }}
+          />
         </div>
       </div>
 
@@ -530,20 +513,18 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         <label className="block font-['Noto_Sans_JP'] text-[16px] font-bold text-[#323232] leading-[1.6] tracking-[1.6px] w-40 mt-2">
           事業内容
         </label>
-        <div className='border p-1'>
-          <textarea
-            value={formData.businessContent}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                businessContent: e.target.value,
-              }))
-            }
-            placeholder='当社では、革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。&#10;具体的には、Webアプリケーション開発、コンサルティング、システムインテグレーションなどのサービスを提供しております。'
-            rows={4}
-            className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-          />
-        </div>
+        <textarea
+          value={formData.businessContent}
+          onChange={e =>
+            setFormData(prev => ({
+              ...prev,
+              businessContent: e.target.value,
+            }))
+          }
+          placeholder='当社では、革新的なソリューションを提供する企業として、お客様のニーズに合わせたサービスを展開しています。&#10;具体的には、Webアプリケーション開発、コンサルティング、システムインテグレーションなどのサービスを提供しております。'
+          rows={4}
+          className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
+        />
       </div>
 
       <hr className='border-gray-300' />
@@ -558,21 +539,14 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
             <label htmlFor='prefecture-select' className='sr-only'>
               都道府県選択
             </label>
-            <select
+            <SelectInput
               id='prefecture-select'
+              options={PREFECTURE_OPTIONS}
               value={formData.prefecture}
-              onChange={e =>
-                setFormData(prev => ({ ...prev, prefecture: e.target.value }))
+              onChange={value =>
+                setFormData(prev => ({ ...prev, prefecture: value }))
               }
-              className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-            >
-              <option value=''>都道府県を選択してください</option>
-              {prefectureOptions.map(prefecture => (
-                <option key={prefecture} value={prefecture}>
-                  {prefecture}
-                </option>
-              ))}
-            </select>
+            />
           </div>
           <input
             type='text'
@@ -596,21 +570,14 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
         >
           企業フェーズ
         </label>
-        <select
+        <SelectInput
           id='company-phase'
+          options={COMPANY_PHASE_OPTIONS}
           value={formData.companyPhase}
-          onChange={e =>
-            setFormData(prev => ({ ...prev, companyPhase: e.target.value }))
+          onChange={value =>
+            setFormData(prev => ({ ...prev, companyPhase: value }))
           }
-          className="px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058]"
-        >
-          <option value=''>企業フェーズを選択してください</option>
-          {companyPhaseOptions.map(phase => (
-            <option key={phase} value={phase}>
-              {phase}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       <hr className='border-gray-300' />
@@ -621,21 +588,29 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
           イメージ画像
         </label>
         <div className='flex gap-4'>
-          {[0, 1, 2].map(index => (
-            <div
-              key={index}
-              className='w-48 h-32 bg-gray-400 flex items-center justify-center cursor-pointer'
-            >
-              <div className='text-center'>
-                <div className='text-sm font-bold text-white'>
-                  {formData.images[index] ? '画像を' : '画像を'}
-                </div>
-                <div className='text-sm font-bold text-white'>
-                  {formData.images[index] ? '変更' : '追加'}
-                </div>
+          {[0, 1, 2].map(index => {
+            const existingImage =
+              company.company_images && company.company_images[index];
+            return (
+              <div
+                key={index}
+                className='w-48 h-32 bg-gray-400 flex items-center justify-center cursor-pointer overflow-hidden'
+              >
+                {existingImage ? (
+                  <img
+                    src={existingImage}
+                    alt={`${company.company_name} 画像 ${index + 1}`}
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <div className='text-center'>
+                    <div className='text-sm font-bold text-white'>画像を</div>
+                    <div className='text-sm font-bold text-white'>追加</div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -656,17 +631,15 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
                 placeholder='ワークライフバランスが充実'
                 className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
               />
-              <div className='border p-1'>
-                <textarea
-                  value={attraction.description}
-                  onChange={e =>
-                    updateAttraction(index, 'description', e.target.value)
-                  }
-                  placeholder='当社では、社員一人ひとりのワークライフバランスを大切に考えています。フレックスタイム制度やリモートワーク制度を導入しており、家庭や個人の時間を大切にしながら働ける環境を整えています。また、年間休日は125日以上と業界トップクラスの水準を確保しています。'
-                  rows={5}
-                  className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
-                />
-              </div>
+              <textarea
+                value={attraction.description}
+                onChange={e =>
+                  updateAttraction(index, 'description', e.target.value)
+                }
+                placeholder='当社では、社員一人ひとりのワークライフバランスを大切に考えています。フレックスタイム制度やリモートワーク制度を導入しており、家庭や個人の時間を大切にしながら働ける環境を整えています。また、年間休日は125日以上と業界トップクラスの水準を確保しています。'
+                rows={5}
+                className="w-full px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP'] resize-none focus:outline-none focus:border-[#0F9058] placeholder:text-[#999999]"
+              />
             </div>
           ))}
           <AdminButton
@@ -700,15 +673,15 @@ export default function CompanyEditClient({ company }: CompanyEditClientProps) {
       )}
 
       {/* 業種選択モーダル */}
-      {industryModalOpen && (
-        <IndustryModal
-          selectedIndustries={formData.industries}
-          onIndustriesChange={selectedIndustries => {
-            setFormData(prev => ({ ...prev, industries: selectedIndustries }));
-          }}
-          onClose={() => setIndustryModalOpen(false)}
-        />
-      )}
+      <IndustrySelectModal
+        isOpen={industryModalOpen}
+        onClose={() => setIndustryModalOpen(false)}
+        onConfirm={selectedIndustries => {
+          setFormData(prev => ({ ...prev, industries: selectedIndustries }));
+        }}
+        initialSelected={formData.industries}
+        maxSelections={5}
+      />
 
       {/* 企業情報編集完了モーダル */}
       <CompanyEditCompleteModal

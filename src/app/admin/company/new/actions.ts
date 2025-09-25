@@ -38,7 +38,7 @@ export interface CompanyFormData {
 const CreateCompanySchema = z.object({
   companyId: z.string().min(1, '企業IDが必要です'),
   companyName: z.string().min(1, '企業名を入力してください'),
-  plan: z.enum(['basic', 'standard'], {
+  plan: z.enum(['none', 'standard', 'strategic'], {
     errorMap: () => ({ message: '有効なプランを選択してください' }),
   }),
   representativeName: z.string().optional(),
@@ -216,7 +216,7 @@ export async function createCompanyData(formData: CompanyFormData) {
       representative_name: formData.representativeName || null,
       representative_position: formData.representativePosition || null,
       company_overview: formData.businessContent || null,
-      plan: formData.plan || 'basic', // NOT NULL with DEFAULT 'basic'
+      plan: formData.plan || 'none', // NOT NULL with DEFAULT 'none'
       status: 'ACTIVE',
 
       // 詳細情報

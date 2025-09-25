@@ -27,7 +27,7 @@ interface JobPostingDetail {
   required_skills?: string;
   preferred_skills?: string;
   selection_process?: string;
-  appeal_points?: string[];
+  company_attractions?: string[];
   smoking_policy?: string;
   smoking_policy_note?: string;
   required_documents?: string[];
@@ -77,7 +77,7 @@ async function getJobDetail(jobId: string): Promise<JobPostingDetail | null> {
         required_skills,
         preferred_skills,
         selection_process,
-        appeal_points,
+        company_attractions,
         smoking_policy,
         smoking_policy_note,
         required_documents,

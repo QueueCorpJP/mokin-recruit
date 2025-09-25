@@ -32,6 +32,34 @@ import CompanyWithdrawalCompleteModal from '@/components/admin/CompanyWithdrawal
 import CompanyDeletionConfirmModal from '@/components/admin/CompanyDeletionConfirmModal';
 import CompanyDeletionCompleteModal from '@/components/admin/CompanyDeletionCompleteModal';
 
+// プランの日本語表示名を取得
+const getPlanDisplayName = (plan: string): string => {
+  switch (plan) {
+    case 'none':
+      return 'プラン加入なし';
+    case 'standard':
+      return 'スタンダード';
+    case 'strategic':
+      return 'ストラテジック';
+    default:
+      return plan;
+  }
+};
+
+// 権限の日本語表示名を取得
+const getPermissionDisplayName = (permission: string): string => {
+  switch (permission) {
+    case 'ADMIN':
+      return '管理者';
+    case 'SCOUT':
+      return 'スカウト担当者';
+    case 'RECRUITER':
+      return '採用担当者';
+    default:
+      return permission;
+  }
+};
+
 interface CompanyDetailClientProps {
   company: CompanyEditData;
   analytics: CompanyAnalyticsData;
@@ -39,11 +67,19 @@ interface CompanyDetailClientProps {
 }
 
 export default function CompanyDetailClient({
-  company,
+  company: initialCompany,
   analytics,
   onUserDeleteComplete,
 }: CompanyDetailClientProps) {
   const router = useRouter();
+
+  // companyをstateで管理して更新可能にする
+  console.log('[CompanyDetailClient] Initial company prop:', initialCompany);
+  console.log('[CompanyDetailClient] Initial plan value:', initialCompany.plan);
+  const [company, setCompany] = useState(initialCompany);
+
+  // 注意: initialCompanyの自動同期は削除（モーダル表示中の勝手な更新を防ぐため）
+  // 更新はモーダルが閉じたときのrouter.refresh()でのみ行う
 
   // デバッグ用: コンポーネントがマウントされたときの情報をログ出力
   useEffect(() => {
@@ -370,24 +406,21 @@ export default function CompanyDetailClient({
   };
 
   const handlePlanChangeConfirm = async (newPlan: string) => {
-    try {
-      const result = await updateCompanyPlan(company.id, newPlan);
+    const result = await updateCompanyPlan(company.id, newPlan);
 
-      if (result.success) {
-        console.log('Company plan updated successfully:', result.company);
-        // プラン変更確認モーダルを閉じて、完了モーダルを表示
-        setNewSelectedPlan(newPlan);
-        setPlanChangeModalOpen(false);
-        setPlanChangeCompleteModalOpen(true);
-      } else {
-        console.error('Company plan update failed:', result.error);
-        alert(`プラン変更に失敗しました: ${result.error}`);
-        setPlanChangeModalOpen(false);
-      }
-    } catch (error) {
-      console.error('Plan change error:', error);
-      alert('プラン変更中にエラーが発生しました');
-      setPlanChangeModalOpen(false);
+    if (result.success) {
+      console.log('Company plan updated successfully:', result.company);
+
+      // プラン変更確認モーダルを閉じて、完了モーダルを表示
+      // 注意: ここではローカルstateは更新しない（モーダル表示中は古いデータのまま）
+      setNewSelectedPlan(newPlan);
+      setPlanChangeCompleteModalOpen(true);
+      // モーダルはCompanyPlanChangeModal内で閉じられる
+    } else {
+      console.error('Company plan update failed:', result.error);
+      alert(`プラン変更に失敗しました: ${result.error}`);
+      // エラー時はモーダルを開いたまま（CompanyPlanChangeModal内でthrowされる）
+      throw new Error(result.error || 'プラン変更に失敗しました');
     }
   };
 
@@ -398,7 +431,8 @@ export default function CompanyDetailClient({
   const handlePlanChangeCompleteClose = () => {
     setPlanChangeCompleteModalOpen(false);
     setNewSelectedPlan('');
-    // 完了後に現在のページに留まる（企業詳細ページ）
+    // モーダルが閉じた時にページをリロードして最新データを表示
+    router.refresh();
   };
 
   const handleScoutLimitChangeClick = () => {
@@ -414,6 +448,13 @@ export default function CompanyDetailClient({
           'Company scout limit updated successfully:',
           result.company
         );
+
+        // クライアント側のcompany状態も更新
+        setCompany(prevCompany => ({
+          ...prevCompany,
+          scout_limit: newLimit,
+        }));
+
         // スカウト上限数変更確認モーダルを閉じて、完了モーダルを表示
         setNewSelectedScoutLimit(newLimit);
         setScoutLimitChangeModalOpen(false);
@@ -609,7 +650,18 @@ export default function CompanyDetailClient({
               プラン
             </label>
             <div className="flex-1 px-[11px] py-[11px] bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-medium tracking-[1.6px] font-['Noto_Sans_JP']">
-              {company.plan || 'プラン名が入ります'}
+              {(() => {
+                console.log('[RENDER] company.plan value:', company.plan);
+                console.log(
+                  '[RENDER] getPlanDisplayName result:',
+                  company.plan
+                    ? getPlanDisplayName(company.plan)
+                    : 'プラン名が入ります'
+                );
+                return company.plan
+                  ? getPlanDisplayName(company.plan)
+                  : 'プラン名が入ります';
+              })()}
             </div>
           </div>
 
@@ -959,24 +1011,34 @@ export default function CompanyDetailClient({
 
                 <hr className='border-gray-300' />
 
-                {/* メンバーリスト - 仮実装 */}
+                {/* メンバーリスト */}
                 <div className='space-y-4'>
-                  {['管理者', '管理者', 'スカウト担当者', '採用担当者', ''].map(
-                    (role, roleIndex) => (
-                      <div key={roleIndex}>
-                        <div className='flex justify-between items-center py-2'>
-                          <div className='text-base font-bold'>名前 名前</div>
-                          <div className='flex items-center gap-4'>
-                            {role && (
+                  {group.company_user_group_permissions &&
+                  group.company_user_group_permissions.length > 0 ? (
+                    group.company_user_group_permissions.map(
+                      (permission, permIndex) => (
+                        <div key={permission.company_user_id}>
+                          <div className='flex justify-between items-center py-2'>
+                            <div className='text-base font-bold'>
+                              {permission.company_users?.full_name ||
+                                '名前未設定'}
+                            </div>
+                            <div className='flex items-center gap-4'>
                               <select
-                                value={role}
+                                value={permission.permission_level}
                                 onChange={e => {
-                                  if (e.target.value !== role) {
+                                  if (
+                                    e.target.value !==
+                                    permission.permission_level
+                                  ) {
                                     handleRoleChangeClick(
-                                      '名前 名前',
-                                      `user-${index}-${roleIndex}`,
-                                      role,
-                                      e.target.value
+                                      permission.company_users?.full_name ||
+                                        '名前未設定',
+                                      permission.company_user_id,
+                                      getPermissionDisplayName(
+                                        permission.permission_level
+                                      ),
+                                      getPermissionDisplayName(e.target.value)
                                     );
                                   }
                                 }}
@@ -986,29 +1048,35 @@ export default function CompanyDetailClient({
                                   backgroundSize: '1.5rem 1.5rem',
                                 }}
                               >
-                                <option value='管理者'>管理者</option>
-                                <option value='スカウト担当者'>
-                                  スカウト担当者
-                                </option>
-                                <option value='採用担当者'>採用担当者</option>
+                                <option value='ADMIN'>管理者</option>
+                                <option value='SCOUT'>スカウト担当者</option>
+                                <option value='RECRUITER'>採用担当者</option>
                               </select>
-                            )}
-                            <ActionButton
-                              onClick={() =>
-                                handleUserDeleteClick(
-                                  '名前 名前',
-                                  `user-${index}-${roleIndex}`
-                                )
-                              }
-                              text='削除'
-                              variant='delete'
-                              size='small'
-                            />
+                              <ActionButton
+                                onClick={() =>
+                                  handleUserDeleteClick(
+                                    permission.company_users?.full_name ||
+                                      '名前未設定',
+                                    permission.company_user_id
+                                  )
+                                }
+                                text='削除'
+                                variant='delete'
+                                size='small'
+                              />
+                            </div>
                           </div>
+                          {permIndex <
+                            group.company_user_group_permissions.length - 1 && (
+                            <hr className='border-gray-300' />
+                          )}
                         </div>
-                        {roleIndex < 4 && <hr className='border-gray-300' />}
-                      </div>
+                      )
                     )
+                  ) : (
+                    <div className='text-center text-gray-500 py-4'>
+                      このグループにはメンバーがいません
+                    </div>
                   )}
                 </div>
               </div>

@@ -98,7 +98,7 @@ async function _getCompanyJobs(
         overtime_info,
         holidays,
         selection_process,
-        appeal_points,
+        company_attractions,
         smoking_policy,
         smoking_policy_note,
         required_documents,
@@ -201,7 +201,7 @@ async function _getCompanyJobs(
       overtimeInfo: job.overtime_info,
       holidays: job.holidays,
       selectionProcess: job.selection_process,
-      appealPoints: job.appeal_points || [],
+      appealPoints: job.company_attractions || [],
       smokingPolicy: job.smoking_policy,
       smokingPolicyNote: job.smoking_policy_note,
       requiredDocuments: job.required_documents || [],
@@ -400,7 +400,7 @@ export async function createJob(data: any) {
       job_type: ensureArray(data.job_types),
       industry: ensureArray(data.industries),
       selection_process: data.selection_process || null,
-      appeal_points: ensureArray(data.appeal_points),
+      company_attractions: ensureArray(data.appeal_points),
       smoking_policy: data.smoking_policy || null,
       smoking_policy_note: data.smoking_policy_note || null,
       required_documents: ensureArray(data.required_documents),
@@ -544,7 +544,7 @@ export async function getJobDetail(jobId: string) {
       jobType: data.job_type || [],
       industry: data.industry || [],
       selectionProcess: data.selection_process,
-      appealPoints: data.appeal_points || [],
+      appealPoints: data.company_attractions || [],
       smokingPolicy: data.smoking_policy,
       smokingPolicyNote: data.smoking_policy_note,
       requiredDocuments: data.required_documents || [],
@@ -888,7 +888,9 @@ export async function updateJob(jobId: string, updateData: any) {
     }
 
     if (updateData.appealPoints !== undefined) {
-      finalUpdateData.appeal_points = ensureArray(updateData.appealPoints);
+      finalUpdateData.company_attractions = ensureArray(
+        updateData.appealPoints
+      );
       delete finalUpdateData.appealPoints;
     }
 
@@ -993,7 +995,9 @@ export async function updateJob(jobId: string, updateData: any) {
     }
 
     if (updateData.appeal_points !== undefined) {
-      finalUpdateData.appeal_points = ensureArray(updateData.appeal_points);
+      finalUpdateData.company_attractions = ensureArray(
+        updateData.appeal_points
+      );
       delete finalUpdateData.appeal_points;
     }
 

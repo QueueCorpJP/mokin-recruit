@@ -1044,7 +1044,7 @@ export type Database = {
       };
       job_postings: {
         Row: {
-          appeal_points: string[] | null;
+          company_attractions: string[] | null;
           application_deadline: string | null;
           approval_comment: string | null;
           approval_reason: string | null;
@@ -1087,7 +1087,7 @@ export type Database = {
           working_hours: string | null;
         };
         Insert: {
-          appeal_points?: string[] | null;
+          company_attractions?: string[] | null;
           application_deadline?: string | null;
           approval_comment?: string | null;
           approval_reason?: string | null;
@@ -1130,7 +1130,7 @@ export type Database = {
           working_hours?: string | null;
         };
         Update: {
-          appeal_points?: string[] | null;
+          company_attractions?: string[] | null;
           application_deadline?: string | null;
           approval_comment?: string | null;
           approval_reason?: string | null;

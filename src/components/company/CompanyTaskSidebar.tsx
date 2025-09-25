@@ -604,7 +604,9 @@ export function CompanyTaskSidebar({
             <div style={planTitleStyle}>
               {resolvedCompanyAccountData?.plan === 'standard'
                 ? 'スタンダードプラン'
-                : 'ベーシックプラン'}
+                : resolvedCompanyAccountData?.plan === 'strategic'
+                  ? 'ストラテジックプラン'
+                  : 'プラン加入なし'}
             </div>
             <div style={planInfoStyle}>
               <div>

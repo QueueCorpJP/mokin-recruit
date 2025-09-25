@@ -242,7 +242,7 @@ interface JobPosting {
   id: string;
   title: string;
   image_urls?: string[];
-  appeal_points?: string[];
+  company_attractions?: string[];
   company_name?: string;
   work_location?: string[];
   salary_min?: number;
@@ -613,7 +613,7 @@ export function CandidateDashboardClient({
                             }
                             imageAlt='求人画像'
                             title={job.title}
-                            tags={job.appeal_points || []}
+                            tags={job.company_attractions || []}
                             companyName={job.company_name || ''}
                             location={
                               Array.isArray(job.work_location)

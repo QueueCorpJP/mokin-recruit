@@ -191,7 +191,9 @@ export default function JobEditClient({
         setSelectionProcess(
           editData.selection_process || jobData.selectionProcess || ''
         );
-        setAppealPoints(editData.appeal_points || jobData.appealPoints || []);
+        setAppealPoints(
+          editData.company_attractions || jobData.appealPoints || []
+        );
         setSmoke(
           editData.smoking_policy || jobData.smokingPolicy || '屋内禁煙'
         );
@@ -432,7 +434,7 @@ export default function JobEditClient({
       job_types: jobTypes || [],
       industries: industries || [],
       selection_process: selectionProcess || '',
-      appeal_points: appealPoints || [],
+      company_attractions: appealPoints || [],
       smoking_policy: smoke || '',
       smoking_policy_note: smokeNote || '',
       required_documents: resumeRequired || [],
