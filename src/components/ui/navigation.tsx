@@ -265,20 +265,21 @@ export function Navigation({
       setIsMenuOpen(false);
       setOpenDropdown(null);
 
-      // 4. クライアントサイドのキャッシュをリフレッシュ
-      router.refresh();
-
-      // 5. 認証状態変更イベントを強制発火
+      // 4. 認証状態変更イベントを強制発火
       window.dispatchEvent(new Event('auth-state-changed'));
 
-      // 6. 適切なログイン画面にリダイレクト
+      // 5. 適切なログイン画面にリダイレクト（refreshの前に実行）
       if (variant === 'company') {
-        router.push('/company/auth/login');
+        await router.push('/company/auth/login');
       } else if (variant === 'candidate') {
-        router.push('/candidate/auth/login');
+        // 候補者はトップページ（ランディングページ）へリダイレクト
+        await router.push('/candidate');
       } else {
-        router.push('/');
+        await router.push('/');
       }
+
+      // 6. 最後にキャッシュをリフレッシュ
+      router.refresh();
 
       if (!result.success) {
         console.error('❌ サーバー側ログアウトに失敗しました:', result.error);

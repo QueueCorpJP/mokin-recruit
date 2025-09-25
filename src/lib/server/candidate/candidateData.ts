@@ -15,10 +15,7 @@ export interface CandidateData {
   prefecture?: string;
   gender?: string;
   birth_date?: string;
-  current_income?: string;
-  has_career_change?: string;
-  job_change_timing?: string;
-  current_activity_status?: string;
+  current_salary?: string;
   recent_job_company_name?: string;
   recent_job_department_position?: string;
   recent_job_start_year?: string;
@@ -79,10 +76,7 @@ export async function getCandidateData(
           prefecture,
           gender,
           birth_date,
-          current_income,
-          has_career_change,
-          job_change_timing,
-          current_activity_status,
+          current_salary,
           recent_job_company_name,
           recent_job_department_position,
           recent_job_start_year,
@@ -99,10 +93,6 @@ export async function getCandidateData(
           interested_work_styles,
           skills,
           experience_years,
-          desired_industries,
-          desired_job_types,
-          desired_salary,
-          desired_locations,
           resume_filename,
           resume_uploaded_at
         `
@@ -228,6 +218,24 @@ export async function getSkillsData(
       }
       console.error('スキルデータの取得に失敗しました:', error);
       return null;
+    }
+
+    // other_languagesの安全なパース処理
+    if (data && data.other_languages) {
+      const otherLanguages = data.other_languages;
+      let parsedOtherLanguages = [];
+
+      if (typeof otherLanguages === 'string') {
+        try {
+          parsedOtherLanguages = JSON.parse(otherLanguages);
+        } catch {
+          parsedOtherLanguages = [];
+        }
+      } else if (Array.isArray(otherLanguages)) {
+        parsedOtherLanguages = otherLanguages;
+      }
+
+      data.other_languages = parsedOtherLanguages;
     }
 
     return data as SkillsData;

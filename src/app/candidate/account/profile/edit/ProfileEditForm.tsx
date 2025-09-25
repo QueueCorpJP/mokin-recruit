@@ -34,7 +34,7 @@ interface CandidateData {
   current_residence?: string;
   birth_date?: string;
   phone_number?: string;
-  current_income?: string;
+  current_salary?: string;
 }
 
 interface ProfileEditFormProps {
@@ -82,7 +82,7 @@ export default function ProfileEditForm({
       birthMonth: initialBirth.month,
       birthDay: initialBirth.day,
       phoneNumber: candidateData.phone_number || '',
-      currentIncome: candidateData.current_income || '',
+      currentIncome: candidateData.current_salary || '',
     }),
     redirectPath: '/candidate/account/profile',
     buildFormData: data => {

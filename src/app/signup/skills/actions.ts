@@ -15,18 +15,11 @@ interface SkillsFormData {
 export async function saveSkillsData(formData: SkillsFormData) {
   console.log('=== Start saveSkillsData ===');
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          async get(name: string) {
-            const cookieStore = await cookies();
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
     );
+    const supabase = await getSupabaseServerClient();
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
@@ -46,7 +39,7 @@ export async function saveSkillsData(formData: SkillsFormData) {
         .from('skills')
         .update({
           english_level: formData.englishLevel,
-          other_languages: JSON.stringify(formData.otherLanguages),
+          other_languages: formData.otherLanguages,
           skills_list: formData.skills,
           qualifications: formData.qualifications || null,
           updated_at: new Date().toISOString(),
@@ -55,15 +48,13 @@ export async function saveSkillsData(formData: SkillsFormData) {
       skillsError = error;
     } else {
       // Insert new record
-      const { error } = await supabase
-        .from('skills')
-        .insert({
-          candidate_id: candidateId,
-          english_level: formData.englishLevel,
-          other_languages: JSON.stringify(formData.otherLanguages),
-          skills_list: formData.skills,
-          qualifications: formData.qualifications || null,
-        });
+      const { error } = await supabase.from('skills').insert({
+        candidate_id: candidateId,
+        english_level: formData.englishLevel,
+        other_languages: formData.otherLanguages,
+        skills_list: formData.skills,
+        qualifications: formData.qualifications || null,
+      });
       skillsError = error;
     }
 
@@ -73,7 +64,6 @@ export async function saveSkillsData(formData: SkillsFormData) {
 
     console.log('Skills data saved successfully');
     redirect('/signup/expectation');
-
   } catch (error) {
     console.error('Skills data save error:', error);
     throw error;

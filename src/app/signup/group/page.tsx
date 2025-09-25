@@ -1,6 +1,6 @@
 import React from 'react';
 import { GroupSignupFormClient } from './GroupSignupFormClient';
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { requireCompanyAuth } from '@/lib/auth/server';
 import { redirect } from 'next/navigation';
 
@@ -21,7 +21,7 @@ export default async function GroupSignupPage({
     redirect('/company/auth/login');
   }
 
-  const supabase = getSupabaseAdminClient();
+  const supabase = await getSupabaseServerClient();
 
   // 認証ユーザーの情報を取得
   const companyUserId = user.user_metadata?.company_user_id || user.id;

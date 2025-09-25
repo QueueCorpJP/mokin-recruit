@@ -48,7 +48,11 @@ export default async function CandidateEducationPage() {
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
-    redirect('/candidate/auth/login');
+    console.warn(
+      '[EDUCATION PAGE] Candidate data not found, showing empty data for user:',
+      user.id
+    );
+    // データが存在しない場合は空のデータで表示を続行
   }
 
   // 学歴データを取得
@@ -109,7 +113,7 @@ export default async function CandidateEducationPage() {
             {/* 業種 */}
             <DataRow label='業種'>
               <div className='flex flex-wrap gap-2'>
-                {candidateData.desired_industries &&
+                {candidateData?.desired_industries &&
                 candidateData.desired_industries.length > 0 ? (
                   candidateData.desired_industries.map((industry, index) => (
                     <span
@@ -130,7 +134,7 @@ export default async function CandidateEducationPage() {
             {/* 職種 */}
             <DataRow label='職種'>
               <div className='flex flex-wrap gap-2'>
-                {candidateData.desired_job_types &&
+                {candidateData?.desired_job_types &&
                 candidateData.desired_job_types.length > 0 ? (
                   candidateData.desired_job_types.map((jobType, index) => (
                     <span

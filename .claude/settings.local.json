@@ -4,14 +4,12 @@
       "mcp__supabase__list_projects",
       "WebSearch",
       "Bash(env)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__supabase__execute_sql"
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "supabase",
-    "Figma"
-  ],
+  "enabledMcpjsonServers": ["supabase", "Figma"],
   "mcpServers": {
     "supabase": {
       "command": "cmd",

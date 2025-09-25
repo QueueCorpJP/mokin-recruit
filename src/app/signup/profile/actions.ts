@@ -2,62 +2,21 @@
 
 import { type ProfileFormData } from '@/lib/schema/profile';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
+import { getOrCreateCandidateId } from '@/lib/signup/candidateId';
 
-export async function saveProfileData(
-  data: ProfileFormData & { userId?: string }
-) {
+export async function saveProfileData(data: ProfileFormData) {
   try {
-    // クライアントから送信されたユーザーIDを使用
-    const userId = data.userId;
+    // RLS対応のSupabaseクライアントを使用
+    const supabase = await getSupabaseServerClient();
 
-    if (!userId) {
-      return {
-        success: false,
-        error: '登録情報が見つかりません。最初からやり直してください。',
-      };
-    }
-
-    // Supabaseクライアントを動的にインポート
-    const { createClient } = await import('@supabase/supabase-js');
-
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return {
-        success: false,
-        error: 'サーバー設定エラーが発生しました。',
-      };
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: false,
-      },
-    });
+    // Get or create candidate ID using the centralized function
+    const candidateId = await getOrCreateCandidateId();
 
     // Convert birth date to proper format
     const birthDate = `${data.birthYear}-${data.birthMonth.padStart(2, '0')}-${data.birthDay.padStart(2, '0')}`;
 
-    // First verify the candidate exists with the provided ID
-    const { data: existingCandidate, error: candidateCheckError } =
-      await supabase.from('candidates').select('id').eq('id', userId).single();
-
-    if (candidateCheckError || !existingCandidate) {
-      console.error('Candidate not found for profile update:', {
-        userId: userId?.substring(0, 8) + '***',
-        error: candidateCheckError,
-      });
-      return {
-        success: false,
-        error:
-          '候補者情報が見つかりません。サインアップを最初からやり直してください。',
-      };
-    }
-
-    // Update candidates table with profile data using user ID
+    // Update candidates table with profile data
     const { error: updateError } = await supabase
       .from('candidates')
       .update({
@@ -69,10 +28,10 @@ export async function saveProfileData(
         birth_date: birthDate,
         prefecture: data.prefecture,
         phone_number: data.phoneNumber,
-        current_income: data.currentIncome,
+        current_salary: data.currentIncome,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', userId);
+      .eq('id', candidateId);
 
     if (updateError) {
       console.error('Profile update error:', updateError);

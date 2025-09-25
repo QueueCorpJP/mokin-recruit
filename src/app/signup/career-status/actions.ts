@@ -54,115 +54,29 @@ export async function saveCareerStatusAction(
       new Date().toISOString()
     );
 
-    // Environment variables check
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
+    );
+    const { getOrCreateCandidateId } = await import('@/lib/signup/candidateId');
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      logger.error('Missing Supabase environment variables:', {
-        hasUrl: !!supabaseUrl,
-        hasServiceRoleKey: !!serviceRoleKey,
-      });
-      return {
-        success: false,
-        message: 'サーバー設定エラーが発生しました。',
-      };
-    }
-
-    // Validation
-    const validationResult = CareerStatusSchema.safeParse({
-      ...formData,
-      userId,
-    });
-
-    if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      logger.warn('Career status validation failed:', firstError);
-      return {
-        success: false,
-        error: firstError?.message || 'Invalid input',
-      };
-    }
-
-    const {
-      hasCareerChange,
-      jobChangeTiming,
-      currentActivityStatus,
-      selectionEntries,
-    } = validationResult.data;
+    const supabase = await getSupabaseServerClient();
+    const candidateId = await getOrCreateCandidateId();
 
     logger.info('Career status save request details:', {
-      userId: userId.substring(0, 8) + '***',
-      userIdLength: userId.length,
-      hasCareerChange,
-      entriesCount: selectionEntries.length,
-    });
-
-    // Dynamic Supabase import
-    let createClient;
-    try {
-      const supabaseModule = await import('@supabase/supabase-js');
-      createClient = supabaseModule.createClient;
-    } catch (importError) {
-      logger.error('Failed to import Supabase module:', importError);
-      return {
-        success: false,
-        message: 'サーバーライブラリの読み込みに失敗しました。',
-      };
-    }
-
-    // Create admin client
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-      db: {
-        schema: 'public',
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'mokin-recruit-server-admin',
-        },
-      },
+      candidateId: candidateId.substring(0, 8) + '***',
+      hasCareerChange: formData.hasCareerChange,
+      entriesCount: formData.selectionEntries.length,
     });
 
     try {
-      // First verify the candidate exists with the provided ID
-      const { data: existingCandidate, error: candidateCheckError } =
-        await supabaseAdmin
-          .from('candidates')
-          .select('id')
-          .eq('id', userId)
-          .single();
-
-      if (candidateCheckError || !existingCandidate) {
-        logger.error('Candidate not found for career status update:', {
-          userId: userId.substring(0, 8) + '***',
-          userIdFull: userId,
-          userIdLength: userId.length,
-          error: candidateCheckError,
-          errorCode: candidateCheckError?.code,
-          errorMessage: candidateCheckError?.message,
-        });
-        return {
-          success: false,
-          message:
-            '候補者情報が見つかりません。サインアップを最初からやり直してください。',
-        };
-      }
-
       // Update candidates table with career status info
-      const { error: candidateUpdateError } = await supabaseAdmin
+      const { error: candidateUpdateError } = await supabase
         .from('candidates')
         .update({
-          has_career_change: hasCareerChange,
-          job_change_timing: jobChangeTiming,
-          current_activity_status: currentActivityStatus,
-          career_status_updated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', userId);
+        .eq('id', candidateId);
 
       if (candidateUpdateError) {
         logger.error(
@@ -175,11 +89,11 @@ export async function saveCareerStatusAction(
         };
       }
 
-      // Delete existing career status entries
-      const { error: deleteError } = await supabaseAdmin
+      // Delete existing career status entries first
+      const { error: deleteError } = await supabase
         .from('career_status_entries')
         .delete()
-        .eq('candidate_id', userId);
+        .eq('candidate_id', candidateId);
 
       if (deleteError) {
         logger.error(
@@ -192,34 +106,59 @@ export async function saveCareerStatusAction(
         };
       }
 
+      // Create base entry with timing and activity status
+      const baseEntry = {
+        candidate_id: candidateId,
+        has_career_change: formData.hasCareerChange,
+        job_change_timing: formData.jobChangeTiming,
+        current_activity_status: formData.currentActivityStatus,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      let entriesToInsert = [];
+
       // Insert new career status entries if they exist
-      if (selectionEntries && selectionEntries.length > 0) {
-        const entriesToInsert = selectionEntries.map(entry => ({
-          candidate_id: userId,
+      if (formData.selectionEntries && formData.selectionEntries.length > 0) {
+        entriesToInsert = formData.selectionEntries.map(entry => ({
+          ...baseEntry,
           is_private: entry.isPrivate,
           industries: entry.industries,
           company_name: entry.companyName,
           department: entry.department || '',
           progress_status: entry.progressStatus,
           decline_reason: entry.declineReason || '',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
         }));
-
-        const { error: insertError } = await supabaseAdmin
-          .from('career_status_entries')
-          .insert(entriesToInsert);
-
-        if (insertError) {
-          logger.error('Failed to insert career status entries:', insertError);
-          return {
-            success: false,
-            message: '選考状況データの保存に失敗しました。',
-          };
-        }
+      } else {
+        // Even if no selection entries, save the timing and activity status
+        entriesToInsert = [
+          {
+            ...baseEntry,
+            is_private: false,
+            industries: null,
+            company_name: null,
+            department: null,
+            progress_status: null,
+            decline_reason: null,
+          },
+        ];
       }
 
-      logger.info(`Career status data saved successfully for user: ${userId}`);
+      const { error: insertError } = await supabase
+        .from('career_status_entries')
+        .insert(entriesToInsert);
+
+      if (insertError) {
+        logger.error('Failed to insert career status entries:', insertError);
+        return {
+          success: false,
+          message: '選考状況データの保存に失敗しました。',
+        };
+      }
+
+      logger.info(
+        `Career status data saved successfully for user: ${candidateId}`
+      );
 
       return {
         success: true,

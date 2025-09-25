@@ -1,5 +1,5 @@
-import { Navigation } from '@/components/ui/navigation';
 import { SignupProvider } from '@/contexts/SignupContext';
+import { AuthAwareNavigationServer } from '@/components/layout/AuthAwareNavigationServer';
 import dynamic from 'next/dynamic';
 
 const AuthAwareFooter = dynamic(
@@ -23,11 +23,7 @@ export default function SignupLayout({
         className='md:min-h-screen flex flex-col signup-layout'
         data-signup-section
       >
-        <Navigation
-          variant='candidate'
-          isLoggedIn={false}
-          userInfo={undefined}
-        />
+        <AuthAwareNavigationServer variant='candidate' />
         {children}
         <AuthAwareFooter />
       </div>

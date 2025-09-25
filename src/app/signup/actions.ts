@@ -88,20 +88,11 @@ export async function signupRequestAction(
       };
     }
 
-    // ステップ2: Supabase環境変数の確認
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      logger.error('Missing Supabase environment variables:', {
-        hasUrl: !!supabaseUrl,
-        hasAnonKey: !!supabaseAnonKey,
-      });
-      return {
-        success: false,
-        error: 'データベース設定エラーが発生しました。',
-      };
-    }
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseActionClient } = await import(
+      '@/lib/supabase/server-client'
+    );
+    const supabase = getSupabaseActionClient();
 
     // ステップ3: バリデーション
     const validationResult = SignupSchema.safeParse(formData);
@@ -119,24 +110,6 @@ export async function signupRequestAction(
     logger.info('Signup request details:', {
       email: email.substring(0, 3) + '***',
     });
-
-    // ステップ4: Supabaseクライアントの作成
-    let supabase;
-    try {
-      supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-          detectSessionInUrl: false,
-        },
-      });
-    } catch (clientError) {
-      logger.error('Failed to create Supabase client:', clientError);
-      return {
-        success: false,
-        error: 'データベース接続の初期化に失敗しました。',
-      };
-    }
 
     // ステップ5: 既存ユーザーチェック（candidatesテーブル）
     try {
@@ -170,19 +143,12 @@ export async function signupRequestAction(
 
     // ステップ5.5: Supabase Authでの既存ユーザーチェック
     try {
-      const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (supabaseServiceRoleKey) {
-        const supabaseAdmin = createClient(
-          supabaseUrl,
-          supabaseServiceRoleKey,
-          {
-            auth: {
-              autoRefreshToken: false,
-              persistSession: false,
-            },
-          }
-        );
+      const { getSupabaseAdminClient } = await import(
+        '@/lib/supabase/server-client'
+      );
+      const supabaseAdmin = getSupabaseAdminClient();
 
+      if (supabaseAdmin) {
         const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
         const existingAuthUser = authUsers.users?.find(
           user => user.email === email.trim()

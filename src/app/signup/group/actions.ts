@@ -1,6 +1,6 @@
 'use server';
 
-import { getSupabaseAdminClient } from '@/lib/server/database/supabase';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 import { sendEmailViaSendGrid } from '@/lib/email/sender';
 
 interface GroupSignupData {
@@ -16,7 +16,7 @@ export async function sendGroupSignupVerification(formData: GroupSignupData) {
     console.log('=== sendGroupSignupVerification開始 ===');
     console.log('フォームデータ:', { ...formData, password: '[HIDDEN]' });
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     // グループとカンパニーの存在確認
     console.log('グループ存在チェック中...');
@@ -125,7 +125,7 @@ export async function verifyGroupSignupCode(email: string, code: string) {
     console.log('入力されたメール:', email);
     console.log('入力された認証コード:', code);
 
-    const supabase = getSupabaseAdminClient();
+    const supabase = await getSupabaseServerClient();
 
     console.log('認証コードをデータベースから検索中...');
     const { data: verification, error: fetchError } = await supabase

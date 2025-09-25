@@ -18,19 +18,11 @@ export async function uploadResumeFiles(formData: FormData) {
       !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // サインアップ段階では認証不要なので、直接Supabaseクライアントを作成
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          async get(name: string) {
-            const cookieStore = await cookies();
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
     );
+    const supabase = await getSupabaseServerClient();
 
     console.log('Supabase client created successfully');
 

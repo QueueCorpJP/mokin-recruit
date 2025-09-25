@@ -62,15 +62,13 @@ export async function autoLoginAction(): Promise<AutoLoginResult> {
   try {
     logger.info('Auto-login action called - checking existing session');
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
+    );
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return {
-        success: false,
-        error: 'サーバー設定エラー',
-      };
-    }
+    const supabaseUrl = process.env.SUPABASE_URL!;
+    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
     const cookieStore = await cookies();
 
@@ -118,14 +116,12 @@ export async function autoLoginAction(): Promise<AutoLoginResult> {
           logger.info('Found candidate email, creating authenticated session');
 
           // 管理者権限でユーザー情報を取得してセッションを作成
-          const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-          if (supabaseServiceRoleKey) {
-            const { createClient } = await import('@supabase/supabase-js');
-            const supabaseAdmin = createClient(
-              supabaseUrl,
-              supabaseServiceRoleKey
-            );
+          const { getSupabaseAdminClient } = await import(
+            '@/lib/supabase/server-client'
+          );
+          const supabaseAdmin = getSupabaseAdminClient();
 
+          if (supabaseAdmin) {
             // ユーザーの認証情報を取得
             const { data: userData, error: userError } =
               await supabaseAdmin.auth.admin.listUsers();
