@@ -21,7 +21,6 @@ async function getTaskData(candidateId: string) {
       candidateResult,
       educationResult,
       skillsResult,
-      workExperienceResult,
       expectationsResult,
       careerStatusResult,
       scoutsResult,
@@ -41,10 +40,6 @@ async function getTaskData(candidateId: string) {
         .select('*')
         .eq('candidate_id', candidateId)
         .single(),
-      client
-        .from('work_experience')
-        .select('*')
-        .eq('candidate_id', candidateId),
       client
         .from('expectations')
         .select('*')
@@ -83,7 +78,6 @@ async function getTaskData(candidateId: string) {
     const candidate = candidateResult.data;
     const education = educationResult.data;
     const skills = skillsResult.data;
-    const workExperience = workExperienceResult.data;
     const expectations = expectationsResult.data;
     const careerStatusEntries = careerStatusResult.data;
     const unrepliedScouts = scoutsResult.data;
@@ -110,12 +104,12 @@ async function getTaskData(candidateId: string) {
         });
       }
 
-      // 現在の職務情報チェック
-      if (!candidate.current_company || !candidate.current_position) {
+      // 現在の職務情報チェック（転職経験の有無をcareer_status_entriesから確認）
+      if (!careerStatusEntries || careerStatusEntries.length === 0) {
         tasks.push({
           id: 'profile-current-job',
-          title: '現在の職務情報を入力してください',
-          description: '現在の会社名と役職を登録してください',
+          title: '転職活動状況を入力してください',
+          description: '転職経験の有無や現在の活動状況を登録してください',
         });
       }
 
@@ -183,12 +177,19 @@ async function getTaskData(candidateId: string) {
       });
     }
 
-    // 4. 職歴経験チェック
-    if (!workExperience || workExperience.length === 0) {
+    // 4. 直近の職歴チェック（candidatesテーブルのrecent_job_*フィールドを参照）
+    if (
+      !candidate.recent_job_company_name ||
+      !candidate.recent_job_department_position ||
+      !candidate.recent_job_start_year ||
+      !candidate.recent_job_industries ||
+      !candidate.recent_job_types ||
+      !candidate.recent_job_description
+    ) {
       tasks.push({
-        id: 'work-experience',
-        title: '職歴・業界経験を登録してください',
-        description: '経験のある業界と年数を入力してください',
+        id: 'recent-job',
+        title: '直近の職歴を登録してください',
+        description: '直近の勤務先と職務内容を入力してください',
       });
     }
 
