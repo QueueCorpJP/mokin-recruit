@@ -381,7 +381,7 @@ export async function markCandidateRoomMessagesAsRead(
     const { error: readUpdateError } = await supabase
       .from('messages')
       .update({
-        status: 'read',
+        status: 'READ',
         read_at: new Date().toISOString(),
       })
       .eq('room_id', roomId)
