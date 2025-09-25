@@ -63,26 +63,17 @@ async function getTaskData(candidateId: string) {
         });
       }
 
-      // 現在の職務情報チェック
-      if (!candidate.current_company || !candidate.current_position) {
-        tasks.push({
-          id: 'profile-current-job',
-          title: '現在の職務情報を入力してください',
-          description: '現在の会社名と役職を登録してください',
-        });
-      }
+      // キャリア状況チェック（career_status_entriesテーブルを参照）
+      const { data: careerStatusEntries } = await client
+        .from('career_status_entries')
+        .select('*')
+        .eq('candidate_id', candidateId);
 
-      // 希望条件チェック
-      if (
-        !candidate.desired_salary ||
-        candidate.desired_industries?.length === 0 ||
-        candidate.desired_job_types?.length === 0 ||
-        candidate.desired_locations?.length === 0
-      ) {
+      if (!careerStatusEntries || careerStatusEntries.length === 0) {
         tasks.push({
-          id: 'profile-expectations',
-          title: '希望条件を設定してください',
-          description: '希望年収・業界・職種・勤務地を設定してください',
+          id: 'career-status',
+          title: '転職活動状況を設定してください',
+          description: '転職経験の有無や現在の活動状況を入力してください',
         });
       }
 
@@ -135,32 +126,43 @@ async function getTaskData(candidateId: string) {
       });
     }
 
-    // 4. 職歴経験チェック
-    const { data: workExperience } = await client
-      .from('work_experience')
-      .select('*')
-      .eq('candidate_id', candidateId);
-
-    if (!workExperience || workExperience.length === 0) {
+    // 4. 直近の職歴チェック（candidatesテーブルのrecent_job_*フィールドを参照）
+    if (
+      !candidate.recent_job_company_name ||
+      !candidate.recent_job_department_position ||
+      !candidate.recent_job_start_year ||
+      !candidate.recent_job_industries ||
+      !candidate.recent_job_types ||
+      !candidate.recent_job_description
+    ) {
       tasks.push({
-        id: 'work-experience',
-        title: '職歴・業界経験を登録してください',
-        description: '経験のある業界と年数を入力してください',
+        id: 'recent-job',
+        title: '直近の職歴を登録してください',
+        description: '直近の勤務先と職務内容を入力してください',
       });
     }
 
-    // 5. 期待条件テーブルチェック
+    // 5. 期待条件テーブルチェック（expectationsテーブルを参照）
     const { data: expectations } = await client
       .from('expectations')
       .select('*')
       .eq('candidate_id', candidateId)
       .single();
 
-    if (!expectations) {
+    if (
+      !expectations ||
+      !expectations.desired_income ||
+      !expectations.desired_industries ||
+      (expectations.desired_industries as any[])?.length === 0 ||
+      !expectations.desired_job_types ||
+      (expectations.desired_job_types as any[])?.length === 0 ||
+      !expectations.desired_work_locations ||
+      (expectations.desired_work_locations as any[])?.length === 0
+    ) {
       tasks.push({
         id: 'expectations-settings',
-        title: '詳細な希望条件を設定してください',
-        description: '希望の働き方や条件を詳しく設定してください',
+        title: '希望条件を設定してください',
+        description: '希望年収・業界・職種・勤務地を設定してください',
       });
     }
 
