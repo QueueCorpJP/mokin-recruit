@@ -18,7 +18,7 @@ interface CandidateData {
   prefecture?: string;
   gender?: string;
   birth_date?: string;
-  current_income?: string;
+  current_salary?: string;
 }
 
 // 候補者データを取得する関数
@@ -43,7 +43,7 @@ async function getCandidateData(
         prefecture,
         gender,
         birth_date,
-        current_income
+        current_salary
       `
       )
       .eq('id', candidateId)
@@ -71,7 +71,26 @@ export default async function ProfileEditPage() {
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
-    redirect('/candidate/auth/login');
+    console.warn(
+      '[PROFILE EDIT PAGE] Candidate data not found, showing empty form for user:',
+      user.id
+    );
+    // プロフィールデータが存在しない場合は空のデータで表示
+    const emptyCandidateData: CandidateData = {
+      id: user.id,
+      email: user.email,
+      last_name: '',
+      first_name: '',
+      last_name_kana: '',
+      first_name_kana: '',
+      phone_number: '',
+      current_residence: '',
+      prefecture: '',
+      gender: '',
+      birth_date: '',
+      current_salary: '',
+    };
+    return <ProfileEditForm candidateData={emptyCandidateData} />;
   }
 
   return <ProfileEditForm candidateData={candidateData} />;

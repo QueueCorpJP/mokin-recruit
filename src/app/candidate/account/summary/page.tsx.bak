@@ -15,10 +15,7 @@ export default async function CandidateSummaryPage() {
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
-    console.warn(
-      '[SUMMARY] Candidate data not found, showing empty data for user:',
-      user.id
-    ); // データが存在しない場合は空のデータで表示を続行
+    redirect('/candidate/auth/login');
   }
 
   return (
@@ -93,7 +90,7 @@ export default async function CandidateSummaryPage() {
                   </div>
                   <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                     <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-8 whitespace-pre-wrap'>
-                      {candidateData?.job_summary || '未設定'}
+                      {candidateData.job_summary || '未設定'}
                     </div>
                   </div>
                 </div>
@@ -107,7 +104,7 @@ export default async function CandidateSummaryPage() {
                   </div>
                   <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                     <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px] leading-8 whitespace-pre-wrap'>
-                      {candidateData?.self_pr || '未設定'}
+                      {candidateData.self_pr || '未設定'}
                     </div>
                   </div>
                 </div>

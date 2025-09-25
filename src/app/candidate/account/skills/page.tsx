@@ -20,7 +20,11 @@ export default async function CandidateSkillsPage() {
   const skillsData = await getSkillsData(user.id);
 
   if (!candidateData) {
-    redirect('/candidate/auth/login');
+    console.warn(
+      '[SKILLS PAGE] Candidate data not found, showing empty data for user:',
+      user.id
+    );
+    // データが存在しない場合は空のデータで表示を続行
   }
 
   // 配列データを安全に処理する関数

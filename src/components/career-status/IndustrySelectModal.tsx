@@ -55,7 +55,7 @@ const IndustrySelectModal = React.memo(
 
     const handleConfirm = () => {
       onConfirm(selectedIndustries);
-      // モーダルを閉じるのは親コンポーネントに任せる
+      onClose();
     };
 
     // カテゴリごとに業種を整理

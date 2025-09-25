@@ -19,11 +19,7 @@ export default async function CandidateResumePage() {
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
-    console.warn(
-      '[RESUME PAGE] Candidate data not found, showing empty data for user:',
-      user.id
-    );
-    // データが存在しない場合は空のデータで表示を続行
+    redirect('/candidate/auth/login');
   }
 
   return (

@@ -92,7 +92,7 @@ export async function updateCandidateProfile(
         prefecture: prefecture,
         birth_date: birthDate,
         phone_number: phoneNumber || null,
-        current_income: currentIncome || null,
+        current_salary: currentIncome || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', candidateId);

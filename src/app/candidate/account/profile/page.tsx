@@ -19,7 +19,7 @@ type CandidateProfile = {
   prefecture: string;
   gender: string | null;
   birth_date: string | null;
-  current_income: string;
+  current_salary: string;
 };
 
 // 候補者データを取得する関数
@@ -44,7 +44,7 @@ async function getCandidateData(
         prefecture,
         gender,
         birth_date,
-        current_income
+        current_salary
       `
       )
       .eq('id', candidateId)
@@ -73,9 +73,32 @@ export default async function CandidateBasicInfoPage() {
   // ユーザーIDが確定してからデータ取得
   const candidateProfile = await getCandidateData(user.id);
   if (!candidateProfile) {
-    redirect('/candidate/auth/login');
+    console.warn(
+      '[PROFILE PAGE] Candidate data not found, showing empty profile for user:',
+      user.id
+    );
+    // プロフィールデータが存在しない場合は空のデータで表示
+    const emptyCandidateProfile: CandidateProfile = {
+      id: user.id,
+      email: user.email,
+      last_name: '',
+      first_name: '',
+      last_name_kana: '',
+      first_name_kana: '',
+      phone_number: '',
+      current_residence: '',
+      prefecture: '',
+      gender: null,
+      birth_date: null,
+      current_salary: '',
+    };
+    return renderProfilePage(emptyCandidateProfile);
   }
 
+  return renderProfilePage(candidateProfile);
+}
+
+function renderProfilePage(candidateProfile: CandidateProfile) {
   // 生年月日をフォーマット
   const formatBirthDate = (birthDate?: string | null) => {
     if (!birthDate) return { year: 'yyyy', month: 'mm', day: 'dd' };
@@ -268,7 +291,7 @@ export default async function CandidateBasicInfoPage() {
                 </div>
                 <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                   <div className='text-[16px] font-medium text-[#323232] tracking-[1.6px]'>
-                    {candidateProfile.current_income || '未設定'}
+                    {candidateProfile.current_salary || '未設定'}
                   </div>
                 </div>
               </div>

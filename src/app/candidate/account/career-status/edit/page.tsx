@@ -46,6 +46,7 @@ export default function CandidateCareerStatusEditPage() {
   } = useEditForm<CareerStatusFormData>({
     schema: careerStatusSchema,
     defaultValues: {
+      hasCareerChange: '',
       transferDesiredTime: '',
       currentActivityStatus: '',
       selectionCompanies: [
@@ -64,6 +65,7 @@ export default function CandidateCareerStatusEditPage() {
       const data = await getCareerStatusData();
       if (!data) return null;
       return {
+        hasCareerChange: data.hasCareerChange || '',
         transferDesiredTime: data.transferDesiredTime || '',
         currentActivityStatus: data.currentActivityStatus || '',
         selectionCompanies:
@@ -85,6 +87,7 @@ export default function CandidateCareerStatusEditPage() {
     redirectPath: '/candidate/account/career-status',
     buildFormData: data => {
       const formData = new FormData();
+      formData.append('hasCareerChange', data.hasCareerChange);
       formData.append('transferDesiredTime', data.transferDesiredTime);
       formData.append('currentActivityStatus', data.currentActivityStatus);
       formData.append(
@@ -247,6 +250,45 @@ export default function CandidateCareerStatusEditPage() {
           >
             <SectionCard>
               <Section title='転職活動状況'>
+                <FormRow
+                  label='転職経験の有無'
+                  error={errors.hasCareerChange?.message || ''}
+                >
+                  <div className='flex gap-2 w-full'>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setValue('hasCareerChange', 'あり', {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        })
+                      }
+                      className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
+                        watch('hasCareerChange') === 'あり'
+                          ? 'bg-[#0f9058] border-[#0f9058] text-white'
+                          : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
+                      }`}
+                    >
+                      あり
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setValue('hasCareerChange', 'なし', {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        })
+                      }
+                      className={`flex-1 px-[11px] py-[11px] border rounded-[5px] text-[16px] font-bold tracking-[1.6px] transition-colors ${
+                        watch('hasCareerChange') === 'なし'
+                          ? 'bg-[#0f9058] border-[#0f9058] text-white'
+                          : 'bg-white border-[#999999] text-[#999999] hover:border-[#0f9058]'
+                      }`}
+                    >
+                      なし
+                    </button>
+                  </div>
+                </FormRow>
                 <FormRow
                   label='転職希望時期'
                   error={errors.transferDesiredTime?.message || ''}

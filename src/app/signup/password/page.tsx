@@ -134,10 +134,17 @@ export default function SignupPasswordPage() {
       setError('パスワードは8文字以上で入力してください。');
       return false;
     }
-    // 半角英数字・記号のみチェック
+    // 半角文字のみチェック
     const validCharRegex = /^[\x20-\x7E]*$/;
     if (!validCharRegex.test(password)) {
-      setError('パスワードは半角英数字・記号を含めて入力してください。');
+      setError('パスワードは半角文字のみで入力してください。');
+      return false;
+    }
+    // 英字と数字の両方を含むかチェック
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    if (!hasLetter || !hasNumber) {
+      setError('パスワードは英字と数字の両方を含めてください。');
       return false;
     }
     if (!confirmPassword) {

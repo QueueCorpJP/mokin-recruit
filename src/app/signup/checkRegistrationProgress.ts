@@ -23,18 +23,11 @@ export interface RegistrationProgress {
 export async function checkRegistrationProgress(
   email: string
 ): Promise<RegistrationProgress> {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        async get(name: string) {
-          const cookieStore = await cookies();
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
+  // RLS対応のSupabaseクライアントを使用
+  const { getSupabaseServerClient } = await import(
+    '@/lib/supabase/server-client'
   );
+  const supabase = await getSupabaseServerClient();
 
   // Check if candidate exists
   const { data: candidate, error: candidateError } = await supabase
@@ -53,10 +46,6 @@ export async function checkRegistrationProgress(
       birth_date,
       phone_number,
       prefecture,
-      current_income,
-      has_career_change,
-      job_change_timing,
-      current_activity_status,
       recent_job_company_name,
       recent_job_department_position,
       recent_job_start_year,
@@ -112,6 +101,12 @@ export async function checkRegistrationProgress(
     .eq('candidate_id', candidateId)
     .single();
 
+  // Check career status entries
+  const { data: careerStatusEntries } = await supabase
+    .from('career_status_entries')
+    .select('id')
+    .eq('candidate_id', candidateId);
+
   // Helper function to check if a step is completed based on its data or if later steps are completed
   const isStepCompleted = (
     stepData: boolean,
@@ -140,10 +135,7 @@ export async function checkRegistrationProgress(
       candidate.prefecture
     ),
     careerStatusCompleted: !!(
-      candidate.current_income &&
-      candidate.has_career_change &&
-      candidate.job_change_timing &&
-      candidate.current_activity_status
+      careerStatusEntries && careerStatusEntries.length > 0
     ),
     recentJobCompleted: !!(
       candidate.recent_job_company_name &&

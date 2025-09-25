@@ -95,95 +95,23 @@ export async function saveRecentJobAction(
       new Date().toISOString()
     );
 
-    // Environment variables check
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
+    );
+    const { getOrCreateCandidateId } = await import('@/lib/signup/candidateId');
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      logger.error('Missing Supabase environment variables:', {
-        hasUrl: !!supabaseUrl,
-        hasServiceRoleKey: !!serviceRoleKey,
-      });
-      return {
-        success: false,
-        message: 'サーバー設定エラーが発生しました。',
-      };
-    }
-
-    // Validation
-    const validationResult = MultipleJobHistoriesSchema.safeParse({
-      ...formData,
-      userId,
-    });
-
-    if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      logger.warn('Recent job validation failed:', firstError);
-      return {
-        success: false,
-        error: firstError?.message || 'Invalid input',
-      };
-    }
-
-    const { jobHistories } = validationResult.data;
+    const supabase = await getSupabaseServerClient();
+    const candidateId = await getOrCreateCandidateId();
 
     logger.info('Recent job save request details:', {
-      userId: userId.substring(0, 8) + '***',
-      jobHistoriesCount: jobHistories.length,
-    });
-
-    // Dynamic Supabase import
-    let createClient;
-    try {
-      const supabaseModule = await import('@supabase/supabase-js');
-      createClient = supabaseModule.createClient;
-    } catch (importError) {
-      logger.error('Failed to import Supabase module:', importError);
-      return {
-        success: false,
-        message: 'サーバーライブラリの読み込みに失敗しました。',
-      };
-    }
-
-    // Create admin client
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-      db: {
-        schema: 'public',
-      },
-      global: {
-        headers: {
-          'X-Client-Info': 'mokin-recruit-server-admin',
-        },
-      },
+      candidateId: candidateId.substring(0, 8) + '***',
+      jobHistoriesCount: formData.jobHistories.length,
     });
 
     try {
-      // First verify the candidate exists with the provided ID
-      const { data: existingCandidate, error: candidateCheckError } =
-        await supabaseAdmin
-          .from('candidates')
-          .select('id')
-          .eq('id', userId)
-          .single();
-
-      if (candidateCheckError || !existingCandidate) {
-        logger.error('Candidate not found for recent job update:', {
-          userId: userId.substring(0, 8) + '***',
-          error: candidateCheckError,
-        });
-        return {
-          success: false,
-          message:
-            '候補者情報が見つかりません。サインアップを最初からやり直してください。',
-        };
-      }
-
       // 複数職歴を処理
-      const processedJobHistories = jobHistories.map(job => ({
+      const processedJobHistories = formData.jobHistories.map(job => ({
         companyName: job.companyName,
         departmentPosition: job.departmentPosition,
         startYear: job.startYear,
@@ -217,7 +145,7 @@ export async function saveRecentJobAction(
         .join('\n\n');
 
       // Update candidates table with recent job info
-      const { error: candidateUpdateError } = await supabaseAdmin
+      const { error: candidateUpdateError } = await supabase
         .from('candidates')
         .update({
           // 最初の職歴の基本情報（互換性維持）
@@ -239,7 +167,7 @@ export async function saveRecentJobAction(
           recent_job_updated_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq('id', userId);
+        .eq('id', candidateId);
 
       if (candidateUpdateError) {
         logger.error(
@@ -253,7 +181,7 @@ export async function saveRecentJobAction(
       }
 
       logger.info(
-        `Recent job data saved successfully for user: ${userId} with ${processedJobHistories.length} job histories`
+        `Recent job data saved successfully for user: ${candidateId} with ${processedJobHistories.length} job histories`
       );
 
       return {

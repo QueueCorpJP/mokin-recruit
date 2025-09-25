@@ -12,9 +12,7 @@ import { useRouter } from 'next/navigation';
 import IndustrySelectModal from '@/components/career-status/IndustrySelectModal';
 import { Button } from '@/components/ui/button';
 import { CompanyNameInput } from '@/components/ui/CompanyNameInput';
-import { SelectInput } from '@/components/ui/select-input';
 import { saveCareerStatusAction } from './actions';
-import { INDUSTRY_GROUPS } from '@/constants/industry-data';
 
 type SelectionEntry = {
   id: string;
@@ -64,35 +62,16 @@ export default function SignupCareerStatusPage() {
         return null;
       };
 
-      // Try to get user ID from cookie first (this should contain the updated Auth user ID)
       const savedUserId = getCookieValue('signup_user_id');
       if (savedUserId) {
         setUserId(savedUserId);
-        console.log('User ID found in cookie:', savedUserId);
-      } else {
-        // Fallback to localStorage if cookie not found
-        const localStorageUserId = localStorage.getItem('signup_user_id');
-        if (localStorageUserId) {
-          setUserId(localStorageUserId);
-          console.log('User ID found in localStorage:', localStorageUserId);
-        } else {
-          console.error('User ID not found in cookie or localStorage');
-          alert(
-            'ユーザー情報が見つかりません。パスワード設定からやり直してください。'
-          );
-          router.push('/signup/password');
-        }
       }
     }
-  }, [router]);
+  }, []);
 
   const handleSubmit = async () => {
     if (!userId) {
       console.error('User ID not found');
-      alert(
-        'ユーザー情報が見つかりません。サインアップを最初からやり直してください。'
-      );
-      router.push('/signup');
       return;
     }
 
@@ -104,23 +83,7 @@ export default function SignupCareerStatusPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await saveCareerStatusAction(
-        {
-          hasCareerChange: formData.hasCareerChange || 'なし',
-          jobChangeTiming: formData.jobChangeTiming || '',
-          currentActivityStatus: formData.currentActivityStatus || '',
-          selectionEntries: (formData.selectionEntries || []).map(entry => ({
-            id: entry.id || '',
-            isPrivate: entry.isPrivate || false,
-            industries: entry.industries || [],
-            companyName: entry.companyName || '',
-            department: entry.department || '',
-            progressStatus: entry.progressStatus || '',
-            declineReason: entry.declineReason,
-          })),
-        },
-        userId
-      );
+      const result = await saveCareerStatusAction(formData, userId);
 
       if (result.success) {
         router.push('/signup/recent-job');
@@ -183,40 +146,45 @@ export default function SignupCareerStatusPage() {
       return false;
     }
 
-    // 情報収集中・まだ始めていない場合は基本項目のみでOK
+    // 活動状況が'not_started'や'researching'の場合は基本項目のみで完了
     if (
-      formData.currentActivityStatus === 'まだ始めていない' ||
-      formData.currentActivityStatus === '情報収集中'
+      formData.currentActivityStatus === 'not_started' ||
+      formData.currentActivityStatus === 'researching'
     ) {
       return true;
     }
 
-    // それ以外は選考状況エントリーの検証
+    // 選考状況エントリーの検証
     for (const entry of formData.selectionEntries) {
       // 業種が選択されていない
       if (!entry.industries || entry.industries.length === 0) {
         return false;
       }
+
       // 企業名が入力されていない
       if (!entry.companyName || entry.companyName.trim() === '') {
         return false;
       }
+
       // 部署名・役職名が入力されていない
       if (!entry.department || entry.department.trim() === '') {
         return false;
       }
+
       // 進捗状況が選択されていない
       if (!entry.progressStatus || entry.progressStatus === '') {
         return false;
       }
-      // 進捗状況が「辞退」の場合のみ辞退理由が必須
+
+      // 進捗状況が'declined'の場合、辞退理由が必須
       if (
-        entry.progressStatus === '辞退' &&
+        entry.progressStatus === 'declined' &&
         (!entry.declineReason || entry.declineReason === '')
       ) {
         return false;
       }
     }
+
     return true;
   };
 
@@ -458,25 +426,39 @@ export default function SignupCareerStatusPage() {
                     </label>
                   </div>
                   <div className='w-[400px]'>
-                    <SelectInput
-                      value={formData.jobChangeTiming}
-                      onChange={value =>
-                        setFormData(prev => ({
-                          ...prev,
-                          jobChangeTiming: value,
-                        }))
-                      }
-                      options={[
-                        { value: '', label: '未選択' },
-                        ...JOB_CHANGE_TIMING_OPTIONS.map(option => ({
-                          value: option.value,
-                          label: option.label,
-                        })),
-                      ]}
-                      placeholder='未選択'
-                      className='w-full'
-                      radius={5}
-                    />
+                    <div className='relative'>
+                      <select
+                        value={formData.jobChangeTiming}
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            jobChangeTiming: e.target.value,
+                          }))
+                        }
+                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] font-bold tracking-[1.6px] appearance-none cursor-pointer text-[#323232]'
+                      >
+                        <option value=''>未選択</option>
+                        {JOB_CHANGE_TIMING_OPTIONS.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='14'
+                          height='10'
+                          viewBox='0 0 14 10'
+                          fill='none'
+                        >
+                          <path
+                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                            fill='#0F9058'
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -488,86 +470,93 @@ export default function SignupCareerStatusPage() {
                     </label>
                   </div>
                   <div className='w-[400px]'>
-                    <SelectInput
-                      value={formData.currentActivityStatus}
-                      onChange={value =>
-                        setFormData(prev => ({
-                          ...prev,
-                          currentActivityStatus: value,
-                        }))
-                      }
-                      options={[
-                        { value: '', label: '未選択' },
-                        ...CURRENT_ACTIVITY_STATUS_OPTIONS.map(
-                          (option: { value: string; label: string }) => ({
-                            value: option.value,
-                            label: option.label,
-                          })
-                        ),
-                      ]}
-                      placeholder='未選択'
-                      className='w-full'
-                      radius={5}
-                    />
+                    <div className='relative'>
+                      <select
+                        value={formData.currentActivityStatus}
+                        onChange={e =>
+                          setFormData(prev => ({
+                            ...prev,
+                            currentActivityStatus: e.target.value,
+                          }))
+                        }
+                        className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] font-bold tracking-[1.6px] appearance-none cursor-pointer text-[#323232]'
+                      >
+                        <option value=''>未選択</option>
+                        {CURRENT_ACTIVITY_STATUS_OPTIONS.map(
+                          (option: { value: string; label: string }) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          )
+                        )}
+                      </select>
+                      <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          width='14'
+                          height='10'
+                          viewBox='0 0 14 10'
+                          fill='none'
+                        >
+                          <path
+                            d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                            fill='#0F9058'
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Divider */}
-              {formData.currentActivityStatus &&
-                !['まだ始めていない', '情報収集中'].includes(
-                  formData.currentActivityStatus
-                ) && (
-                  <div className='flex flex-row w-full h-[29px] items-center justify-center gap-6'>
-                    <div className='flex-1 h-px relative'>
-                      <div className='absolute inset-[-1px_-0.3%]'>
-                        <svg
-                          width='100%'
-                          height='1'
-                          viewBox='0 0 100 1'
-                          preserveAspectRatio='none'
-                        >
-                          <line
-                            x1='0'
-                            y1='0'
-                            x2='100'
-                            y2='0'
-                            stroke='#dcdcdc'
-                            strokeWidth='1'
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                    <span className='text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap'>
-                      選考状況
-                    </span>
-                    <div className='flex-1 h-px relative'>
-                      <div className='absolute inset-[-1px_-0.3%]'>
-                        <svg
-                          width='100%'
-                          height='1'
-                          viewBox='0 0 100 1'
-                          preserveAspectRatio='none'
-                        >
-                          <line
-                            x1='0'
-                            y1='0'
-                            x2='100'
-                            y2='0'
-                            stroke='#dcdcdc'
-                            strokeWidth='1'
-                          />
-                        </svg>
-                      </div>
-                    </div>
+              <div className='flex flex-row w-full h-[29px] items-center justify-center gap-6'>
+                <div className='flex-1 h-px relative'>
+                  <div className='absolute inset-[-1px_-0.3%]'>
+                    <svg
+                      width='100%'
+                      height='1'
+                      viewBox='0 0 100 1'
+                      preserveAspectRatio='none'
+                    >
+                      <line
+                        x1='0'
+                        y1='0'
+                        x2='100'
+                        y2='0'
+                        stroke='#dcdcdc'
+                        strokeWidth='1'
+                      />
+                    </svg>
                   </div>
-                )}
+                </div>
+                <span className='text-[#323232] text-[18px] font-bold tracking-[1.8px] text-nowrap'>
+                  選考状況
+                </span>
+                <div className='flex-1 h-px relative'>
+                  <div className='absolute inset-[-1px_-0.3%]'>
+                    <svg
+                      width='100%'
+                      height='1'
+                      viewBox='0 0 100 1'
+                      preserveAspectRatio='none'
+                    >
+                      <line
+                        x1='0'
+                        y1='0'
+                        x2='100'
+                        y2='0'
+                        stroke='#dcdcdc'
+                        strokeWidth='1'
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
               {/* Selection Status Entries */}
-              {formData.currentActivityStatus &&
-                !['まだ始めていない', '情報収集中'].includes(
-                  formData.currentActivityStatus
-                ) && (
+              {formData.currentActivityStatus !== 'not_started' &&
+                formData.currentActivityStatus !== 'researching' && (
                   <div className='flex flex-col gap-2 items-center w-[536]px'>
                     {formData.selectionEntries.map((entry, index) => (
                       <div
@@ -743,48 +732,90 @@ export default function SignupCareerStatusPage() {
                             進捗状況
                           </label>
                           <div className='w-[400px]'>
-                            <SelectInput
-                              value={entry.progressStatus}
-                              onChange={value =>
-                                updateEntry(index, 'progressStatus', value)
-                              }
-                              options={[
-                                { value: '', label: '未選択' },
-                                ...PROGRESS_STATUS_OPTIONS.map(option => ({
-                                  value: option.value,
-                                  label: option.label,
-                                })),
-                              ]}
-                              placeholder='未選択'
-                              className='w-full'
-                              radius={5}
-                            />
+                            <div className='relative'>
+                              <select
+                                value={entry.progressStatus}
+                                onChange={e =>
+                                  updateEntry(
+                                    index,
+                                    'progressStatus',
+                                    e.target.value
+                                  )
+                                }
+                                className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                              >
+                                <option value=''>未選択</option>
+                                {PROGRESS_STATUS_OPTIONS.map(option => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  width='14'
+                                  height='10'
+                                  viewBox='0 0 14 10'
+                                  fill='none'
+                                >
+                                  <path
+                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                    fill='#0F9058'
+                                  />
+                                </svg>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Decline Reason - show only if progressStatus is '辞退' */}
-                        {entry.progressStatus === '辞退' && (
+                        {/* Decline Reason */}
+                        {entry.progressStatus === 'declined' && (
                           <div className='flex flex-row gap-4 items-start w-full'>
                             <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px] pt-[11px] min-w-[130px] text-right'>
                               辞退理由
                             </label>
                             <div className='w-[400px]'>
-                              <SelectInput
-                                value={entry.declineReason || ''}
-                                onChange={value =>
-                                  updateEntry(index, 'declineReason', value)
-                                }
-                                options={[
-                                  { value: '', label: '未選択' },
-                                  ...DECLINE_REASON_OPTIONS.map(option => ({
-                                    value: option.value,
-                                    label: option.label,
-                                  })),
-                                ]}
-                                placeholder='未選択'
-                                className='w-full'
-                                radius={5}
-                              />
+                              <div className='relative'>
+                                <select
+                                  value={entry.declineReason || ''}
+                                  onChange={e =>
+                                    updateEntry(
+                                      index,
+                                      'declineReason',
+                                      e.target.value
+                                    )
+                                  }
+                                  className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                                >
+                                  <option value=''>未選択</option>
+                                  {DECLINE_REASON_OPTIONS.map(option => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                                  <svg
+                                    xmlns='http://www.w3.org/2000/svg'
+                                    width='14'
+                                    height='10'
+                                    viewBox='0 0 14 10'
+                                    fill='none'
+                                  >
+                                    <path
+                                      d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                      fill='#0F9058'
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -1031,25 +1062,39 @@ export default function SignupCareerStatusPage() {
                   <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                     転職希望時期
                   </label>
-                  <SelectInput
-                    value={formData.jobChangeTiming}
-                    onChange={value =>
-                      setFormData(prev => ({
-                        ...prev,
-                        jobChangeTiming: value,
-                      }))
-                    }
-                    options={[
-                      { value: '', label: '未選択' },
-                      ...JOB_CHANGE_TIMING_OPTIONS.map(option => ({
-                        value: option.value,
-                        label: option.label,
-                      })),
-                    ]}
-                    placeholder='未選択'
-                    className='w-full'
-                    radius={5}
-                  />
+                  <div className='relative'>
+                    <select
+                      value={formData.jobChangeTiming}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          jobChangeTiming: e.target.value,
+                        }))
+                      }
+                      className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] font-bold tracking-[1.6px] appearance-none cursor-pointer text-[#323232]'
+                    >
+                      <option value=''>未選択</option>
+                      {JOB_CHANGE_TIMING_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        width='14'
+                        height='10'
+                        viewBox='0 0 14 10'
+                        fill='none'
+                      >
+                        <path
+                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                          fill='#0F9058'
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Current Activity Status */}
@@ -1057,35 +1102,47 @@ export default function SignupCareerStatusPage() {
                   <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                     現在の活動状況
                   </label>
-                  <SelectInput
-                    value={formData.currentActivityStatus}
-                    onChange={value =>
-                      setFormData(prev => ({
-                        ...prev,
-                        currentActivityStatus: value,
-                      }))
-                    }
-                    options={[
-                      { value: '', label: '未選択' },
-                      ...CURRENT_ACTIVITY_STATUS_OPTIONS.map(
-                        (option: { value: string; label: string }) => ({
-                          value: option.value,
-                          label: option.label,
-                        })
-                      ),
-                    ]}
-                    placeholder='未選択'
-                    className='w-full'
-                    radius={5}
-                  />
+                  <div className='relative'>
+                    <select
+                      value={formData.currentActivityStatus}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          currentActivityStatus: e.target.value,
+                        }))
+                      }
+                      className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] font-bold tracking-[1.6px] appearance-none cursor-pointer text-[#323232]'
+                    >
+                      <option value=''>未選択</option>
+                      {CURRENT_ACTIVITY_STATUS_OPTIONS.map(
+                        (option: { value: string; label: string }) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        )
+                      )}
+                    </select>
+                    <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                      <svg
+                        xmlns='http://www.w3.org/2000/svg'
+                        width='14'
+                        height='10'
+                        viewBox='0 0 14 10'
+                        fill='none'
+                      >
+                        <path
+                          d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                          fill='#0F9058'
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Section header: 選考状況 */}
-              {formData.currentActivityStatus &&
-                !['まだ始めていない', '情報収集中'].includes(
-                  formData.currentActivityStatus
-                ) && (
+              {formData.currentActivityStatus !== 'not_started' &&
+                formData.currentActivityStatus !== 'researching' && (
                   <div className='flex flex-row w-full h-[29px] items-center justify-center gap-6'>
                     <div className='flex-1 h-px relative'>
                       <div className='absolute inset-[-1px_-0.3%]'>
@@ -1132,10 +1189,8 @@ export default function SignupCareerStatusPage() {
                 )}
 
               {/* Mobile version of Selection Status Entries */}
-              {formData.currentActivityStatus &&
-                !['まだ始めていない', '情報収集中'].includes(
-                  formData.currentActivityStatus
-                ) && (
+              {formData.currentActivityStatus !== 'not_started' &&
+                formData.currentActivityStatus !== 'researching' && (
                   <div className='flex flex-col gap-2 items-center w-full'>
                     {formData.selectionEntries.map((entry, index) => (
                       <div
@@ -1298,46 +1353,85 @@ export default function SignupCareerStatusPage() {
                           <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                             進捗状況
                           </label>
-                          <SelectInput
-                            value={entry.progressStatus}
-                            onChange={value =>
-                              updateEntry(index, 'progressStatus', value)
-                            }
-                            options={[
-                              { value: '', label: '未選択' },
-                              ...PROGRESS_STATUS_OPTIONS.map(option => ({
-                                value: option.value,
-                                label: option.label,
-                              })),
-                            ]}
-                            placeholder='未選択'
-                            className='w-full'
-                            radius={5}
-                          />
+                          <div className='relative'>
+                            <select
+                              value={entry.progressStatus}
+                              onChange={e =>
+                                updateEntry(
+                                  index,
+                                  'progressStatus',
+                                  e.target.value
+                                )
+                              }
+                              className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                            >
+                              <option value=''>未選択</option>
+                              {PROGRESS_STATUS_OPTIONS.map(option => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                              <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width='14'
+                                height='10'
+                                viewBox='0 0 14 10'
+                                fill='none'
+                              >
+                                <path
+                                  d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                  fill='#0F9058'
+                                />
+                              </svg>
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Decline Reason - show only if progressStatus is '辞退' */}
-                        {entry.progressStatus === '辞退' && (
+                        {/* Decline Reason */}
+                        {entry.progressStatus === 'declined' && (
                           <div className='flex flex-col gap-2'>
                             <label className='text-[#323232] text-[16px] font-bold tracking-[1.6px]'>
                               辞退理由
                             </label>
-                            <SelectInput
-                              value={entry.declineReason || ''}
-                              onChange={value =>
-                                updateEntry(index, 'declineReason', value)
-                              }
-                              options={[
-                                { value: '', label: '未選択' },
-                                ...DECLINE_REASON_OPTIONS.map(option => ({
-                                  value: option.value,
-                                  label: option.label,
-                                })),
-                              ]}
-                              placeholder='未選択'
-                              className='w-full'
-                              radius={5}
-                            />
+                            <div className='relative'>
+                              <select
+                                value={entry.declineReason || ''}
+                                onChange={e =>
+                                  updateEntry(
+                                    index,
+                                    'declineReason',
+                                    e.target.value
+                                  )
+                                }
+                                className='w-full px-[11px] py-[11px] pr-10 bg-white border border-[#999999] rounded-[5px] text-[16px] text-[#323232] font-bold tracking-[1.6px] appearance-none cursor-pointer'
+                              >
+                                <option value=''>未選択</option>
+                                {DECLINE_REASON_OPTIONS.map(option => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none'>
+                                <svg
+                                  xmlns='http://www.w3.org/2000/svg'
+                                  width='14'
+                                  height='10'
+                                  viewBox='0 0 14 10'
+                                  fill='none'
+                                >
+                                  <path
+                                    d='M6.07178 8.90462L0.234161 1.71483C-0.339509 1.00828 0.206262 0 1.16238 0H12.8376C13.7937 0 14.3395 1.00828 13.7658 1.71483L7.92822 8.90462C7.46411 9.47624 6.53589 9.47624 6.07178 8.90462Z'
+                                    fill='#0F9058'
+                                  />
+                                </svg>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>

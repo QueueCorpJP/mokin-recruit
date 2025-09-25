@@ -18,18 +18,11 @@ interface EducationFormData {
 export async function saveEducationData(formData: EducationFormData) {
   console.log('=== Start saveEducationData ===');
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          async get(name: string) {
-            const cookieStore = await cookies();
-            return cookieStore.get(name)?.value;
-          },
-        },
-      }
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
     );
+    const supabase = await getSupabaseServerClient();
 
     // Get or create candidate ID using the centralized function
     const candidateId = await getOrCreateCandidateId();
@@ -59,16 +52,14 @@ export async function saveEducationData(formData: EducationFormData) {
       educationError = error;
     } else {
       // Insert new record
-      const { error } = await supabase
-        .from('education')
-        .insert({
-          candidate_id: candidateId,
-          final_education: formData.finalEducation,
-          school_name: formData.schoolName || null,
-          department: formData.department || null,
-          graduation_year: formData.graduationYear || null,
-          graduation_month: formData.graduationMonth || null,
-        });
+      const { error } = await supabase.from('education').insert({
+        candidate_id: candidateId,
+        final_education: formData.finalEducation,
+        school_name: formData.schoolName || null,
+        department: formData.department || null,
+        graduation_year: formData.graduationYear || null,
+        graduation_month: formData.graduationMonth || null,
+      });
       educationError = error;
     }
 
@@ -97,7 +88,9 @@ export async function saveEducationData(formData: EducationFormData) {
         .insert(workExperienceData);
 
       if (workExperienceError) {
-        throw new Error(`Work experience data save failed: ${workExperienceError.message}`);
+        throw new Error(
+          `Work experience data save failed: ${workExperienceError.message}`
+        );
       }
     }
 
@@ -122,13 +115,14 @@ export async function saveEducationData(formData: EducationFormData) {
         .insert(jobTypeExperienceData);
 
       if (jobTypeExperienceError) {
-        throw new Error(`Job type experience data save failed: ${jobTypeExperienceError.message}`);
+        throw new Error(
+          `Job type experience data save failed: ${jobTypeExperienceError.message}`
+        );
       }
     }
 
     console.log('Education data saved successfully');
     redirect('/signup/skills');
-
   } catch (error) {
     console.error('Education data save error:', error);
     throw error;

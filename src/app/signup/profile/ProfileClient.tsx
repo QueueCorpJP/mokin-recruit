@@ -16,6 +16,7 @@ import React from 'react';
 import { saveProfileData } from './actions';
 import { Button } from '@/components/ui/button';
 import { SelectInput } from '@/components/ui/select-input';
+import { AlertCircle } from 'lucide-react';
 
 function encryptData(data: object, secret: string): string {
   // AES encrypt the JSON stringified data.
@@ -31,6 +32,7 @@ export default function SignupProfilePage() {
     firstNameKana: '',
     phoneNumber: '',
   });
+  const [saveError, setSaveError] = useState('');
   const [formData, setFormData] = useState<ProfileFormData>({
     gender: '未回答',
     lastName: '',
@@ -192,6 +194,7 @@ export default function SignupProfilePage() {
     }
 
     setIsSubmitting(true);
+    setSaveError('');
 
     try {
       if (userId) {
@@ -209,6 +212,9 @@ export default function SignupProfilePage() {
           router.push('/signup/career-status');
         } else {
           console.error('Profile save error:', result.error);
+          setSaveError(
+            result.error || 'プロフィール情報の保存に失敗しました。'
+          );
           setIsSubmitting(false);
         }
       } else {
@@ -224,6 +230,9 @@ export default function SignupProfilePage() {
       }
     } catch (error) {
       console.error('Profile submit error:', error);
+      setSaveError(
+        'ネットワークエラーが発生しました。しばらくしてから再度お試しください。'
+      );
       setIsSubmitting(false);
     }
   };
@@ -336,6 +345,18 @@ export default function SignupProfilePage() {
                   <p>※氏名はスカウトに返信した場合のみ企業に開示されます</p>
                   <p>※電話番号は企業には公開されません</p>
                 </div>
+
+                {/* Error Message Display */}
+                {saveError && (
+                  <div className='bg-red-50 border border-red-200 rounded-lg p-4 w-full max-w-[600px] mx-auto'>
+                    <div className='flex items-center gap-2 text-red-600'>
+                      <AlertCircle className='w-5 h-5' />
+                      <span className='text-[16px] font-medium'>
+                        {saveError}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className='flex flex-col gap-6 w-fit items-end mx-auto'>
                   {/* Name Fields */}
@@ -733,6 +754,18 @@ export default function SignupProfilePage() {
                   <p>企業に開示されます</p>
                   <p>※電話番号は企業には公開されません</p>
                 </div>
+
+                {/* Error Message Display */}
+                {saveError && (
+                  <div className='bg-red-50 border border-red-200 rounded-lg p-4 w-full'>
+                    <div className='flex items-center gap-2 text-red-600'>
+                      <AlertCircle className='w-5 h-5' />
+                      <span className='text-[16px] font-medium'>
+                        {saveError}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <div className='flex flex-col gap-6 w-full'>
                   {/* Name Fields */}

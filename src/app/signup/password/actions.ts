@@ -21,7 +21,12 @@ export interface SetPasswordResult {
 // パスワード設定のバリデーションスキーマ
 const SetPasswordSchema = z
   .object({
-    password: z.string().min(8, 'パスワードは8文字以上で入力してください'),
+    password: z
+      .string()
+      .min(8, 'パスワードは8文字以上で入力してください')
+      .regex(/^[\x20-\x7E]*$/, 'パスワードは半角文字のみで入力してください')
+      .regex(/[a-zA-Z]/, 'パスワードは英字を含めてください')
+      .regex(/[0-9]/, 'パスワードは数字を含めてください'),
     confirmPassword: z.string(),
     userId: z.string().min(1, 'ユーザーIDが必要です'),
   })
@@ -103,20 +108,11 @@ export async function setPasswordAction(
       userIdLength: userId?.length,
     });
 
-    // ステップ1: 環境変数の確認
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      logger.error('Missing Supabase environment variables:', {
-        hasUrl: !!supabaseUrl,
-        hasAnonKey: !!supabaseAnonKey,
-      });
-      return {
-        success: false,
-        message: 'サーバー設定エラーが発生しました。',
-      };
-    }
+    // RLS対応のSupabaseクライアントを使用
+    const { getSupabaseServerClient } = await import(
+      '@/lib/supabase/server-client'
+    );
+    const supabase = await getSupabaseServerClient();
 
     // ステップ2: バリデーション
     logger.info('=== PASSWORD ACTION DEBUG START ===');
@@ -154,28 +150,6 @@ export async function setPasswordAction(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
           userId
         ),
-    });
-
-    // ステップ3: Supabaseクライアントの動的インポート
-    let createClient;
-    try {
-      const supabaseModule = await import('@supabase/supabase-js');
-      createClient = supabaseModule.createClient;
-    } catch (importError) {
-      logger.error('Failed to import Supabase module:', importError);
-      return {
-        success: false,
-        message: 'サーバーライブラリの読み込みに失敗しました。',
-      };
-    }
-
-    // ステップ4: 通常のSupabaseクライアントでパスワード更新
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
     });
 
     try {
@@ -363,22 +337,14 @@ export async function setPasswordAction(
         maxAge: 60 * 60 * 24 * 7, // 7日間
       });
 
-      // Supabaseセッションを作成（サービスロールキーを使用）
+      // Supabaseセッションを作成（管理者クライアントを使用）
       try {
-        const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        if (supabaseServiceRoleKey && candidateData.email) {
-          // 管理者クライアントを作成
-          const supabaseAdmin = createClient(
-            supabaseUrl,
-            supabaseServiceRoleKey,
-            {
-              auth: {
-                autoRefreshToken: false,
-                persistSession: false,
-              },
-            }
-          );
+        const { getSupabaseAdminClient } = await import(
+          '@/lib/supabase/server-client'
+        );
+        const supabaseAdmin = getSupabaseAdminClient();
 
+        if (supabaseAdmin && candidateData.email) {
           // まず、Supabase Auth にユーザーが既に存在するかチェック
           const { data: existingAuthUser } =
             await supabaseAdmin.auth.admin.getUserById(userId);
@@ -449,6 +415,8 @@ export async function setPasswordAction(
 
           // SSRクライアントを作成してログインセッションを確立
           const { createServerClient } = await import('@supabase/ssr');
+          const supabaseUrl = process.env.SUPABASE_URL!;
+          const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
 
           const supabaseAuth = createServerClient(
             supabaseUrl,

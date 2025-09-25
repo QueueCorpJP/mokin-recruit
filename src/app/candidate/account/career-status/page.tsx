@@ -50,11 +50,42 @@ export default async function CandidateCareerStatusPage() {
   // 候補者データを取得
   const candidateData = await getCandidateData(user.id);
   if (!candidateData) {
-    redirect('/candidate/auth/login');
+    console.warn(
+      '[CAREER STATUS PAGE] Candidate data not found, showing empty data for user:',
+      user.id
+    );
+    // プロフィールデータが存在しない場合はデフォルトデータで表示
+    const emptyCandidateData = {
+      id: user.id,
+      email: user.email,
+      job_change_timing: '',
+      current_activity_status: '',
+    };
+    const careerStatusEntries = await getCareerStatusEntries(user.id);
+    return renderCareerStatusPage(emptyCandidateData, careerStatusEntries);
   }
 
   // 選考状況データを取得
   const careerStatusEntries = await getCareerStatusEntries(user.id);
+
+  return renderCareerStatusPage(candidateData, careerStatusEntries);
+}
+
+function renderCareerStatusPage(
+  candidateData: any,
+  careerStatusEntries: any[]
+) {
+  // 最新のエントリから転職活動情報を取得
+  let hasCareerChange = '未設定';
+  let jobChangeTiming = '未設定';
+  let currentActivityStatus = '未設定';
+
+  if (careerStatusEntries && careerStatusEntries.length > 0) {
+    const latestEntry = careerStatusEntries[0];
+    hasCareerChange = latestEntry.has_career_change || '未設定';
+    jobChangeTiming = latestEntry.job_change_timing || '未設定';
+    currentActivityStatus = latestEntry.current_activity_status || '未設定';
+  }
 
   return (
     <PageLayout breadcrumb='転職活動状況' title='転職活動状況'>
@@ -64,17 +95,24 @@ export default async function CandidateCareerStatusPage() {
           <SectionHeader title='転職活動状況' />
 
           <div className='space-y-6 lg:space-y-2'>
+            {/* 転職経験の有無 */}
+            <DataRow label='転職経験の有無'>
+              <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
+                {hasCareerChange}
+              </div>
+            </DataRow>
+
             {/* 転職希望時期 */}
             <DataRow label='転職希望時期'>
               <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-                {candidateData.job_change_timing || '未設定'}
+                {jobChangeTiming}
               </div>
             </DataRow>
 
             {/* 現在の活動状況 */}
             <DataRow label='現在の活動状況'>
               <div className='text-[16px] text-[#323232] font-medium tracking-[1.6px]'>
-                {candidateData.current_activity_status || '未設定'}
+                {currentActivityStatus}
               </div>
             </DataRow>
           </div>

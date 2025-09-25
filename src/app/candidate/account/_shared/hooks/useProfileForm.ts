@@ -74,7 +74,7 @@ export function useProfileForm(candidateData: CandidateData) {
       birthMonth: initialBirthDate.month,
       birthDay: initialBirthDate.day,
       phoneNumber: candidateData.phone_number || '',
-      currentIncome: candidateData.current_income || '',
+      currentIncome: candidateData.current_salary || '',
       // 表示専用（読み取り）
       lastName: (candidateData as any).last_name || '',
       firstName: (candidateData as any).first_name || '',

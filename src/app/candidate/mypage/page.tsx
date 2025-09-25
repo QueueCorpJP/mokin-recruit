@@ -23,6 +23,7 @@ async function getTaskData(candidateId: string) {
       skillsResult,
       workExperienceResult,
       expectationsResult,
+      careerStatusResult,
       scoutsResult,
       applicationsResult,
       selectionsResult,
@@ -49,6 +50,10 @@ async function getTaskData(candidateId: string) {
         .select('*')
         .eq('candidate_id', candidateId)
         .single(),
+      client
+        .from('career_status_entries')
+        .select('*')
+        .eq('candidate_id', candidateId),
       client
         .from('scout_sends')
         .select('*')
@@ -80,6 +85,7 @@ async function getTaskData(candidateId: string) {
     const skills = skillsResult.data;
     const workExperience = workExperienceResult.data;
     const expectations = expectationsResult.data;
+    const careerStatusEntries = careerStatusResult.data;
     const unrepliedScouts = scoutsResult.data;
     const applications = applicationsResult.data;
     const selections = selectionsResult.data;
@@ -113,17 +119,30 @@ async function getTaskData(candidateId: string) {
         });
       }
 
-      // 希望条件チェック
+      // 希望条件チェック（expectationsテーブルを参照）
       if (
-        !candidate.desired_salary ||
-        candidate.desired_industries?.length === 0 ||
-        candidate.desired_job_types?.length === 0 ||
-        candidate.desired_locations?.length === 0
+        !expectations ||
+        !expectations.desired_income ||
+        !expectations.desired_industries ||
+        (expectations.desired_industries as any[])?.length === 0 ||
+        !expectations.desired_job_types ||
+        (expectations.desired_job_types as any[])?.length === 0 ||
+        !expectations.desired_work_locations ||
+        (expectations.desired_work_locations as any[])?.length === 0
       ) {
         tasks.push({
           id: 'profile-expectations',
           title: '希望条件を設定してください',
           description: '希望年収・業界・職種・勤務地を設定してください',
+        });
+      }
+
+      // キャリア状況チェック（career_status_entriesテーブルを参照）
+      if (!careerStatusEntries || careerStatusEntries.length === 0) {
+        tasks.push({
+          id: 'career-status',
+          title: 'キャリア状況を設定してください',
+          description: '転職活動の状況や選考進捗を入力してください',
         });
       }
 
@@ -280,6 +299,13 @@ async function getRecommendedJobsInternal(candidateId: string) {
 
     const client = await getSupabaseServerClient();
 
+    // 候補者の希望条件を先に取得
+    const { data: expectations } = await client
+      .from('expectations')
+      .select('desired_job_types, desired_work_locations, desired_industries')
+      .eq('candidate_id', candidateId)
+      .single();
+
     // 必要最小限のフィールドのみ取得
     let query = client
       .from('job_postings')
@@ -300,28 +326,40 @@ async function getRecommendedJobsInternal(candidateId: string) {
       .eq('status', 'PUBLISHED')
       .in('publication_type', ['public', 'members']);
 
-    // 候補者の希望条件でフィルタリング（最適化）
+    // 候補者の希望条件でフィルタリング
+
     const conditions = [];
-    if (candidate.desired_job_types?.length > 0) {
+    if (
+      expectations?.desired_job_types &&
+      (expectations.desired_job_types as any[]).length > 0
+    ) {
       conditions.push(
-        candidate.desired_job_types
-          .map((jobType: string) => `job_type.cs.{${jobType}}`)
+        (expectations.desired_job_types as any[])
+          .map((jobType: any) => `job_type.cs.{${jobType.name || jobType}}`)
           .join(',')
       );
     }
 
-    if (candidate.desired_locations?.length > 0) {
+    if (
+      expectations?.desired_work_locations &&
+      (expectations.desired_work_locations as any[]).length > 0
+    ) {
       conditions.push(
-        candidate.desired_locations
-          .map((location: string) => `work_location.cs.{${location}}`)
+        (expectations.desired_work_locations as any[])
+          .map(
+            (location: any) => `work_location.cs.{${location.name || location}}`
+          )
           .join(',')
       );
     }
 
-    if (candidate.desired_industries?.length > 0) {
+    if (
+      expectations?.desired_industries &&
+      (expectations.desired_industries as any[]).length > 0
+    ) {
       conditions.push(
-        candidate.desired_industries
-          .map((industry: string) => `industry.cs.{${industry}}`)
+        (expectations.desired_industries as any[])
+          .map((industry: any) => `industry.cs.{${industry.name || industry}}`)
           .join(',')
       );
     }
