@@ -317,7 +317,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
         salary_min,
         salary_max,
         work_location,
-        appeal_points,
+        company_attractions,
         image_urls,
         company_accounts!inner (
           company_name
@@ -397,7 +397,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
         salary_min: any;
         salary_max: any;
         work_location: any;
-        appeal_points: any;
+        company_attractions: any;
         image_urls: any;
         company_accounts: { company_name: any }[];
       }) => ({
@@ -405,7 +405,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
         title: job.title || '求人タイトル未設定',
         company_name: job.company_accounts?.[0]?.company_name || '企業名未設定',
         image_urls: job.image_urls?.slice(0, 1) || [], // 最初の画像のみ取得して転送量削減
-        appeal_points: job.appeal_points?.slice(0, 3) || [],
+        appeal_points: job.company_attractions?.slice(0, 3) || [],
         work_location: Array.isArray(job.work_location)
           ? job.work_location
           : [job.work_location || '勤務地未設定'],

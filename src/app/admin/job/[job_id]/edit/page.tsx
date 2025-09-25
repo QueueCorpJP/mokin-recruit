@@ -41,7 +41,7 @@ interface JobDetail {
   overtime_info: string | null;
   holidays: string | null;
   selection_process: string | null;
-  appeal_points: string[] | null;
+  company_attractions: string[] | null;
   smoking_policy: string | null;
   smoking_policy_note: string | null;
   required_documents: string[] | null;

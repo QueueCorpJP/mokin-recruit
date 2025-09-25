@@ -79,7 +79,7 @@ async function getJobDetailServer(jobId: string) {
         selection_process,
         job_type,
         industry,
-        appeal_points,
+        company_attractions,
         required_documents,
         image_urls,
         smoking_policy,
@@ -119,7 +119,7 @@ async function getJobDetailServer(jobId: string) {
       selection_process: string | null;
       job_type: string[];
       industry: string[];
-      appeal_points: string[];
+      company_attractions: string[];
       required_documents: string[];
       image_urls: string[];
       smoking_policy: string | null;
@@ -276,7 +276,7 @@ export async function getJobDetailData(
         holidays: apiJob.holidays || 'テキストが入ります。',
         selectionProcess: apiJob.selection_process || 'テキストが入ります。',
         appealPoints: (() => {
-          const appealPointsData = apiJob.appeal_points as any;
+          const appealPointsData = apiJob.company_attractions as any;
           if (
             appealPointsData &&
             typeof appealPointsData === 'object' &&

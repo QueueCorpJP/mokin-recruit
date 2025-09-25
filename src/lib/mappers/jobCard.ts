@@ -4,8 +4,8 @@ import type { JobCardData } from '@/types/candidate';
 // This function intentionally accepts 'any' to allow non-breaking gradual adoption.
 export function toJobCardData(job: any): JobCardData {
   const imageUrl: string = Array.isArray(job?.image_urls)
-    ? job.image_urls[0] ?? '/company.jpg'
-    : job?.image_urls ?? '/company.jpg';
+    ? (job.image_urls[0] ?? '/company.jpg')
+    : (job?.image_urls ?? '/company.jpg');
 
   const companyName: string =
     job?.company_accounts?.company_name ?? job?.company_name ?? '企業名';
@@ -14,8 +14,8 @@ export function toJobCardData(job: any): JobCardData {
   const location: string | string[] = Array.isArray(rawLocation)
     ? rawLocation
     : rawLocation
-    ? [rawLocation]
-    : ['勤務地未設定'];
+      ? [rawLocation]
+      : ['勤務地未設定'];
 
   const salary: string =
     job?.salary_min &&
@@ -29,11 +29,11 @@ export function toJobCardData(job: any): JobCardData {
     ? job.job_type.slice(0, 3)
     : [job?.job_type].filter(Boolean);
 
-  const apell: string[] = Array.isArray(job?.appeal_points)
-    ? job.appeal_points
+  const apell: string[] = Array.isArray(job?.company_attractions)
+    ? job.company_attractions
     : job?.apell && Array.isArray(job.apell)
-    ? job.apell
-    : ['アピールポイントなし'];
+      ? job.apell
+      : ['アピールポイントなし'];
 
   return {
     id: String(job?.id ?? ''),

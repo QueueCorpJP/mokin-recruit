@@ -23,7 +23,7 @@ interface JobDetailViewProps {
     required_skills?: string;
     preferred_skills?: string;
     selection_process?: string;
-    appeal_points?: string[];
+    company_attractions?: string[];
     smoking_policy?: string;
     smoking_policy_note?: string;
     required_documents?: string[];
@@ -300,23 +300,24 @@ export function JobDetailView({ jobDetail }: JobDetailViewProps) {
           )}
 
           {/* アピールポイント */}
-          {jobDetail.appeal_points && jobDetail.appeal_points.length > 0 && (
-            <Card>
-              <CardContent className='p-6'>
-                <h3 className='text-lg font-semibold mb-4'>
-                  この求人のアピールポイント
-                </h3>
-                <ul className='space-y-2'>
-                  {jobDetail.appeal_points.map((point, index) => (
-                    <li key={index} className='flex items-start'>
-                      <span className='text-green-600 mr-2'>✓</span>
-                      <span className='text-gray-700'>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
+          {jobDetail.company_attractions &&
+            jobDetail.company_attractions.length > 0 && (
+              <Card>
+                <CardContent className='p-6'>
+                  <h3 className='text-lg font-semibold mb-4'>
+                    この求人のアピールポイント
+                  </h3>
+                  <ul className='space-y-2'>
+                    {jobDetail.company_attractions.map((point, index) => (
+                      <li key={index} className='flex items-start'>
+                        <span className='text-green-600 mr-2'>✓</span>
+                        <span className='text-gray-700'>{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
           {/* 選考プロセス */}
           {jobDetail.selection_process && (

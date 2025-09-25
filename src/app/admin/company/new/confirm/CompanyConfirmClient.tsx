@@ -144,11 +144,13 @@ export default function CompanyConfirmClient() {
           プラン
         </label>
         <div className="font-['Noto_Sans_JP'] text-[16px] font-medium text-[#323232] leading-[1.6] tracking-[1.6px]">
-          {companyData.plan === 'basic'
-            ? 'ベーシック'
+          {companyData.plan === 'none'
+            ? 'プラン加入なし'
             : companyData.plan === 'standard'
               ? 'スタンダード'
-              : companyData.plan}
+              : companyData.plan === 'strategic'
+                ? 'ストラテジック'
+                : companyData.plan}
         </div>
       </div>
 

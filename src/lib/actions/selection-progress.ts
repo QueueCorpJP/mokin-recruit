@@ -40,6 +40,42 @@ export async function updateSelectionProgressAction({
   try {
     const supabase = await getSupabaseServerClient();
 
+    // 企業の認証情報を取得（アクセス可能なグループのみに制限）
+    const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
+    const authResult = await requireCompanyAuthForAction();
+
+    if (!authResult.success) {
+      return {
+        success: false,
+        error: '認証が必要です',
+      };
+    }
+
+    // ユーザーがアクセス可能なグループを取得
+    const { data: userPermissions } = await supabase
+      .from('company_user_group_permissions')
+      .select('company_group_id')
+      .eq('company_user_id', authResult.data.companyUserId);
+
+    if (!userPermissions || userPermissions.length === 0) {
+      return {
+        success: false,
+        error: 'アクセス権限がありません',
+      };
+    }
+
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
+
+    // 指定されたグループIDがアクセス可能なグループに含まれているかチェック
+    if (!accessibleGroupIds.includes(companyGroupId)) {
+      return {
+        success: false,
+        error: 'このグループの進捗状況を更新する権限がありません',
+      };
+    }
+
     // 既存の進捗レコードを確認
     const { data: existingProgress } = await supabase
       .from('selection_progress')
@@ -143,6 +179,42 @@ export async function getSelectionProgressAction(
 
   try {
     const supabase = await getSupabaseServerClient();
+
+    // 企業の認証情報を取得（アクセス可能なグループのみに制限）
+    const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
+    const authResult = await requireCompanyAuthForAction();
+
+    if (!authResult.success) {
+      return {
+        success: false,
+        error: '認証が必要です',
+      };
+    }
+
+    // ユーザーがアクセス可能なグループを取得
+    const { data: userPermissions } = await supabase
+      .from('company_user_group_permissions')
+      .select('company_group_id')
+      .eq('company_user_id', authResult.data.companyUserId);
+
+    if (!userPermissions || userPermissions.length === 0) {
+      return {
+        success: false,
+        error: 'アクセス権限がありません',
+      };
+    }
+
+    const accessibleGroupIds = userPermissions.map(
+      (perm: any) => perm.company_group_id
+    );
+
+    // 指定されたグループIDがアクセス可能なグループに含まれているかチェック
+    if (!accessibleGroupIds.includes(companyGroupId)) {
+      return {
+        success: false,
+        error: 'このグループの進捗状況にアクセスする権限がありません',
+      };
+    }
 
     const { data, error } = await supabase
       .from('selection_progress')

@@ -22,10 +22,10 @@ export interface CompanyEditData {
   status: string;
   created_at: string;
   updated_at: string;
-  established_year: string | null;
-  capital_amount: string | null;
+  established_year: number | string | null;
+  capital_amount: number | string | null;
   capital_unit: string | null;
-  employees_count: string | null;
+  employees_count: number | string | null;
   prefecture: string | null;
   address: string | null;
   company_phase: string | null;
@@ -46,6 +46,16 @@ export interface CompanyEditData {
     description: string | null;
     created_at: string;
     updated_at: string;
+    company_user_group_permissions?: Array<{
+      permission_level: string;
+      company_user_id: string;
+      company_users: {
+        id: string;
+        full_name: string;
+        email: string;
+        position_title: string | null;
+      } | null;
+    }>;
   }>;
 }
 
@@ -67,9 +77,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       industries,
       company_overview,
       business_content,
-      appeal_points,
-      logo_image_path,
-      contract_plan,
+      company_attractions,
       status,
       created_at,
       updated_at,
@@ -85,7 +93,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
       company_urls,
       icon_image_url,
       company_images,
-      company_attractions,
+      remaining_tickets,
       company_users!company_account_id (
         id,
         full_name,
@@ -133,9 +141,9 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     industries: data.industries || null,
     company_overview: data.company_overview || null,
     business_content: data.business_content || null,
-    appeal_points: data.appeal_points || null,
-    logo_image_path: data.logo_image_path || null,
-    contract_plan: data.contract_plan || null,
+    appeal_points: data.company_attractions || null,
+    logo_image_path: null,
+    contract_plan: null,
     plan: data.plan || '',
     scout_limit: data.scout_limit || undefined,
     status: data.status || '',

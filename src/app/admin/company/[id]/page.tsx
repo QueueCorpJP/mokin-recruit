@@ -166,7 +166,17 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
         group_name,
         description,
         created_at,
-        updated_at
+        updated_at,
+        company_user_group_permissions (
+          permission_level,
+          company_user_id,
+          company_users (
+            id,
+            full_name,
+            email,
+            position_title
+          )
+        )
       )
     `
     )
@@ -176,6 +186,11 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
   if (data) {
     console.log(
       `[Company Detail] Successfully fetched company: ${data.company_name}, Plan: ${data.plan}`
+    );
+    console.log('[Company Detail] Raw plan value type:', typeof data.plan);
+    console.log(
+      '[Company Detail] Raw plan value JSON:',
+      JSON.stringify(data.plan)
     );
   }
 
@@ -192,7 +207,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
   // 存在しないフィールドにデフォルト値を設定
   const companyData: CompanyEditData = {
     ...data,
-    appeal_points: null,
+    appeal_points: data.company_attractions || null,
     logo_image_path: null,
     contract_plan: null,
     company_users: [],

@@ -10,6 +10,20 @@ interface CompanyPlanChangeCompleteModalProps {
   newPlan: string;
 }
 
+// プランの日本語表示名を取得
+const getPlanDisplayName = (plan: string): string => {
+  switch (plan) {
+    case 'none':
+      return 'プラン加入なし';
+    case 'standard':
+      return 'スタンダード';
+    case 'strategic':
+      return 'ストラテジック';
+    default:
+      return plan;
+  }
+};
+
 export default function CompanyPlanChangeCompleteModal({
   isOpen,
   onClose,
@@ -19,7 +33,6 @@ export default function CompanyPlanChangeCompleteModal({
   const router = useRouter();
 
   const handleGoToCompanyDetail = () => {
-    // 現在の企業詳細ページに留まる
     onClose();
   };
 
@@ -32,38 +45,36 @@ export default function CompanyPlanChangeCompleteModal({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center z-50"
+      className='fixed inset-0 flex items-center justify-center z-50'
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
     >
       <div
-        className="bg-white border border-black rounded-2xl"
+        className='bg-white border border-black rounded-2xl'
         style={{
           width: '700px',
           padding: '26px 40px',
-          borderRadius: '16px'
+          borderRadius: '16px',
         }}
       >
         {/* メインコンテンツ */}
-        <div className="flex flex-col items-center gap-8">
+        <div className='flex flex-col items-center gap-8'>
           {/* タイトル */}
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-black mb-4">
+          <div className='text-center'>
+            <h2 className='text-2xl font-bold text-black mb-4'>
               プラン変更完了
             </h2>
-            <p className="text-base font-bold text-black mb-2">
-              {companyName}
-            </p>
-            <p className="text-base font-bold text-black">
-              プラン変更が完了しました。
+            <p className='text-base font-bold text-black mb-2'>{companyName}</p>
+            <p className='text-base font-bold text-black'>
+              {getPlanDisplayName(newPlan)}プランへの変更が完了しました。
             </p>
           </div>
 
           {/* ボタン群 */}
-          <div className="flex gap-4 w-full max-w-[600px] justify-center">
+          <div className='flex gap-4 w-full max-w-[600px] justify-center'>
             {/* 企業ページに戻るボタン */}
             <button
               onClick={handleGoToCompanyDetail}
-              className="flex-1 min-w-[180px] h-[60px] px-8 py-4 bg-white border border-black rounded-full text-base font-bold text-black hover:bg-gray-50 transition-colors whitespace-nowrap"
+              className='flex-1 min-w-[180px] h-[60px] px-8 py-4 bg-white border border-black rounded-full text-base font-bold text-black hover:bg-gray-50 transition-colors whitespace-nowrap'
             >
               企業ページに戻る
             </button>
@@ -71,7 +82,7 @@ export default function CompanyPlanChangeCompleteModal({
             {/* 管理画面トップに戻るボタン */}
             <button
               onClick={handleGoToAdminTop}
-              className="flex-1 min-w-[180px] h-[60px] px-8 py-4 bg-black text-white rounded-full text-base font-bold hover:bg-gray-800 transition-colors whitespace-nowrap"
+              className='flex-1 min-w-[180px] h-[60px] px-8 py-4 bg-black text-white rounded-full text-base font-bold hover:bg-gray-800 transition-colors whitespace-nowrap'
             >
               管理画面トップに戻る
             </button>

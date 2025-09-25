@@ -92,7 +92,7 @@ export async function getFavoriteList(
           updated_at,
           status,
           company_account_id,
-          appeal_points,
+          company_attractions,
           image_urls,
           company_accounts (
             id,

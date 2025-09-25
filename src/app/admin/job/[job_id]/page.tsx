@@ -38,7 +38,7 @@ interface JobDetail {
   working_hours: string | null;
   holidays: string | null;
   selection_process: string | null;
-  appeal_points: string[] | null;
+  company_attractions: string[] | null;
   image_urls: string[] | null;
   smoking_policy: string | null;
   smoking_policy_note: string | null;
@@ -762,7 +762,7 @@ export default async function JobDetailPage({ params }: JobDetailPageProps) {
                 </div>
                 <div className='flex-1 flex flex-col gap-2.5 items-start justify-start px-0 py-6'>
                   <div className='flex flex-col gap-4 items-start justify-start w-full'>
-                    <TagDisplay items={jobDetail.appeal_points || []} />
+                    <TagDisplay items={jobDetail.company_attractions || []} />
                   </div>
                 </div>
               </div>
