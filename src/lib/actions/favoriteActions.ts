@@ -127,11 +127,33 @@ export async function getFavoriteStatusAction(
       };
     }
 
+    // 認証チェックを非必須にする - 匿名ユーザーの場合は空の結果を返す
+    const { getServerAuth } = await import('@/lib/auth/server');
+    const authResult = await getServerAuth(true, false); // allowStatic=true で匿名許可
+
+    // 認証されていない場合は空のお気に入り状態を返す
+    if (!authResult.isAuthenticated || !authResult.user) {
+      const emptyStatus: Record<string, boolean> = {};
+      jobPostingIds.forEach(id => {
+        emptyStatus[id] = false;
+      });
+      return {
+        success: true,
+        data: emptyStatus,
+      };
+    }
+
+    // 認証されている場合のみ候補者チェック
     const auth = await requireCandidateAuthForAction();
     if (!auth.success) {
+      // 認証はあるが候補者でない場合も空を返す
+      const emptyStatus: Record<string, boolean> = {};
+      jobPostingIds.forEach(id => {
+        emptyStatus[id] = false;
+      });
       return {
-        success: false,
-        error: (auth as any).error || '認証が必要です',
+        success: true,
+        data: emptyStatus,
       };
     }
 

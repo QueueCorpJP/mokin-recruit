@@ -39,7 +39,9 @@ export function Footer({
         case 'メディア':
           return `${baseUrl}/media`;
         case '求人を探す':
-          return variant === 'candidate' ? '/candidate/search' : '/search';
+          return variant === 'candidate'
+            ? '/candidate/search/setting'
+            : '/search';
         case 'お気に入り求人':
           return '/candidate/job/favorite';
         case 'お知らせ一覧':

@@ -214,6 +214,12 @@ export async function logoutAction(): Promise<LogoutResult> {
       };
     }
 
+    // サインアップ関連のクッキーも削除
+    const cookieStore = await cookies();
+    cookieStore.delete('signup_user_id');
+    cookieStore.delete('signup_email');
+    cookieStore.delete('signup_step');
+
     console.log('✅ [LOGOUT] Success');
 
     // すべてのページのキャッシュをクリア

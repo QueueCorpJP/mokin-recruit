@@ -115,6 +115,9 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
+  // jobPostingIdsを安定した文字列に変換してメモ化
+  const jobPostingIdsKey = jobPostingIds.sort().join(',');
+
   // 楽観的更新用の関数
   const updateOptimistic = useCallback((jobId: string, isFavorite: boolean) => {
     setData(prev => ({ ...prev, [jobId]: isFavorite }));
@@ -146,7 +149,7 @@ export const useFavoriteStatusQuery = (jobPostingIds: string[]) => {
     } finally {
       setIsLoading(false);
     }
-  }, [jobPostingIds]); // 配列の内容で比較するよう変更
+  }, [jobPostingIdsKey]); // 安定した文字列キーを使用
 
   useEffect(() => {
     refetch();
