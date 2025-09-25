@@ -16,13 +16,14 @@ import {
   deleteGroup,
   inviteMembersToGroup,
   createNewGroup,
+  deleteMember,
 } from './actions';
-import NewGroupModal from '@/components/admin/NewGroupModal';
 import CompanyUserRoleChangeModal from '@/components/admin/CompanyUserRoleChangeModal';
-import CompanyGroupNameChangeModal from '@/components/admin/CompanyGroupNameChangeModal';
+import { CreateGroupModal } from '@/components/admin/CreateGroupModal';
+import { GroupNameChangeModal } from '@/components/admin/GroupNameChangeModal';
 import CompanyGroupNameChangeCompleteModal from '@/components/admin/CompanyGroupNameChangeCompleteModal';
 import AddMemberModal from '@/components/admin/AddMemberModal';
-import InvitationCompleteModal from '@/components/admin/InvitationCompleteModal';
+import { InviteMemberCompleteModal } from '@/components/company_account/InviteMemberCompleteModal';
 import CompanyScoutLimitChangeModal from '@/components/admin/CompanyScoutLimitChangeModal';
 import CompanyScoutLimitChangeCompleteModal from '@/components/admin/CompanyScoutLimitChangeCompleteModal';
 import CompanyPlanChangeModal from '@/components/admin/CompanyPlanChangeModal';
@@ -74,23 +75,7 @@ export default function CompanyDetailClient({
   const router = useRouter();
 
   // companyをstateで管理して更新可能にする
-  console.log('[CompanyDetailClient] Initial company prop:', initialCompany);
-  console.log('[CompanyDetailClient] Initial plan value:', initialCompany.plan);
   const [company, setCompany] = useState(initialCompany);
-
-  // 注意: initialCompanyの自動同期は削除（モーダル表示中の勝手な更新を防ぐため）
-  // 更新はモーダルが閉じたときのrouter.refresh()でのみ行う
-
-  // デバッグ用: コンポーネントがマウントされたときの情報をログ出力
-  useEffect(() => {
-    console.log(
-      `[Company Detail Client] Company: ${company.company_name}, Plan: ${company.plan}`
-    );
-    console.log(
-      `[Company Detail Client] Groups:`,
-      company.company_groups?.map(g => `${g.group_name} (${g.id})`) || []
-    );
-  }, [company.company_name, company.plan, company.company_groups]);
 
   const [memoText, setMemoText] = useState(
     '自由にメモを記入できます。\n同一グループ内の方が閲覧可能です。'
@@ -165,19 +150,38 @@ export default function CompanyDetailClient({
     setDeleteModalOpen(true);
   };
 
-  const handleUserDeleteConfirm = () => {
+  const handleUserDeleteConfirm = async () => {
     if (selectedUser) {
-      // TODO: 実際の企業ユーザー削除処理を実装
-      console.log('Deleting user:', selectedUser.id, selectedUser.name);
-      setDeleteModalOpen(false);
-      setSelectedUser(null);
+      try {
+        console.log('Deleting user:', selectedUser.id, selectedUser.name);
 
-      // デバッグページ用のコールバックがある場合はそれを実行
-      if (onUserDeleteComplete) {
-        onUserDeleteComplete();
-      } else {
-        // 通常の企業詳細ページでは削除完了ページに遷移
-        router.push('/admin/company/user');
+        const result = await deleteMember(selectedUser.id);
+
+        if (result.success) {
+          console.log('User deleted successfully:', result.data);
+          alert(`メンバー「${selectedUser.name}」を削除しました`);
+
+          setDeleteModalOpen(false);
+          setSelectedUser(null);
+
+          // デバッグページ用のコールバックがある場合はそれを実行
+          if (onUserDeleteComplete) {
+            onUserDeleteComplete();
+          } else {
+            // 通常の企業詳細ページではページをリフレッシュ
+            router.refresh();
+          }
+        } else {
+          console.error('User deletion failed:', (result as any).error);
+          alert(`メンバーの削除に失敗しました: ${(result as any).error}`);
+          setDeleteModalOpen(false);
+          setSelectedUser(null);
+        }
+      } catch (error) {
+        console.error('User deletion error:', error);
+        alert('メンバー削除中にエラーが発生しました');
+        setDeleteModalOpen(false);
+        setSelectedUser(null);
       }
     }
   };
@@ -191,19 +195,31 @@ export default function CompanyDetailClient({
     setNewGroupModalOpen(true);
   };
 
-  const handleNewGroupConfirm = async (groupName: string, members: any[]) => {
+  const handleNewGroupConfirm = async (payload: {
+    groupName: string;
+    members: { email: string; role: 'admin' | 'recruiter' | 'scout' }[];
+  }) => {
     try {
-      console.log('Creating new group:', groupName, 'with members:', members);
+      console.log(
+        'Creating new group:',
+        payload.groupName,
+        'with members:',
+        payload.members
+      );
 
-      const result = await createNewGroup(company.id, groupName, members);
+      const result = await createNewGroup(
+        company.id,
+        payload.groupName,
+        payload.members
+      );
 
       if (result.success) {
-        console.log('New group created successfully:', result.group);
-        alert(result.message || `グループ「${groupName}」を作成しました`);
+        console.log('New group created successfully:', result.data);
+        alert(`グループ「${payload.groupName}」を作成しました`);
         setNewGroupModalOpen(false);
       } else {
-        console.error('New group creation failed:', result.error);
-        alert(`グループの作成に失敗しました: ${result.error}`);
+        console.error('New group creation failed:', (result as any).error);
+        alert(`グループの作成に失敗しました: ${(result as any).error}`);
         setNewGroupModalOpen(false);
       }
     } catch (error) {
@@ -273,7 +289,7 @@ export default function CompanyDetailClient({
         );
 
         if (result.success) {
-          console.log('Group name updated successfully:', result.updatedGroup);
+          console.log('Group name updated successfully');
           console.log(
             `Group name changed: ${selectedGroupData?.currentName} → ${newGroupName}`
           );
@@ -281,9 +297,15 @@ export default function CompanyDetailClient({
           setUpdatedGroupName(newGroupName);
           setGroupNameChangeModalOpen(false);
           setGroupNameChangeCompleteModalOpen(true);
+          // ページを更新してデータベースの変更を反映
+          router.refresh();
+          // 少し待ってからもう一度refresh（確実にデータを取得するため）
+          setTimeout(() => {
+            router.refresh();
+          }, 100);
         } else {
-          console.error('Group name update failed:', result.error);
-          alert(`グループ名の変更に失敗しました: ${result.error}`);
+          console.error('Group name update failed:', (result as any).error);
+          alert(`グループ名の変更に失敗しました: ${(result as any).error}`);
           setGroupNameChangeModalOpen(false);
           setSelectedGroupData(null);
         }
@@ -305,7 +327,8 @@ export default function CompanyDetailClient({
     setGroupNameChangeCompleteModalOpen(false);
     setSelectedGroupData(null);
     setUpdatedGroupName('');
-    // 完了モーダルのクローズ処理のみ - リロードはモーダルのボタンで実行
+    // 完了モーダルのクローズ時に確実にページをリロード
+    router.refresh();
   };
 
   const handleAddMemberClick = (groupId: string, groupName: string) => {
@@ -318,37 +341,31 @@ export default function CompanyDetailClient({
 
   const handleAddMemberConfirm = async (members: any[]) => {
     if (selectedGroupForMember) {
-      try {
-        console.log(
-          'Inviting members to group:',
-          selectedGroupForMember.groupId,
-          'members:',
-          members
-        );
+      console.log(
+        'Inviting members to group:',
+        selectedGroupForMember.groupId,
+        'members:',
+        members
+      );
 
-        const result = await inviteMembersToGroup(
-          selectedGroupForMember.groupId,
-          members
-        );
+      const result = await inviteMembersToGroup(
+        selectedGroupForMember.groupId,
+        members
+      );
 
-        if (result.success) {
-          console.log('Members invited successfully:', result.invitedMembers);
+      if (result.success) {
+        console.log('Members invited successfully:', result.data);
 
-          // 招待完了モーダルを開く
-          setInvitedMembersCount(result.invitedMembers?.length || 0);
-          setAddMemberModalOpen(false);
-          setInvitationCompleteModalOpen(true);
-        } else {
-          console.error('Member invitation failed:', result.error);
-          alert(`メンバー招待に失敗しました: ${result.error}`);
-          setAddMemberModalOpen(false);
-          setSelectedGroupForMember(null);
-        }
-      } catch (error) {
-        console.error('Member invitation error:', error);
-        alert('メンバー招待中にエラーが発生しました');
+        // 招待完了モーダルを開く
+        setInvitedMembersCount(result.data?.invitedCount || 0);
+        setAddMemberModalOpen(false);
+        setInvitationCompleteModalOpen(true);
+      } else {
+        console.error('Member invitation failed:', (result as any).error);
+        alert(`メンバー招待に失敗しました: ${(result as any).error}`);
         setAddMemberModalOpen(false);
         setSelectedGroupForMember(null);
+        throw new Error((result as any).error || 'メンバー招待に失敗しました');
       }
     }
   };
@@ -1230,10 +1247,10 @@ export default function CompanyDetailClient({
       />
 
       {/* 新規グループ追加モーダル */}
-      <NewGroupModal
+      <CreateGroupModal
         isOpen={newGroupModalOpen}
         onClose={handleNewGroupCancel}
-        onConfirm={handleNewGroupConfirm}
+        onSubmit={handleNewGroupConfirm}
       />
 
       {/* 企業ユーザー権限変更確認モーダル */}
@@ -1247,7 +1264,7 @@ export default function CompanyDetailClient({
       />
 
       {/* 企業グループ名変更モーダル */}
-      <CompanyGroupNameChangeModal
+      <GroupNameChangeModal
         isOpen={groupNameChangeModalOpen}
         onClose={handleGroupNameChangeCancel}
         onConfirm={handleGroupNameChangeConfirm}
@@ -1272,10 +1289,9 @@ export default function CompanyDetailClient({
       />
 
       {/* 招待完了モーダル */}
-      <InvitationCompleteModal
+      <InviteMemberCompleteModal
         isOpen={invitationCompleteModalOpen}
         onClose={handleInvitationCompleteClose}
-        invitedMembersCount={invitedMembersCount}
       />
 
       {/* 休会確認モーダル */}

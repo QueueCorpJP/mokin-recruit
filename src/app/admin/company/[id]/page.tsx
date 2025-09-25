@@ -54,10 +54,6 @@ async function fetchCompanyAnalytics(
     .select('id')
     .eq('company_account_id', companyId);
 
-  if (groupError) {
-    console.error('Error fetching company groups:', groupError);
-  }
-
   const groupIds = groupData?.map(g => g.id) || [];
 
   // スカウトメッセージデータを取得（messagesテーブルから）
@@ -68,19 +64,11 @@ async function fetchCompanyAnalytics(
     .eq('sender_type', 'COMPANY_USER')
     .in('sender_company_group_id', groupIds);
 
-  if (scoutError) {
-    console.error('Error fetching scout messages:', scoutError);
-  }
-
   // 応募データを取得
   const { data: applicationData, error: applicationError } = await supabase
     .from('application')
     .select('id, created_at, company_account_id')
     .eq('company_account_id', companyId);
-
-  if (applicationError) {
-    console.error('Error fetching application data:', applicationError);
-  }
 
   const scouts = scoutData || [];
   const applications = applicationData || [];
@@ -129,8 +117,6 @@ async function fetchCompanyAnalytics(
 
 async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
   const supabase = getSupabaseAdminClient();
-
-  console.log(`[Company Detail] Fetching company data for ID: ${id}`);
 
   const { data, error } = await supabase
     .from('company_accounts')
@@ -183,24 +169,7 @@ async function fetchCompanyById(id: string): Promise<CompanyEditData | null> {
     .eq('id', id)
     .single();
 
-  if (data) {
-    console.log(
-      `[Company Detail] Successfully fetched company: ${data.company_name}, Plan: ${data.plan}`
-    );
-    console.log('[Company Detail] Raw plan value type:', typeof data.plan);
-    console.log(
-      '[Company Detail] Raw plan value JSON:',
-      JSON.stringify(data.plan)
-    );
-  }
-
   if (error) {
-    console.error('Error fetching company:', error);
-    console.error('Error details:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-    });
     return null;
   }
 
@@ -230,13 +199,6 @@ export default async function CompanyDetailPage({
   params,
   searchParams,
 }: CompanyDetailPageProps) {
-  // refreshパラメータがある場合はログ出力（デバッグ用）
-  if (searchParams?.refresh) {
-    console.log(
-      `[Company Detail Page] Refresh requested at: ${searchParams.refresh}`
-    );
-  }
-
   // 企業データと分析データを並列で取得
   const [company, analytics] = await Promise.all([
     fetchCompanyById(params.id),
