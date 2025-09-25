@@ -131,6 +131,17 @@ export async function middleware(request: NextRequest) {
     const authToken = request.cookies.get('auth_token')?.value;
     const adminUser = request.cookies.get('admin_user')?.value;
 
+    if (process.env.NODE_ENV !== 'production') {
+      const cookieNames = request.cookies.getAll().map(c => c.name);
+      console.log('[MW:admin] path=', path, 'cookies=', cookieNames);
+      console.log(
+        '[MW:admin] authToken exists=',
+        !!authToken,
+        'adminUser=',
+        adminUser
+      );
+    }
+
     // auth_tokenがある場合は、それがSupabaseのアクセストークンとして有効かチェック
     // ADMIN_JWT_SECRETがない場合は、adminUserクッキーの存在で判定
     let isAuthorized = false;
@@ -149,17 +160,35 @@ export async function middleware(request: NextRequest) {
           if (exp && exp > now) {
             isAuthorized = true;
           }
-        } catch {}
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('[MW:admin] JWT check:', {
+              exp,
+              now,
+              isValid: exp > now,
+            });
+          }
+        } catch (error) {
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('[MW:admin] JWT decode error:', error);
+          }
+        }
       }
     }
 
     // adminUserクッキーも併せてチェック（後方互換性）
     if (!isAuthorized && adminUser !== 'true') {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[MW:admin] redirect -> /admin/login (not authorized)');
+      }
       const redirectResponse = NextResponse.redirect(
         new URL('/admin/login', request.url)
       );
       redirectResponse.headers.set('x-nonce', nonce);
       return redirectResponse;
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[MW:admin] authorization success, continue');
     }
   }
 
