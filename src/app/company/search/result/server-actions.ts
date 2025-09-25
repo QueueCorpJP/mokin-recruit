@@ -68,6 +68,9 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
     console.log('📊 [getCandidatesFromDatabase] candidatesクエリを実行中...');
+    console.log(
+      '📊 [getCandidatesFromDatabase] Using status filter: ACTIVE, official'
+    );
     const { data: candidates, error } = await supabase
       .from('candidates')
       .select(
@@ -76,17 +79,12 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         last_name,
         first_name,
         current_company,
-        current_position,
         prefecture,
         birth_date,
         gender,
-        current_income,
         current_salary,
-        desired_salary,
         skills,
         experience_years,
-        desired_industries,
-        desired_job_types,
         last_login_at,
         recent_job_company_name,
         recent_job_department_position,
@@ -94,6 +92,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         recent_job_types,
         recent_job_description,
         job_summary,
+        status,
         education(
           final_education,
           school_name
@@ -113,7 +112,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         )
       `
       )
-      .eq('status', 'ACTIVE')
+      .in('status', ['ACTIVE', 'official'])
       .order('last_login_at', { ascending: false });
 
     if (error) {
@@ -282,26 +281,28 @@ async function transformCandidatesToDisplayFormat(
       badgeText = 'スカウト多数受信';
     }
 
-    // 給与情報のフォーマット関数
-    const formatSalary = (currentSalary: any, currentIncome: any) => {
-      if (currentSalary) {
-        const salaryValue = String(currentSalary);
-        const match = salaryValue.match(/(\d+)/);
-        if (match) {
-          const salaryNum = parseInt(match[1]);
-          if (salaryNum > 0) {
-            return `${salaryValue}`;
-          }
-        }
-      }
+    // 給与情報のフォーマット関数（動作している関数と同じロジック）
+    const formatSalary = (
+      currentSalary: any,
+      currentIncome: any,
+      desiredSalary: any
+    ) => {
+      // 優先順位: currentIncome > currentSalary > desiredSalary
+      const salaryOptions = [
+        currentIncome,
+        currentSalary,
+        desiredSalary,
+      ].filter(Boolean);
 
-      if (currentIncome) {
-        const salaryValue = String(currentIncome);
-        const match = salaryValue.match(/(\d+)/);
-        if (match) {
-          const salaryNum = parseInt(match[1]);
-          if (salaryNum > 0) {
-            return `${salaryValue}`;
+      for (const salary of salaryOptions) {
+        if (salary) {
+          const salaryValue = String(salary);
+          const match = salaryValue.match(/(\d+)/);
+          if (match) {
+            const salaryNum = parseInt(match[1]);
+            if (salaryNum > 0) {
+              return `${salaryValue}`;
+            }
           }
         }
       }
@@ -314,19 +315,14 @@ async function transformCandidatesToDisplayFormat(
       ?.map((exp: any) => exp.job_type_name)
       .filter(Boolean);
     if (!experienceJobs || experienceJobs.length === 0) {
-      experienceJobs = candidate.desired_job_types?.slice(0, 3);
-    }
-    if (!experienceJobs || experienceJobs.length === 0) {
-      experienceJobs = candidate.current_position
-        ? [candidate.current_position]
-        : [];
+      experienceJobs = candidate.recent_job_types?.slice(0, 3) || [];
     }
 
     let experienceIndustries = candidate.work_experience
       ?.map((exp: any) => exp.industry_name)
       .filter(Boolean);
     if (!experienceIndustries || experienceIndustries.length === 0) {
-      experienceIndustries = candidate.desired_industries?.slice(0, 3) || [];
+      experienceIndustries = candidate.recent_job_industries?.slice(0, 3) || [];
     }
 
     // 選考中企業の情報を構築
@@ -348,11 +344,8 @@ async function transformCandidatesToDisplayFormat(
           candidate.current_company ||
           candidate.recent_job_company_name ||
           '企業名未設定',
-        position:
-          candidate.current_position ||
-          candidate.recent_job_department_position ||
-          '役職未設定',
-        detail: candidate.recent_job_content || '職歴詳細未設定',
+        position: candidate.recent_job_department_position || '役職未設定',
+        detail: candidate.recent_job_description || '職歴詳細未設定',
       },
     ];
 
@@ -369,7 +362,7 @@ async function transformCandidatesToDisplayFormat(
         candidate.recent_job_company_name ||
         '企業名未設定',
       department: candidate.recent_job_department_position || '部署名未設定',
-      position: candidate.current_position || '役職未設定',
+      position: candidate.recent_job_department_position || '役職未設定',
       location: candidate.prefecture || '未設定',
       age: calculateAge(candidate.birth_date),
       gender:
@@ -378,7 +371,7 @@ async function transformCandidatesToDisplayFormat(
           : candidate.gender === 'female'
             ? '女性'
             : '未設定',
-      salary: formatSalary(candidate.current_salary, candidate.current_income),
+      salary: formatSalary(candidate.current_salary, null, null),
       university: candidate.education?.[0]?.school_name || '大学名未設定',
       degree: candidate.education?.[0]?.final_education || '学歴未設定',
       language: candidate.skills
@@ -448,29 +441,24 @@ export async function searchCandidatesWithConditions(
       aud: user.aud,
     });
 
+    // Use the same field selection as the working getCandidateDetailData function
     let query = supabase.from('candidates').select(`
         id,
-        last_name,
         first_name,
+        last_name,
         current_company,
-        current_position,
         prefecture,
         birth_date,
         gender,
-        current_income,
         current_salary,
-        desired_salary,
-        skills,
-        experience_years,
-        desired_industries,
-        desired_job_types,
         last_login_at,
+        job_summary,
+        skills,
         recent_job_company_name,
         recent_job_department_position,
         recent_job_industries,
         recent_job_types,
         recent_job_description,
-        job_summary,
         education(
           final_education,
           school_name
@@ -562,10 +550,6 @@ export async function searchCandidatesWithConditions(
           ...(candidate.job_type_experience?.map((exp: any) =>
             exp.job_type_name?.toLowerCase()
           ) || []),
-          ...(candidate.desired_job_types?.map((jt: string) =>
-            jt.toLowerCase()
-          ) || []),
-          candidate.current_position?.toLowerCase(),
           candidate.recent_job_department_position?.toLowerCase(),
         ].filter(Boolean);
 
@@ -600,9 +584,6 @@ export async function searchCandidatesWithConditions(
           ...(candidate.work_experience?.map((exp: any) =>
             exp.industry_name?.toLowerCase()
           ) || []),
-          ...(candidate.desired_industries?.map((ind: string) =>
-            ind.toLowerCase()
-          ) || []),
           ...(candidate.recent_job_industries
             ? JSON.stringify(candidate.recent_job_industries).toLowerCase()
             : []),
@@ -622,19 +603,24 @@ export async function searchCandidatesWithConditions(
       );
     }
 
-    // 年収フィルタ（クライアントサイド）
+    // 年収フィルタ（クライアントサイド）- 復活
     if (conditions.currentSalaryMin || conditions.currentSalaryMax) {
       console.log('💰 [searchCandidatesWithConditions] 年収フィルタを適用:', {
         min: conditions.currentSalaryMin,
         max: conditions.currentSalaryMax,
       });
       filteredCandidates = filteredCandidates.filter((candidate: any) => {
-        const salaryStr =
-          candidate.current_salary || candidate.current_income || '';
-        const salaryMatch = salaryStr.match(/(\d+)/);
-        if (!salaryMatch) return false;
+        // current_salary のみを使用してチェック
+        let salary = 0;
 
-        const salary = parseInt(salaryMatch[1]);
+        if (candidate.current_salary) {
+          const salaryMatch = String(candidate.current_salary).match(/(\d+)/);
+          if (salaryMatch) {
+            salary = parseInt(salaryMatch[1]);
+          }
+        }
+
+        if (salary === 0) return false; // 年収が不明な場合は除外
 
         if (
           conditions.currentSalaryMin &&

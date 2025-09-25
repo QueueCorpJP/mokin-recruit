@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import React, { useMemo, useState } from 'react';
 import { RecommendedCandidatesSection } from '@/components/company/RecommendedCandidatesSection';
 import type { CandidateData } from '@/components/company/CandidateCard';
 import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
@@ -15,6 +14,7 @@ interface Props {
     search_title: string;
     search_conditions: any;
   }>;
+  initialCandidates?: any[];
 }
 
 // search/result 相当の緩さに合わせて、保存済み検索条件を検索関数の期待キーへ正規化
@@ -58,157 +58,85 @@ export function SavedSearchRecommendationsClient({
   companyGroupId,
   jobOptions = [],
   initialSavedSearches = [],
+  initialCandidates = [],
 }: Props) {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [savedSearches, setSavedSearches] =
-    useState<any[]>(initialSavedSearches);
-  const [candidates, setCandidates] = useState<CandidateData[]>([]);
+  const [savedSearches] = useState<any[]>(initialSavedSearches);
 
-  useEffect(() => {
-    let mounted = true;
-    const supabase = createClient();
-
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-
-        // 1) サーバーから初期値がない場合のみクライアント側で取得
-        // すでにサーバー側でグループごとに1つずつ取得済みなので、通常は不要
-        if (!initialSavedSearches.length && companyGroupId) {
-          const { data: histories, error: shError } = await supabase
-            .from('search_history')
-            .select('*')
-            .eq('group_id', companyGroupId) // グループIDでフィルタリング
-            .order('searched_at', { ascending: false })
-            .limit(20);
-
-          if (shError) {
-            console.error(
-              '[SavedSearchRecommendationsClient] search_history error:',
-              shError
-            );
-          }
-
-          const saved = (histories || [])
-            .filter((h: any) => {
-              const v = h.is_saved;
-              return (
-                v === true ||
-                v === 'true' ||
-                v === 'TRUE' ||
-                String(v).toLowerCase() === 'true'
-              );
-            })
-            .slice(0, 1); // 各グループから1つのみ
-
-          if (mounted) setSavedSearches(saved);
-        }
-
-        // 2) 候補者（表示に必要なフィールドのみ）
-        const { data: rows, error: cError } = await supabase
-          .from('candidates')
-          .select(
-            `
-            id,
-            last_name,
-            first_name,
-            current_company,
-            current_position,
-            prefecture,
-            gender,
-            birth_date,
-            desired_salary,
-            skills,
-            experience_years,
-            desired_industries,
-            desired_job_types,
-            last_login_at
-          `
-          )
-          .eq('status', 'ACTIVE')
-          .order('last_login_at', { ascending: false })
-          .limit(50);
-
-        if (cError) {
-          console.error(
-            '[SavedSearchRecommendationsClient] candidates error:',
-            cError
-          );
-          if (mounted) setCandidates([]);
-        } else {
-          const mapped: CandidateData[] = (rows || []).map(
-            (candidate: any, index: number) => {
-              const age = candidate.birth_date
-                ? new Date().getFullYear() -
-                  new Date(candidate.birth_date).getFullYear()
-                : null;
-              const lastLogin = candidate.last_login_at
-                ? new Date(candidate.last_login_at).toLocaleDateString(
-                    'ja-JP',
-                    { year: 'numeric', month: 'numeric', day: 'numeric' }
-                  )
-                : '未ログイン';
-
-              return {
-                id: index + 1,
-                candidateId: candidate.id,
-                isPickup: false,
-                isHidden: false,
-                isAttention: index % 3 === 0,
-                lastLogin,
-                companyName: candidate.current_company || '企業名未設定',
-                department: candidate.current_position || '部署名未設定',
-                position: candidate.current_position || '役職未設定',
-                location: candidate.prefecture || '未設定',
-                age: age ? `${age}歳` : '年齢未設定',
-                gender:
-                  candidate.gender === 'male'
-                    ? '男性'
-                    : candidate.gender === 'female'
-                      ? '女性'
-                      : '未設定',
-                salary: candidate.desired_salary || '未設定',
-                university: '未設定',
-                degree: '未設定',
-                experienceJobs: (
-                  candidate.desired_job_types ||
-                  candidate.skills ||
-                  []
-                ).slice(0, 3),
-                experienceIndustries: (
-                  candidate.desired_industries || []
-                ).slice(0, 3),
-                careerHistory: [
-                  {
-                    period: '現在',
-                    company: candidate.current_company || '企業名未設定',
-                    role: candidate.current_position || '役職未設定',
-                  },
-                ],
-                selectionCompanies: [],
-              } as CandidateData;
-            }
-          );
-
-          if (mounted) setCandidates(mapped);
-        }
-      } catch (e) {
-        console.error(
-          '[SavedSearchRecommendationsClient] unexpected error:',
-          e
-        );
-        if (mounted) setError('データ取得に失敗しました');
-      } finally {
-        if (mounted) setLoading(false);
+  // Server-side candidates を CandidateData 形式に変換
+  const candidates = useMemo(() => {
+    console.log(
+      '[SavedSearchRecommendationsClient] Processing server candidates:',
+      {
+        initialCandidatesCount: initialCandidates?.length || 0,
+        sampleCandidate: initialCandidates?.[0],
       }
-    };
+    );
 
-    fetchAll();
-    return () => {
-      mounted = false;
-    };
-  }, [initialSavedSearches.length, companyGroupId]);
+    return (initialCandidates || []).map((candidate: any, index: number) => {
+      const age = candidate.birth_date
+        ? new Date().getFullYear() -
+          new Date(candidate.birth_date).getFullYear()
+        : null;
+      const lastLogin = candidate.last_login_at
+        ? new Date(candidate.last_login_at).toLocaleDateString('ja-JP', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+          })
+        : '未ログイン';
+
+      return {
+        id: index + 1,
+        candidateId: candidate.candidateId || candidate.id,
+        isPickup: false,
+        isHidden: false,
+        isAttention: index % 3 === 0,
+        lastLogin,
+        companyName:
+          candidate.companyName || candidate.current_company || '企業名未設定',
+        department:
+          candidate.position || candidate.current_position || '部署名未設定',
+        position:
+          candidate.position || candidate.current_position || '役職未設定',
+        location: candidate.location || candidate.prefecture || '未設定',
+        age: age ? `${age}歳` : '年齢未設定',
+        gender:
+          candidate.gender === 'male'
+            ? '男性'
+            : candidate.gender === 'female'
+              ? '女性'
+              : '未設定',
+        salary: candidate.salary || candidate.desired_salary || '未設定',
+        university: '未設定',
+        degree: '未設定',
+        experienceJobs: (
+          candidate.experienceJobs ||
+          candidate.desired_job_types ||
+          candidate.skills ||
+          []
+        ).slice(0, 3),
+        experienceIndustries: (
+          candidate.experienceIndustries ||
+          candidate.desired_industries ||
+          []
+        ).slice(0, 3),
+        careerHistory: [
+          {
+            period: '現在',
+            company:
+              candidate.companyName ||
+              candidate.current_company ||
+              '企業名未設定',
+            role:
+              candidate.position || candidate.current_position || '役職未設定',
+          },
+        ],
+        selectionCompanies: [],
+      } as CandidateData;
+    });
+  }, [initialCandidates]);
 
   // クライアント側でマッチングして先出（フック順を安定させるため、条件分岐より前に配置）
   // 条件一つに対してグループ一つ：グループ名で重複除去

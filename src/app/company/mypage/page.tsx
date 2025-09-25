@@ -148,19 +148,31 @@ export default async function CompanyMypage() {
     '@/lib/server/candidate/recruitment-queries'
   );
 
+  // 候補者データをサーバーサイドで取得
+  const { getCandidatesFromDatabase } = await import(
+    '@/app/company/search/result/server-actions'
+  );
+
   const [
     notices,
     companyAccountData,
     companyGroupsResult,
     defaultGroupResult,
     jobOptions,
+    candidates,
   ] = await Promise.all([
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData),
     getCompanyAccountData(authResult.data.companyUserId),
     getCompanyGroups(),
     getUserDefaultGroupId(),
     getJobOptions(),
+    getCandidatesFromDatabase(),
   ]);
+
+  console.log(
+    '[DEBUG mypage] Server-side candidates count:',
+    candidates.length
+  );
 
   console.log('[DEBUG] Default group result:', defaultGroupResult);
   console.log('[DEBUG] Notices fetched:', notices);
@@ -292,6 +304,7 @@ export default async function CompanyMypage() {
               companyGroupId={companyGroupId}
               jobOptions={jobOptions}
               initialSavedSearches={initialSavedSearches}
+              initialCandidates={candidates}
             />
           </div>
           {/* 右カラム（サブ） */}
