@@ -282,17 +282,9 @@ async function transformCandidatesToDisplayFormat(
     }
 
     // 給与情報のフォーマット関数（動作している関数と同じロジック）
-    const formatSalary = (
-      currentSalary: any,
-      currentIncome: any,
-      desiredSalary: any
-    ) => {
-      // 優先順位: currentIncome > currentSalary > desiredSalary
-      const salaryOptions = [
-        currentIncome,
-        currentSalary,
-        desiredSalary,
-      ].filter(Boolean);
+    const formatSalary = (currentSalary: any, desiredSalary: any) => {
+      // 優先順位: currentSalary > desiredSalary
+      const salaryOptions = [currentSalary, desiredSalary].filter(Boolean);
 
       for (const salary of salaryOptions) {
         if (salary) {
@@ -371,7 +363,7 @@ async function transformCandidatesToDisplayFormat(
           : candidate.gender === 'female'
             ? '女性'
             : '未設定',
-      salary: formatSalary(candidate.current_salary, null, null),
+      salary: formatSalary(candidate.current_salary, null),
       university: candidate.education?.[0]?.school_name || '大学名未設定',
       degree: candidate.education?.[0]?.final_education || '学歴未設定',
       language: candidate.skills
@@ -459,6 +451,8 @@ export async function searchCandidatesWithConditions(
         recent_job_industries,
         recent_job_types,
         recent_job_description,
+        status,
+        experience_years,
         education(
           final_education,
           school_name
@@ -492,10 +486,13 @@ export async function searchCandidatesWithConditions(
     if (conditions.currentSalaryMin) {
       const minSalary = parseInt(conditions.currentSalaryMin);
       if (!isNaN(minSalary)) {
-        // current_salaryまたはcurrent_incomeから年収を抽出して比較
+        // current_salaryから年収を抽出して比較
         // 簡易的にnumberフィールドがないため、text検索で実装
       }
     }
+
+    // ACTIVEまたはofficialステータスのみ取得
+    query = query.in('status', ['ACTIVE', 'official']);
 
     console.log(
       '📊 [searchCandidatesWithConditions] データベースクエリを実行中...'

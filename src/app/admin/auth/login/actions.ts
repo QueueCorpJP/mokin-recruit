@@ -95,29 +95,31 @@ export async function loginAction(formData: FormData) {
     const cookieStore = cookies();
 
     // セキュアなクッキー設定
-    cookieStore.set('auth_token', data.session?.access_token || '', {
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isHttps =
+      process.env.NEXT_PUBLIC_BASE_URL?.startsWith('https://') || false;
+    const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isHttps, // HTTPSの場合のみセキュア
+      sameSite: 'lax' as const,
       maxAge: 60 * 60 * 24 * 7, // 7日間
       path: '/',
+    };
+
+    console.log('🍪 [ADMIN LOGIN] Setting cookies with options:', {
+      ...cookieOptions,
+      isProduction,
+      isHttps,
+      baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
     });
 
-    cookieStore.set('admin_user', 'true', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7日間
-      path: '/',
-    });
-
-    cookieStore.set('user_id', data.user.id, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7日間
-      path: '/',
-    });
+    cookieStore.set(
+      'auth_token',
+      data.session?.access_token || '',
+      cookieOptions
+    );
+    cookieStore.set('admin_user', 'true', cookieOptions);
+    cookieStore.set('user_id', data.user.id, cookieOptions);
 
     // すべてのページのキャッシュをクリア
     revalidatePath('/', 'layout');
