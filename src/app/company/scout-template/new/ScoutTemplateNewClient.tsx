@@ -146,11 +146,16 @@ export default function ScoutTemplateNewClient({
 
   // フィールド変更ハンドラー
   const handleFieldChange = (fieldName: string, value: string) => {
+    console.log(
+      `🔄 handleFieldChange called - field: ${fieldName}, value: ${value}`
+    );
+
     switch (fieldName) {
       case 'group':
         setGroup(value);
         break;
       case 'targetJob':
+        console.log(`📝 Setting targetJob to: ${value}`);
         setTargetJob(value);
         break;
       case 'templateName':
@@ -421,6 +426,12 @@ export default function ScoutTemplateNewClient({
                         style={{ fontFamily: 'Noto Sans JP, sans-serif' }}
                       >
                         {errors.targetJob}
+                      </div>
+                    )}
+                    {/* デバッグ情報 */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className='text-xs text-gray-500 mt-1'>
+                        Current value: {targetJob || 'empty'}
                       </div>
                     )}
                   </div>

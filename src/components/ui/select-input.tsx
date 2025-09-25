@@ -80,23 +80,10 @@ const callOnChange = (
   value: string
 ) => {
   if (!onChange) return;
-  // Check parameter count - react-hook-form onChange expects an event object (1 param)
-  // while custom onChange expects just the value (1 param too, but different type)
-  // We'll check if the function looks like it expects an event by testing for common patterns
-  const funcString = onChange.toString();
-  if (
-    funcString.includes('target') ||
-    funcString.includes('event') ||
-    onChange.length === 0
-  ) {
-    // Likely expects an event object
-    (onChange as (event: { target: { value: string } }) => void)({
-      target: { value },
-    });
-  } else {
-    // Likely expects just the value
-    (onChange as (selectedValue: string) => void)(value);
-  }
+
+  // Simply call the function with the value
+  // The type signature indicates it can accept either form
+  (onChange as (selectedValue: string) => void)(value);
 };
 
 // Helper to call onBlur with the appropriate signature
