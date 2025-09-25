@@ -13,7 +13,10 @@ interface GroupVerifyClientProps {
 export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,25 +31,31 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
     setMessage(null);
 
     if (!code || code.length !== 4) {
-      setMessage({ type: 'error', text: '4桁の認証コードを入力してください。' });
+      setMessage({
+        type: 'error',
+        text: '4桁の認証コードを入力してください。',
+      });
       setIsSubmitting(false);
       return;
     }
 
     if (!email) {
-      setMessage({ type: 'error', text: 'メールアドレスが指定されていません。' });
+      setMessage({
+        type: 'error',
+        text: 'メールアドレスが指定されていません。',
+      });
       setIsSubmitting(false);
       return;
     }
 
     try {
       const result = await verifyGroupSignupCode(email, code);
-      
+
       if (result.error) {
         setMessage({ type: 'error', text: result.error });
       } else {
         // 認証成功とアカウント作成完了 - ログインページに遷移
-        router.push('/company/auth/login?signup=success&message=' + encodeURIComponent('グループ参加が完了しました。ログインしてください。'));
+        router.push('/company/auth/login');
       }
     } catch (error) {
       console.error('認証エラー:', error);
@@ -62,13 +71,13 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+    <form onSubmit={handleSubmit} className='flex flex-col gap-6 w-full'>
       {/* メッセージ表示 */}
       {message && (
         <div
           className={`p-4 rounded-md ${
-            message.type === 'success' 
-              ? 'bg-green-50 text-green-800 border border-green-200' 
+            message.type === 'success'
+              ? 'bg-green-50 text-green-800 border border-green-200'
               : 'bg-red-50 text-red-800 border border-red-200'
           }`}
         >
@@ -100,9 +109,7 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
               value={code}
               onChange={e => {
                 // 4桁までの数字のみ許可
-                const value = e.target.value
-                  .replace(/[^0-9]/g, '')
-                  .slice(0, 4);
+                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
                 setCode(value);
               }}
               placeholder='4桁の認証コードを入力してください'
@@ -133,7 +140,7 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
             認証コードが受け取れなかった場合は、新規のコードを発行してください。
             <br />
             <button
-              type="button"
+              type='button'
               onClick={handleResendCode}
               style={{
                 textDecoration: 'underline',
@@ -144,7 +151,7 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
                 border: 'none',
                 color: 'inherit',
                 fontSize: 'inherit',
-                padding: 0
+                padding: 0,
               }}
             >
               新しいコードを発行する
@@ -155,7 +162,7 @@ export function GroupVerifyClient({ email }: GroupVerifyClientProps) {
       {/* 送信ボタン */}
       <div className='flex w-full justify-center mt-10'>
         <Button
-          type="submit"
+          type='submit'
           variant='green-gradient'
           disabled={isSubmitting || code.length !== 4}
           style={{
