@@ -7,6 +7,7 @@ import { SectionHeading } from '@/components/ui/SectionHeading';
 import { Button } from '@/components/ui/button';
 import { useFavoriteToggleMutation } from '@/hooks';
 import SharedBanner from '@/components/ui/SharedBanner';
+import Link from 'next/link';
 
 // Dynamic imports for heavy components
 const FaqBox = lazy(() => import('@/components/ui/FaqBox'));
@@ -16,8 +17,8 @@ const MessageListCard = lazy(() =>
   }))
 );
 const JobPostCard = lazy(() =>
-  import('@/components/ui/JobPostCard').then(mod => ({
-    default: mod.JobPostCard,
+  import('@/components/ui/JobPostCardMypage').then(mod => ({
+    default: mod.JobPostCardMypage,
   }))
 );
 
@@ -240,25 +241,32 @@ const FooterSection = lazy(() =>
                 gap: 8,
               }}
             >
-              <span
-                style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  color: '#0F9058',
-                  lineHeight: '200%',
-                  fontFamily:
-                    'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
-                  whiteSpace: 'normal',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  wordBreak: 'break-word',
-                }}
+              <a
+                href='https://cuepoint.notion.site/2770ac1822c780a6b27bc6240068361e?v=2770ac1822c7818d9f91000cd9dadb2f&pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ textDecoration: 'none' }}
               >
-                Q&A一覧を見る
-              </span>
+                <span
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    color: '#0F9058',
+                    lineHeight: '200%',
+                    fontFamily:
+                      'Noto Sans JP, Noto Sans JP Fallback, system-ui, sans-serif',
+                    whiteSpace: 'normal',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  Q&A一覧を見る
+                </span>
+              </a>
               <Image
                 src='/images/arrow.svg'
                 alt='arrow'
@@ -289,7 +297,7 @@ interface JobPosting {
   id: string;
   title: string;
   image_urls?: string[];
-  company_attractions?: string[];
+  appeal_points?: string[];
   company_name?: string;
   work_location?: string[];
   salary_min?: number;
@@ -660,7 +668,7 @@ export function CandidateDashboardClient({
                             }
                             imageAlt='求人画像'
                             title={job.title}
-                            tags={job.company_attractions || []}
+                            tags={job.appeal_points || []}
                             companyName={job.company_name || ''}
                             location={
                               Array.isArray(job.work_location)
@@ -684,6 +692,8 @@ export function CandidateDashboardClient({
                             imageHeight={69}
                             isFavoriteLoading={favoriteLoading[job.id] || false}
                             onStarClick={() => handleStarClick(job.id)}
+                            companyIconUrl={(job as any).companyIconUrl}
+                            showCompanyInfo={true}
                             onClick={() =>
                               router.push(`/candidate/search/setting/${job.id}`)
                             }

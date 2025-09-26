@@ -109,7 +109,7 @@ function applyFilters(query: any, params: JobSearchParams) {
   // アピールポイントフィルター
   if (params.appealPoints && params.appealPoints.length > 0) {
     const appealConditions = params.appealPoints
-      .map(point => `company_attractions.cs.{${point}}`)
+      .map(point => `appeal_points.cs.{${point}}`)
       .join(',');
     query = query.or(appealConditions);
   }
@@ -200,7 +200,7 @@ async function searchJobsServerOptimized(
         work_location,
         job_type,
         industry,
-        company_attractions,
+        appeal_points,
         created_at,
         image_urls,
         company_account_id,
@@ -275,9 +275,8 @@ async function searchJobsServerOptimized(
             ? `${job.salary_min}万〜${job.salary_max}万`
             : job.salary_note || '給与応相談',
         apell:
-          Array.isArray(job.company_attractions) &&
-          job.company_attractions.length > 0
-            ? job.company_attractions.slice(0, 3)
+          Array.isArray(job.appeal_points) && job.appeal_points.length > 0
+            ? job.appeal_points.slice(0, 3)
             : ['アピールポイントなし'],
         starred: false,
         created_at: job.created_at,
@@ -286,12 +285,10 @@ async function searchJobsServerOptimized(
         salary_min: job.salary_min,
         salary_max: job.salary_max,
         salary_note: job.salary_note,
-        appeal_points: job.company_attractions,
+        appeal_points: job.appeal_points,
         image_urls: job.image_urls,
         company_name: companyName,
-        companyIconUrl:
-          job.company_accounts?.icon_image_url ||
-          '/company-icon-placeholder.png',
+        companyIconUrl: job.company_accounts?.icon_image_url || '/company.jpg',
       };
     });
 

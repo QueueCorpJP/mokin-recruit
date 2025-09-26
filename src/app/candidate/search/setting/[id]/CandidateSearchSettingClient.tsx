@@ -701,7 +701,7 @@ export default function CandidateSearchSettingClient({
                       </div>
                       <div className='bg-white flex flex-col gap-3 w-full items-start justify-start p-6 rounded-b-[10px] lg:rounded-r-[10px] lg:rounded-bl-none overflow-hidden'>
                         {/* 業務・ポジション */}
-                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                        <div className='flex flex-col gap-1 items-start justify-start min-w-0 max-w-full'>
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                             業務・ポジション
                           </div>
@@ -711,7 +711,7 @@ export default function CandidateSearchSettingClient({
                         </div>
 
                         {/* 企業・組織 */}
-                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                        <div className='flex flex-col gap-1 items-start justify-start min-w-0 max-w-full'>
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
                             企業・組織
                           </div>
@@ -720,20 +720,20 @@ export default function CandidateSearchSettingClient({
                           </div>
                         </div>
 
-                        {/* チーム・文化 */}
-                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                        {/* チーム・人間関係 */}
+                        <div className='flex flex-col gap-1 items-start justify-start min-w-0 max-w-full'>
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                            チーム・文化
+                            チーム・人間関係
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
                             {jobData.appealPoints.team.join('、')}
                           </div>
                         </div>
 
-                        {/* 働き方・制度 */}
-                        <div className='flex flex-col flex items-center gap-1 items-start justify-start min-w-0 max-w-full'>
+                        {/* 働き方 */}
+                        <div className='flex flex-col gap-1 items-start justify-start min-w-0 max-w-full'>
                           <div className="font-['Noto_Sans_JP'] font-bold text-[16px] leading-[2] tracking-[1.6px] text-[#323232]">
-                            働き方・制度
+                            働き方
                           </div>
                           <div className="font-['Noto_Sans_JP'] font-medium text-[16px] leading-[2] tracking-[1.6px] text-[#323232] whitespace-pre-wrap break-words overflow-wrap-break-word min-w-0 max-w-full">
                             {jobData.appealPoints.workstyle.join('、')}

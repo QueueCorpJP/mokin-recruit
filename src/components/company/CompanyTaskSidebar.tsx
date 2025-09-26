@@ -1002,7 +1002,11 @@ export function CompanyTaskSidebar({
               onMouseLeave={e => {
                 e.currentTarget.style.backgroundColor = 'white';
               }}
-              onClick={() => router.push('/company/guide')}
+              onClick={() =>
+                router.push(
+                  'https://cuepoint.notion.site/27a0ac1822c781a79f33d3a322c38bdb?pvs=143'
+                )
+              }
             >
               <Image
                 src='/images/book.svg'
@@ -1028,7 +1032,11 @@ export function CompanyTaskSidebar({
               onMouseLeave={e => {
                 e.currentTarget.style.backgroundColor = 'white';
               }}
-              onClick={() => router.push('/company/faq')}
+              onClick={() =>
+                router.push(
+                  'https://cuepoint.notion.site/27a0ac1822c780cca04fc24c71c206a1?v=27a0ac1822c7812abd13000c3bc2e531&pvs=143'
+                )
+              }
             >
               <Image
                 src='/images/question.svg'
