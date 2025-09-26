@@ -214,11 +214,15 @@ export async function logoutAction(): Promise<LogoutResult> {
       };
     }
 
-    // サインアップ関連のクッキーも削除
+    // 全ての認証関連クッキーを削除
     const cookieStore = await cookies();
     cookieStore.delete('signup_user_id');
     cookieStore.delete('signup_email');
     cookieStore.delete('signup_step');
+    cookieStore.delete('signup_candidate_id');
+    cookieStore.delete('admin_user');
+    cookieStore.delete('user_id');
+    cookieStore.delete('auth_token');
 
     console.log('✅ [LOGOUT] Success');
 

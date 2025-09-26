@@ -5,7 +5,15 @@ import { createClient } from '@/lib/supabase/client';
 import type { Message } from './NewMessageItem';
 import { NewMessageList } from './NewMessageList';
 
-export function NewMessagesSectionClient() {
+interface Props {
+  companyUserId: string;
+  companyGroupId: string;
+}
+
+export function NewMessagesSectionClient({
+  companyUserId,
+  companyGroupId,
+}: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,9 +24,15 @@ export function NewMessagesSectionClient() {
     const fetchMessages = async () => {
       try {
         setLoading(true);
+        console.log(
+          '[NewMessagesSectionClient] Fetching messages for company:',
+          { companyUserId, companyGroupId }
+        );
+
         const { data, error } = await supabase
           .from('messages')
-          .select(`
+          .select(
+            `
             id,
             content,
             sent_at,
@@ -26,6 +40,7 @@ export function NewMessagesSectionClient() {
             status,
             rooms!room_id (
               id,
+              company_group_id,
               candidates!candidate_id (
                 first_name,
                 last_name
@@ -40,9 +55,11 @@ export function NewMessagesSectionClient() {
                 )
               )
             )
-          `)
+          `
+          )
           .eq('sender_type', 'CANDIDATE')
           .eq('status', 'SENT')
+          .eq('rooms.company_group_id', companyGroupId)
           .order('sent_at', { ascending: false })
           .limit(3);
 
@@ -62,9 +79,12 @@ export function NewMessagesSectionClient() {
           }),
           group:
             (msg.rooms?.company_groups?.group_name as string) ||
-            (msg.rooms?.company_groups?.company_accounts?.company_name as string) ||
+            (msg.rooms?.company_groups?.company_accounts
+              ?.company_name as string) ||
             'グループ',
-          user: `${msg.rooms?.candidates?.last_name || ''} ${msg.rooms?.candidates?.first_name || ''}`.trim() || '候補者',
+          user:
+            `${msg.rooms?.candidates?.last_name || ''} ${msg.rooms?.candidates?.first_name || ''}`.trim() ||
+            '候補者',
           content:
             msg.content && msg.content.length > 50
               ? msg.content.substring(0, 50) + '...'
@@ -82,12 +102,12 @@ export function NewMessagesSectionClient() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [companyUserId, companyGroupId]);
 
   if (loading) {
     return (
       <div className='flex flex-col gap-2 mt-2 mb-6'>
-        {[0, 1, 2].map((i) => (
+        {[0, 1, 2].map(i => (
           <div
             key={i}
             className='w-full bg-white px-6 py-4 rounded-lg'
@@ -109,5 +129,3 @@ export function NewMessagesSectionClient() {
 }
 
 export default NewMessagesSectionClient;
-
-

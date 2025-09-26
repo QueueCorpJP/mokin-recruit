@@ -641,23 +641,27 @@ export function CompanyTaskSidebar({
             <br />
             プラン変更
           </Button>
-
-          <div style={faqLinkStyle}>
-            <Image
-              src='/images/question.svg'
-              alt='プラン比較'
-              width={16}
-              height={16}
-              loading='lazy'
-              style={{
-                display: 'block',
-                maxWidth: 'none',
-                filter:
-                  'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%) contrast(95%)',
-              }}
-            />
-            <span style={faqTextStyle}>プランごとの違いはこちら</span>
-          </div>
+          <Link
+            href='https://cuepoint.notion.site/27a0ac1822c781aeaff9dd699ca897b7'
+            target='_blank'
+          >
+            <div style={faqLinkStyle}>
+              <Image
+                src='/images/question.svg'
+                alt='プラン比較'
+                width={16}
+                height={16}
+                loading='lazy'
+                style={{
+                  display: 'block',
+                  maxWidth: 'none',
+                  filter:
+                    'brightness(0) saturate(100%) invert(87%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(70%) contrast(95%)',
+                }}
+              />
+              <span style={faqTextStyle}>プランごとの違いはこちら</span>
+            </div>
+          </Link>
         </div>
       </div>
 

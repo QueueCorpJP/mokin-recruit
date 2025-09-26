@@ -201,7 +201,7 @@ export default async function CandidateSkillsPage() {
                     </div>
                     <div className='px-4 lg:px-0 lg:py-6 lg:flex-1'>
                       {renderTags(
-                        skillsData?.skills_list || candidateData.skills
+                        skillsData?.skills_list || candidateData?.skills || []
                       )}
                     </div>
                   </div>

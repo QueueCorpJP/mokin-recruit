@@ -120,7 +120,7 @@ function _formatRelativeTime(date: Date): string {
 // メッセージはクライアントセクション（NewMessagesSectionClient）で取得する
 
 export default async function CompanyMypage() {
-  // 企業ユーザー認証情報を取得
+  // 企業ユーザー認証情報を取得（1回のみ）
   const { requireCompanyAuthForAction } = await import('@/lib/auth/server');
   const authResult = await requireCompanyAuthForAction();
 
@@ -135,90 +135,110 @@ export default async function CompanyMypage() {
     );
   }
 
-  // cookiesを外部で取得（サイドバーの軽量データのみサーバーで用意）
+  // cookiesとSupabase設定を外部で取得
   const { cookies } = await import('next/headers');
   const cookieStore = await cookies();
   const cookiesData = cookieStore.getAll();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  const { getCompanyGroups, getUserDefaultGroupId, getSearchHistory } =
-    await import('@/lib/actions/search-history');
+  // 認証済みのユーザー情報を各関数に渡すため、個別にインポート
   const { getJobOptions } = await import(
     '@/lib/server/candidate/recruitment-queries'
   );
 
-  // 候補者データをサーバーサイドで取得
-  const { getCandidatesFromDatabase } = await import(
-    '@/app/company/search/result/server-actions'
-  );
-
+  // 軽量データのみを並行取得（重い処理は分離）
   const [
     notices,
     companyAccountData,
-    companyGroupsResult,
-    defaultGroupResult,
     jobOptions,
-    candidates,
+    savedSearchResult,
+    candidatesData,
   ] = await Promise.all([
     getPublishedNotices(3, supabaseUrl, supabaseAnonKey, cookiesData),
     getCompanyAccountData(authResult.data.companyUserId),
-    getCompanyGroups(),
-    getUserDefaultGroupId(),
     getJobOptions(),
-    getCandidatesFromDatabase(),
+    (async () => {
+      const { getSavedSearchHistory } = await import(
+        '@/lib/actions/search-history'
+      );
+      return getSavedSearchHistory(undefined, 3); // 最大3件の保存済み検索条件を取得
+    })(),
+    (async () => {
+      // 一時的にSupabaseから直接全候補者を取得
+      const supabase = await import('@/lib/supabase/server-client').then(m =>
+        m.getSupabaseServerClient()
+      );
+      const client = await supabase;
+      const { data: candidates, error } = await client
+        .from('candidates')
+        .select(
+          `
+          id,
+          first_name,
+          last_name,
+          recent_job_company_name,
+          prefecture,
+          birth_date,
+          gender,
+          current_salary,
+          skills,
+          last_login_at,
+          recent_job_department_position,
+          recent_job_industries,
+          recent_job_types,
+          education(
+            final_education,
+            school_name,
+            department,
+            graduation_year,
+            graduation_month
+          )
+        `
+        )
+        .limit(50); // 最大50件に制限
+
+      console.log('[DEBUG mypage] Direct candidates query result:', {
+        candidatesCount: candidates?.length || 0,
+        error,
+        sampleCandidate: candidates?.[0],
+      });
+
+      return candidates || [];
+    })(),
   ]);
 
-  console.log(
-    '[DEBUG mypage] Server-side candidates count:',
-    candidates.length
-  );
+  // 重複する認証処理を避けるため、認証済み情報を直接使用
+  console.log('[DEBUG mypage] Auth result:', {
+    companyUserId: authResult.data.companyUserId,
+    companyAccountId: authResult.data.companyAccountId,
+    companyGroupId: authResult.data.companyGroupId,
+  });
 
-  console.log('[DEBUG] Default group result:', defaultGroupResult);
   console.log('[DEBUG] Notices fetched:', notices);
   console.log('[DEBUG] Company Account Data:', companyAccountData);
+  console.log('[DEBUG] Saved search result:', savedSearchResult);
+  console.log('[DEBUG] Candidates data:', {
+    candidatesCount: candidatesData?.length || 0,
+    sampleCandidate: candidatesData?.[0],
+  });
 
-  const companyGroups = companyGroupsResult.success
-    ? companyGroupsResult.data.map(group => ({
-        value: group.id,
-        label: group.name,
+  // 認証済み情報から直接グループIDを使用（追加認証なし）
+  const companyGroupId =
+    authResult.data.companyGroupId || authResult.data.companyUserId;
+
+  // 保存済み検索条件を取得
+  const initialSavedSearches = savedSearchResult.success
+    ? savedSearchResult.data.map((item: any) => ({
+        id: item.id,
+        group_name: item.group_name,
+        search_title: item.search_title,
+        search_conditions: item.search_conditions,
       }))
     : [];
 
-  const companyGroupId =
-    companyGroups[0]?.value ??
-    (defaultGroupResult.success && defaultGroupResult.data
-      ? (defaultGroupResult.data as any).id
-      : undefined);
-
-  // おすすめ候補者セクション用にサーバー側で全グループの保存済み検索履歴を取得
-  // 条件一つに対してグループ一つになるよう、グループごとに保存済み条件を1つずつ取得
-  let initialSavedSearches: Array<{
-    id: string;
-    group_name: string;
-    search_title: string;
-    search_conditions: any;
-  }> = [];
-  try {
-    // 各グループから保存済み検索条件を1つずつ取得
-    for (const group of companyGroups) {
-      const savedHistoryResult = await getSearchHistory(group.value, 20, 0);
-      if (savedHistoryResult.success) {
-        const all = (savedHistoryResult.data as any[]) || [];
-        const saved = all.filter(
-          h =>
-            h.is_saved === true || String(h.is_saved).toLowerCase() === 'true'
-        );
-        // 各グループから保存済み条件を1つ取得（なければ直近履歴から1つ）
-        const groupCondition = saved.length > 0 ? saved[0] : all[0];
-        if (groupCondition) {
-          initialSavedSearches.push(groupCondition);
-        }
-      }
-    }
-  } catch (_) {
-    // エラー時は初期化処理をスキップ
-  }
+  // 候補者データを実際のデータに更新
+  const candidates = candidatesData || [];
 
   return (
     <div className='min-h-[60vh] w-full flex flex-col items-center bg-[#F9F9F9] px-4 pt-4 pb-20 md:px-20 md:py-10 md:pb-20'>
@@ -233,7 +253,10 @@ export default async function CompanyMypage() {
             >
               新着メッセージ
             </SectionHeading>
-            <NewMessagesSectionClient />
+            <NewMessagesSectionClient
+              companyUserId={authResult.data.companyUserId}
+              companyGroupId={companyGroupId}
+            />
             <div
               style={{
                 display: 'flex',
@@ -301,6 +324,7 @@ export default async function CompanyMypage() {
             </div>
             {/* おすすめ候補者セクション（クライアント先出） */}
             <SavedSearchRecommendationsClient
+              companyUserId={authResult.data.companyUserId}
               companyGroupId={companyGroupId}
               jobOptions={jobOptions}
               initialSavedSearches={initialSavedSearches}

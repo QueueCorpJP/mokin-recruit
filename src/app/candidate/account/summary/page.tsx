@@ -21,6 +21,16 @@ export default async function CandidateSummaryPage() {
     ); // データが存在しない場合は空のデータで表示を続行
   }
 
+  // デバッグ情報をコンソールに出力
+  console.log('[SUMMARY PAGE] Debug info:', {
+    userId: user.id,
+    candidateDataExists: !!candidateData,
+    hasJobSummary: !!candidateData?.job_summary,
+    hasSelfPr: !!candidateData?.self_pr,
+    jobSummary: candidateData?.job_summary,
+    selfPr: candidateData?.self_pr,
+  });
+
   return (
     <>
       {/* メインコンテンツ */}

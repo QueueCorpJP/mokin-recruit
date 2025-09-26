@@ -24,6 +24,16 @@ export default async function SearchHistoryPage() {
     const result = await getSearchHistory(undefined, 50, 0);
     if (result.success) {
       initialSearchHistory = result.data || [];
+      console.log(
+        '[SearchHistoryPage] Data fetched successfully, count:',
+        initialSearchHistory.length
+      );
+      if (initialSearchHistory.length > 0) {
+        console.log(
+          '[SearchHistoryPage] First item:',
+          JSON.stringify(initialSearchHistory[0], null, 2)
+        );
+      }
     } else {
       error = (result as any).error || 'エラーが発生しました';
       console.error(

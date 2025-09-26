@@ -156,18 +156,61 @@ export function CandidateDashboardServer({
             よくある質問
           </SectionHeading>
           <div className='space-y-4'>
-            <FaqBox
-              title='プロフィールはどこで編集できますか？'
-              body='右上のメニューから「プロフィール設定」を選択してください。'
-            />
-            <FaqBox
-              title='応募した求人の状況を確認するには？'
-              body='「応募履歴」ページで確認できます。'
-            />
-            <FaqBox
-              title='企業からメッセージが来た場合の通知設定は？'
-              body='「通知設定」ページで詳細を設定できます。'
-            />
+            <a
+              href='https://cuepoint.notion.site/CuePoint-2770ac1822c781799e90cb2dc0b49913?pvs=143'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <FaqBox
+                title='CuePointとはどのようなサービスですか？'
+                body='詳細はこちらをご覧ください。'
+              />
+            </a>
+            <a
+              href='https://cuepoint.notion.site/2770ac1822c7813f8012d75b89980737?pvs=143'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <FaqBox
+                title='求人の応募方法を教えてください。'
+                body='詳細はこちらをご覧ください。'
+              />
+            </a>
+            <a
+              href='https://cuepoint.notion.site/2770ac1822c781f58f8bef9c2b5469bf?pvs=143'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <FaqBox
+                title='企業からのスカウトはどのように届きますか？'
+                body='詳細はこちらをご覧ください。'
+              />
+            </a>
+            <a
+              href='https://cuepoint.notion.site/2770ac1822c7817d9bc2e97a913c2f45?pvs=143'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <FaqBox
+                title='面談日時の調整はどのように行いますか？'
+                body='詳細はこちらをご覧ください。'
+              />
+            </a>
+            <a
+              href='https://cuepoint.notion.site/2770ac1822c781129d40c05ddd0bb5f1?pvs=143'
+              target='_blank'
+              rel='noopener noreferrer'
+              className='block'
+            >
+              <FaqBox
+                title='不具合やトラブルがあった場合の連絡先は？'
+                body='詳細はこちらをご覧ください。'
+              />
+            </a>
           </div>
         </div>
       </div>

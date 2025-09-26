@@ -78,7 +78,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
         id,
         last_name,
         first_name,
-        current_company,
+        recent_job_company_name,
         prefecture,
         birth_date,
         gender,
@@ -139,7 +139,7 @@ export async function getCandidatesFromDatabase(): Promise<CandidateData[]> {
       console.log('👥 [getCandidatesFromDatabase] 最初の候補者サンプル:', {
         id: candidates[0].id,
         name: `${candidates[0].last_name} ${candidates[0].first_name}`,
-        company: candidates[0].current_company,
+        company: candidates[0].recent_job_company_name,
       });
     }
 
@@ -333,7 +333,7 @@ async function transformCandidatesToDisplayFormat(
       {
         period: candidate.recent_job_company_name ? '直近' : '現在',
         company:
-          candidate.current_company ||
+          candidate.recent_job_company_name ||
           candidate.recent_job_company_name ||
           '企業名未設定',
         position: candidate.recent_job_department_position || '役職未設定',
@@ -350,7 +350,7 @@ async function transformCandidatesToDisplayFormat(
       badgeText,
       lastLogin: getLastLoginText(candidate.last_login_at),
       companyName:
-        candidate.current_company ||
+        candidate.recent_job_company_name ||
         candidate.recent_job_company_name ||
         '企業名未設定',
       department: candidate.recent_job_department_position || '部署名未設定',
@@ -438,7 +438,7 @@ export async function searchCandidatesWithConditions(
         id,
         first_name,
         last_name,
-        current_company,
+        recent_job_company_name,
         prefecture,
         birth_date,
         gender,

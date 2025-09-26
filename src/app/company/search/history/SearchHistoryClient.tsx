@@ -165,7 +165,24 @@ export function SearchHistoryClient({
   };
 
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>(
-    transformSearchHistory(initialSearchHistory)
+    () => {
+      const transformed = transformSearchHistory(initialSearchHistory);
+      console.log(
+        '[SearchHistoryClient] Initial data count:',
+        initialSearchHistory.length
+      );
+      console.log(
+        '[SearchHistoryClient] Transformed data count:',
+        transformed.length
+      );
+      if (transformed.length > 0) {
+        console.log(
+          '[SearchHistoryClient] First transformed item:',
+          transformed[0]
+        );
+      }
+      return transformed;
+    }
   );
 
   const toggleMenu = (id: string) => {

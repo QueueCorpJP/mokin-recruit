@@ -63,7 +63,7 @@ export function CandidateCard({
         {showActions && (
           <div className='flex flex-col gap-6 w-8'>
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 e.preventDefault();
                 onTogglePickup?.(candidate.id);
@@ -99,7 +99,7 @@ export function CandidateCard({
               )}
             </button>
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 e.preventDefault();
                 onToggleHidden?.(candidate.id);
@@ -138,7 +138,11 @@ export function CandidateCard({
         )}
 
         {/* Candidate Info */}
-        <div className='flex-1' onClick={() => onCandidateClick?.(candidate)} style={{ cursor: onCandidateClick ? 'pointer' : 'default' }}>
+        <div
+          className='flex-1'
+          onClick={() => onCandidateClick?.(candidate)}
+          style={{ cursor: onCandidateClick ? 'pointer' : 'default' }}
+        >
           {/* Badges */}
           <div className='flex items-center gap-2 mb-2'>
             {candidate.isAttention && (
@@ -312,7 +316,7 @@ export function CandidateCard({
                 </span>
                 <div className='flex gap-2 flex-wrap'>
                   {candidate.experienceJobs.map((job, index) =>
-                    job.includes('未設定') ? (
+                    typeof job === 'string' && job.includes('未設定') ? (
                       <span
                         key={index}
                         className='text-[#999999] text-[14px] font-medium tracking-[1.4px]'
@@ -320,7 +324,11 @@ export function CandidateCard({
                           fontFamily: 'Noto Sans JP, sans-serif',
                         }}
                       >
-                        {job}
+                        {typeof job === 'string'
+                          ? job
+                          : typeof job === 'object' && job.name
+                            ? job.name
+                            : String(job)}
                       </span>
                     ) : (
                       <div
@@ -333,7 +341,11 @@ export function CandidateCard({
                             fontFamily: 'Noto Sans JP, sans-serif',
                           }}
                         >
-                          {job}
+                          {typeof job === 'string'
+                            ? job
+                            : typeof job === 'object' && job.name
+                              ? job.name
+                              : String(job)}
                         </span>
                       </div>
                     )
@@ -351,6 +363,7 @@ export function CandidateCard({
                 </span>
                 <div className='flex gap-2 flex-wrap'>
                   {candidate.experienceIndustries.map((industry, index) =>
+                    typeof industry === 'string' &&
                     industry.includes('未設定') ? (
                       <span
                         key={index}
@@ -359,7 +372,11 @@ export function CandidateCard({
                           fontFamily: 'Noto Sans JP, sans-serif',
                         }}
                       >
-                        {industry}
+                        {typeof industry === 'string'
+                          ? industry
+                          : typeof industry === 'object' && industry.name
+                            ? industry.name
+                            : String(industry)}
                       </span>
                     ) : (
                       <div
@@ -372,7 +389,11 @@ export function CandidateCard({
                             fontFamily: 'Noto Sans JP, sans-serif',
                           }}
                         >
-                          {industry}
+                          {typeof industry === 'string'
+                            ? industry
+                            : typeof industry === 'object' && industry.name
+                              ? industry.name
+                              : String(industry)}
                         </span>
                       </div>
                     )
@@ -397,6 +418,7 @@ export function CandidateCard({
                 </span>
                 <div className='flex flex-col gap-2'>
                   {candidate.selectionCompanies.map((selection, index) =>
+                    typeof selection.company === 'string' &&
                     selection.company.includes('未設定') ? (
                       <span
                         key={index}
@@ -414,10 +436,13 @@ export function CandidateCard({
                           style={{
                             fontFamily: 'Noto Sans JP, sans-serif',
                           }}
-                          onClick={(e) => {
+                          onClick={e => {
                             e.preventDefault();
                             e.stopPropagation();
-                            window.open(`https://www.google.com/search?q=${encodeURIComponent(selection.company)}`, '_blank');
+                            window.open(
+                              `https://www.google.com/search?q=${encodeURIComponent(selection.company)}`,
+                              '_blank'
+                            );
                           }}
                         >
                           {selection.company}

@@ -55,7 +55,12 @@ async function createSupabaseServerClientReadOnly(useCookies: boolean = true) {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          const allCookies = cookieStore.getAll();
+          console.log(
+            '🍪 [READ_ONLY_CLIENT] Available cookies:',
+            allCookies.map(c => ({ name: c.name, hasValue: !!c.value }))
+          );
+          return allCookies;
         },
         setAll() {
           // サーバーコンポーネントではクッキーを設定しない（読み取り専用）
@@ -78,15 +83,24 @@ async function createSupabaseServerClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll();
+          const allCookies = cookieStore.getAll();
+          console.log(
+            '🍪 [WRITABLE_CLIENT] Available cookies:',
+            allCookies.map(c => ({ name: c.name, hasValue: !!c.value }))
+          );
+          return allCookies;
         },
         setAll(cookiesToSet) {
           try {
+            console.log(
+              '🍪 [WRITABLE_CLIENT] Setting cookies:',
+              cookiesToSet.map(c => ({ name: c.name, hasValue: !!c.value }))
+            );
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            console.warn('Cookie setting error:', error);
+            console.error('❌ [WRITABLE_CLIENT] Cookie setting error:', error);
           }
         },
       },
@@ -126,6 +140,7 @@ async function createSupabaseAdminClient() {
 /**
  * Supabase認証を使用したサーバー認証チェック
  * 静的レンダリング対応版 - ログイン状態チェック時はキャッシュなし
+ * 自動セッション復活機能付き
  */
 export async function getServerAuth(
   allowStatic: boolean = false,
@@ -169,12 +184,108 @@ export async function getServerAuth(
     });
 
     if (error || !user) {
-      console.log('❌ [GET_SERVER_AUTH] No valid user session');
-      return {
-        isAuthenticated: false,
-        user: null,
-        userType: null,
-      };
+      console.log(
+        '❌ [GET_SERVER_AUTH] No valid user session, attempting session refresh...'
+      );
+
+      // セッション復活のために書き込み可能なクライアントを作成
+      const writableSupabase = await createSupabaseServerClient();
+
+      // セッション復活を試行
+      try {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await writableSupabase.auth.refreshSession();
+
+        if (sessionError || !session?.user) {
+          console.log(
+            '❌ [GET_SERVER_AUTH] Session refresh failed:',
+            sessionError?.message
+          );
+          return {
+            isAuthenticated: false,
+            user: null,
+            userType: null,
+          };
+        }
+
+        console.log('✅ [GET_SERVER_AUTH] Session refreshed successfully');
+
+        // 復活したセッションを新しいクライアントで再確認
+        const refreshedSupabase =
+          await createSupabaseServerClientReadOnly(true);
+        const {
+          data: { user: verifiedUser },
+          error: verifyError,
+        } = await refreshedSupabase.auth.getUser();
+
+        if (verifyError || !verifiedUser) {
+          console.log(
+            '⚠️ [GET_SERVER_AUTH] Session verification failed after refresh'
+          );
+          // 復活したセッションのユーザーを直接使用
+        }
+
+        // 復活したセッションのユーザーを使用
+        const refreshedUser = verifiedUser || session.user;
+
+        // user_metadataからユーザータイプを取得
+        const meta = refreshedUser.user_metadata || {};
+        console.log('🔍 [GET_SERVER_AUTH] Refreshed user metadata:', meta);
+
+        let userType: UserType =
+          (meta.user_type as UserType) ||
+          (meta.userType as UserType) ||
+          'candidate';
+
+        if (userType !== 'company_user') {
+          if (meta.company_account_id || (meta as any).companyAccountId) {
+            console.log(
+              '🔄 [GET_SERVER_AUTH] Found company_account_id, changing to company_user'
+            );
+            userType = 'company_user';
+          }
+        }
+
+        const authUser: User = {
+          id: refreshedUser.id,
+          email: refreshedUser.email || '',
+          userType,
+          name:
+            refreshedUser.user_metadata?.full_name ||
+            refreshedUser.user_metadata?.name,
+          emailConfirmed: refreshedUser.email_confirmed_at != null,
+          lastSignIn: refreshedUser.last_sign_in_at || undefined,
+          user_metadata: refreshedUser.user_metadata,
+        };
+
+        console.log(
+          '✅ [GET_SERVER_AUTH] Authentication successful after refresh:',
+          {
+            isAuthenticated: true,
+            userType: userType,
+            userId: authUser.id,
+            email: authUser.email,
+          }
+        );
+
+        return {
+          isAuthenticated: true,
+          user: authUser,
+          userType,
+        };
+      } catch (refreshError) {
+        console.error(
+          '❌ [GET_SERVER_AUTH] Session refresh error:',
+          refreshError
+        );
+        return {
+          isAuthenticated: false,
+          user: null,
+          userType: null,
+        };
+      }
     }
 
     // user_metadataからユーザータイプを取得

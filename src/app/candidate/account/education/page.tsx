@@ -58,6 +58,17 @@ export default async function CandidateEducationPage() {
   // 学歴データを取得
   const educationData = await getEducationData(user.id);
 
+  // デバッグ情報をコンソールに出力
+  console.log('[EDUCATION PAGE] Debug info:', {
+    userId: user.id,
+    candidateDataExists: !!candidateData,
+    hasDesiredIndustries: candidateData?.desired_industries?.length || 0,
+    hasDesiredJobTypes: candidateData?.desired_job_types?.length || 0,
+    desiredIndustries: candidateData?.desired_industries,
+    desiredJobTypes: candidateData?.desired_job_types,
+    educationDataExists: !!educationData,
+  });
+
   // 卒業年月の整形
   const graduationDate = formatGraduationDate(
     educationData?.graduation_year,
