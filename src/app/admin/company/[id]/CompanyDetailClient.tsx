@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { CompanyEditData } from './edit/page';
-import type { CompanyAnalyticsData } from './page';
+import type { CompanyAnalyticsData, ScoutLogData } from './page';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { ActionButton } from '@/components/admin/ui/ActionButton';
 import CompanyUserDeleteModal from '@/components/admin/CompanyUserDeleteModal';
@@ -61,15 +61,43 @@ const getPermissionDisplayName = (permission: string): string => {
   }
 };
 
+// 日付をフォーマットする関数
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+};
+
+// スカウトステータスの日本語表示名を取得
+const getScoutStatusDisplayName = (status: string): string => {
+  switch (status) {
+    case 'sent':
+      return '送信済み';
+    case 'read':
+      return '開封済み';
+    case 'replied':
+      return '返信済み';
+    case 'failed':
+      return '送信失敗';
+    default:
+      return status;
+  }
+};
+
 interface CompanyDetailClientProps {
   company: CompanyEditData;
   analytics: CompanyAnalyticsData;
+  scoutLogs: ScoutLogData;
   onUserDeleteComplete?: () => void;
 }
 
 export default function CompanyDetailClient({
   company: initialCompany,
   analytics,
+  scoutLogs,
   onUserDeleteComplete,
 }: CompanyDetailClientProps) {
   const router = useRouter();
@@ -1112,25 +1140,33 @@ export default function CompanyDetailClient({
 
             <div className='bg-white rounded-lg p-6 space-y-4'>
               <div className='space-y-2'>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
+                {scoutLogs.logs.slice(0, 4).length > 0 ? (
+                  scoutLogs.logs.slice(0, 4).map(log => (
+                    <div key={log.id} className='text-base'>
+                      {formatDate(log.sent_at)}：{log.sender_name}が
+                      {log.candidate_name}に
+                      {log.job_title ? `「${log.job_title}」の` : ''}
+                      スカウト送信（{getScoutStatusDisplayName(log.status)}）
+                    </div>
+                  ))
+                ) : (
+                  <div className='text-base text-gray-500'>
+                    スカウト送信履歴がありません
+                  </div>
+                )}
               </div>
 
               <div className='flex justify-between items-center'>
                 <div className='border-l border-gray-300 h-20'></div>
                 <div className='text-right'>
                   <div className='text-base'>グループ内月次消化枚数</div>
-                  <div className='text-2xl font-bold'>100枚</div>
+                  <div className='text-2xl font-bold'>
+                    {Object.values(scoutLogs.monthlyUsageByGroup).reduce(
+                      (total, group) => total + group.usage,
+                      0
+                    )}
+                    枚
+                  </div>
                 </div>
               </div>
             </div>
@@ -1166,31 +1202,29 @@ export default function CompanyDetailClient({
 
             <div className='bg-white rounded-lg p-6 text-black space-y-4'>
               <div className='space-y-2'>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
+                {scoutLogs.logs.slice(0, 6).length > 0 ? (
+                  scoutLogs.logs.slice(0, 6).map(log => (
+                    <div key={log.id} className='text-base'>
+                      {formatDate(log.sent_at)}：{log.sender_name}が
+                      {log.candidate_name}に
+                      {log.job_title ? `「${log.job_title}」の` : ''}
+                      スカウト送信（チケット1枚消費）
+                    </div>
+                  ))
+                ) : (
+                  <div className='text-base text-gray-500'>
+                    スカウト送信履歴がありません
+                  </div>
+                )}
               </div>
 
               <div className='flex justify-between items-center'>
                 <div className='border-l border-gray-300 h-24'></div>
                 <div className='text-right'>
                   <div className='text-base'>現在の残チケット枚数</div>
-                  <div className='text-2xl font-bold'>100枚</div>
+                  <div className='text-2xl font-bold'>
+                    {scoutLogs.remainingTickets}枚
+                  </div>
                 </div>
               </div>
 
@@ -1200,41 +1234,56 @@ export default function CompanyDetailClient({
             </div>
           </div>
 
-          {/* グループチケットログ2 */}
-          <div className='bg-gray-300 rounded-lg p-6'>
-            <h3 className='text-xl font-bold text-[#323232] text-center mb-6'>
-              グループチケットログ
-            </h3>
+          {/* グループ別チケット使用量詳細 */}
+          {Object.keys(scoutLogs.monthlyUsageByGroup).length > 0 && (
+            <div className='bg-gray-300 rounded-lg p-6'>
+              <h3 className='text-xl font-bold text-[#323232] text-center mb-6'>
+                グループ別月次使用量詳細
+              </h3>
 
-            <div className='bg-white rounded-lg p-6 space-y-4'>
-              <div className='space-y-2'>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
+              <div className='bg-white rounded-lg p-6 space-y-4'>
+                <div className='space-y-4'>
+                  {Object.entries(scoutLogs.monthlyUsageByGroup).map(
+                    ([groupId, groupData]) => (
+                      <div
+                        key={groupId}
+                        className='border-b border-gray-200 pb-4 last:border-b-0'
+                      >
+                        <div className='flex justify-between items-center mb-2'>
+                          <div className='text-lg font-bold'>
+                            {groupData.groupName}
+                          </div>
+                          <div className='text-xl font-bold text-blue-600'>
+                            {groupData.usage}枚
+                          </div>
+                        </div>
+                        <div className='space-y-1'>
+                          {scoutLogs.logs
+                            .filter(log => log.company_group_id === groupId)
+                            .slice(0, 3)
+                            .map(log => (
+                              <div
+                                key={log.id}
+                                className='text-sm text-gray-600'
+                              >
+                                {formatDate(log.sent_at)}：{log.candidate_name}
+                                に
+                                {log.job_title ? `「${log.job_title}」の` : ''}
+                                スカウト送信
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-                <div className='text-base'>
-                  yyyy/mm/dd：ログ表示テキストが入ります
-                </div>
-              </div>
 
-              <div className='flex justify-between items-center'>
-                <div className='border-l border-gray-300 h-20'></div>
-                <div className='text-right'>
-                  <div className='text-base'>グループ内月次消化枚数</div>
-                  <div className='text-2xl font-bold'>100枚</div>
+                <div className='text-sm text-red-500 text-center'>
+                  期間は6ヶ月分をログとして記載する
                 </div>
-              </div>
-
-              <div className='text-sm text-red-500 text-center'>
-                期間は6ヶ月分をログとして記載する
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
