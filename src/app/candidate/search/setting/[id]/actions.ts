@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/lib/supabase/client';
+import { getSupabaseServerClient } from '@/lib/supabase/server-client';
 
 export interface JobDetailData {
   id: string;
@@ -52,7 +52,7 @@ export interface JobDetailData {
 // 初期表示に必要最小限のデータのみ取得して高速化
 async function getJobDetailServer(jobId: string) {
   try {
-    const supabase = createClient();
+    const supabase = await getSupabaseServerClient();
 
     // ユーザー認証状態を確認
     const {
@@ -85,7 +85,7 @@ async function getJobDetailServer(jobId: string) {
         selection_process,
         job_type,
         industry,
-        company_attractions,
+        appeal_points,
         required_documents,
         image_urls,
         smoking_policy,
@@ -134,7 +134,7 @@ async function getJobDetailServer(jobId: string) {
       selection_process: string | null;
       job_type: string[];
       industry: string[];
-      company_attractions: string[];
+      appeal_points: string[];
       required_documents: string[];
       image_urls: string[];
       smoking_policy: string | null;
@@ -263,9 +263,17 @@ export async function getJobDetailData(
           ? apiJob.job_type
           : [apiJob.job_type || '職種未設定'],
         industries: Array.isArray(apiJob.company_industries)
-          ? apiJob.company_industries
+          ? apiJob.company_industries.map((industry: any) =>
+              typeof industry === 'string'
+                ? industry
+                : industry.name || industry
+            )
           : Array.isArray(apiJob.industry)
-            ? apiJob.industry
+            ? apiJob.industry.map((industry: any) =>
+                typeof industry === 'string'
+                  ? industry
+                  : industry.name || industry
+              )
             : [apiJob.company_industry || apiJob.industry || '業種未設定'],
         jobDescription: apiJob.job_description || 'テキストが入ります。',
         positionSummary: apiJob.position_summary || 'テキストが入ります。',
@@ -291,7 +299,7 @@ export async function getJobDetailData(
         holidays: apiJob.holidays || 'テキストが入ります。',
         selectionProcess: apiJob.selection_process || 'テキストが入ります。',
         appealPoints: (() => {
-          const appealPointsData = apiJob.company_attractions as any;
+          const appealPointsData = apiJob.appeal_points as any;
           if (
             appealPointsData &&
             typeof appealPointsData === 'object' &&

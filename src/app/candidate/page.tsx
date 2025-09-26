@@ -31,4 +31,3 @@ export default function CandidateLandingPage() {
     </div>
   );
 }
-//dff

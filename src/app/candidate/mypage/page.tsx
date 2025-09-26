@@ -295,6 +295,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
     const candidate = await candidateRepo.findById(candidateId);
 
     if (!candidate) {
+      console.log('Candidate not found for ID:', candidateId);
       return [];
     }
 
@@ -307,7 +308,7 @@ async function getRecommendedJobsInternal(candidateId: string) {
       .eq('candidate_id', candidateId)
       .single();
 
-    // 必要最小限のフィールドのみ取得
+    // 必要最小限のフィールドのみ取得 - シンプルなクエリで試す
     let query = client
       .from('job_postings')
       .select(
@@ -317,63 +318,28 @@ async function getRecommendedJobsInternal(candidateId: string) {
         salary_min,
         salary_max,
         work_location,
-        company_attractions,
+        appeal_points,
         image_urls,
-        company_accounts!inner (
-          company_name
-        )
+        company_account_id
       `
       )
       .eq('status', 'PUBLISHED')
       .in('publication_type', ['public', 'members']);
 
-    // 候補者の希望条件でフィルタリング
-
-    const conditions = [];
-    if (
-      expectations?.desired_job_types &&
-      (expectations.desired_job_types as any[]).length > 0
-    ) {
-      conditions.push(
-        (expectations.desired_job_types as any[])
-          .map((jobType: any) => `job_type.cs.{${jobType.name || jobType}}`)
-          .join(',')
-      );
-    }
-
-    if (
-      expectations?.desired_work_locations &&
-      (expectations.desired_work_locations as any[]).length > 0
-    ) {
-      conditions.push(
-        (expectations.desired_work_locations as any[])
-          .map(
-            (location: any) => `work_location.cs.{${location.name || location}}`
-          )
-          .join(',')
-      );
-    }
-
-    if (
-      expectations?.desired_industries &&
-      (expectations.desired_industries as any[]).length > 0
-    ) {
-      conditions.push(
-        (expectations.desired_industries as any[])
-          .map((industry: any) => `industry.cs.{${industry.name || industry}}`)
-          .join(',')
-      );
-    }
-
-    if (conditions.length > 0) {
-      query = query.or(conditions.join(','));
-    }
+    // 候補者の希望条件でフィルタリング - 条件がない場合もすべて表示
+    // フィルタリングは一旦無効化して、すべての求人を取得
 
     const { data: jobs, error } = await query
       .order('created_at', { ascending: false })
       .limit(5); // 5件に減らして初期ロードを高速化
 
-    if (error || !jobs) {
+    if (error) {
+      console.error('Error fetching recommended jobs:', error);
+      return [];
+    }
+
+    if (!jobs || jobs.length === 0) {
+      console.log('No jobs found with current query');
       return [];
     }
 
@@ -389,6 +355,28 @@ async function getRecommendedJobsInternal(candidateId: string) {
       favorites?.map(fav => fav.job_posting_id) || []
     );
 
+    // 企業情報を別途取得
+    const companyAccountIds = [
+      ...new Set(
+        jobs.map((job: any) => job.company_account_id).filter(id => id != null)
+      ),
+    ];
+
+    let companyMap = new Map();
+    if (companyAccountIds.length > 0) {
+      const { data: companies } = await client
+        .from('company_accounts')
+        .select('id, company_name, icon_image_url')
+        .in('id', companyAccountIds);
+
+      companyMap = new Map(
+        companies?.map(c => [
+          c.id,
+          { company_name: c.company_name, icon_image_url: c.icon_image_url },
+        ]) || []
+      );
+    }
+
     // 最適化されたデータ変換
     const transformedJobs = jobs.map(
       (job: {
@@ -397,26 +385,34 @@ async function getRecommendedJobsInternal(candidateId: string) {
         salary_min: any;
         salary_max: any;
         work_location: any;
-        company_attractions: any;
+        appeal_points: any;
         image_urls: any;
-        company_accounts: { company_name: any }[];
-      }) => ({
-        id: job.id,
-        title: job.title || '求人タイトル未設定',
-        company_name: job.company_accounts?.[0]?.company_name || '企業名未設定',
-        image_urls: job.image_urls?.slice(0, 1) || [], // 最初の画像のみ取得して転送量削減
-        appeal_points: job.company_attractions?.slice(0, 3) || [],
-        work_location: Array.isArray(job.work_location)
-          ? job.work_location
-          : [job.work_location || '勤務地未設定'],
-        salary_min: job.salary_min,
-        salary_max: job.salary_max,
-        starred: favoriteJobIds.has(job.id),
-      })
+        company_account_id: any;
+      }) => {
+        const companyInfo = companyMap.get(job.company_account_id) || {};
+        return {
+          id: job.id,
+          title: job.title || '求人タイトル未設定',
+          company_name: companyInfo.company_name || '企業名未設定',
+          image_urls:
+            job.image_urls && job.image_urls.length > 0
+              ? job.image_urls
+              : ['/company.jpg'],
+          appeal_points: job.appeal_points?.slice(0, 3) || [],
+          work_location: Array.isArray(job.work_location)
+            ? job.work_location
+            : [job.work_location || '勤務地未設定'],
+          salary_min: job.salary_min,
+          salary_max: job.salary_max,
+          starred: favoriteJobIds.has(job.id),
+          companyIconUrl: companyInfo.icon_image_url || '/company.jpg',
+        };
+      }
     );
 
     return transformedJobs;
-  } catch {
+  } catch (error) {
+    console.error('Error in getRecommendedJobsInternal:', error);
     return [];
   }
 }
