@@ -54,8 +54,14 @@ async function getJobDetailServer(jobId: string) {
   try {
     const supabase = createClient();
 
+    // ユーザー認証状態を確認
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const isAuthenticated = !!user;
+
     // 求人詳細を取得（初期表示に必要最小限のフィールドのみ）
-    const { data: job, error: jobError } = await supabase
+    let jobQuery = supabase
       .from('job_postings')
       .select(
         `
@@ -88,9 +94,18 @@ async function getJobDetailServer(jobId: string) {
       `
       )
       .eq('id', jobId)
-      .eq('status', 'PUBLISHED')
-      .in('publication_type', ['public', 'members'])
-      .maybeSingle();
+      .eq('status', 'PUBLISHED');
+
+    // 認証状態に応じてpublication_typeフィルターを適用
+    if (isAuthenticated) {
+      // ログインユーザーはpublicとmembersの両方を閲覧可能
+      jobQuery = jobQuery.in('publication_type', ['public', 'members']);
+    } else {
+      // 未認証ユーザーはpublicのみ閲覧可能
+      jobQuery = jobQuery.eq('publication_type', 'public');
+    }
+
+    const { data: job, error: jobError } = await jobQuery.maybeSingle();
 
     if (jobError || !job) {
       console.error('Failed to fetch job:', jobError);

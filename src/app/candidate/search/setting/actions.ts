@@ -159,6 +159,12 @@ async function searchJobsServerOptimized(
   try {
     const supabase = await createSupabaseServerClient();
 
+    // ユーザー認証状態を確認
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const isAuthenticated = !!user;
+
     // ページネーション設定
     const page = params.page || 1;
     const limit = params.limit || 10;
@@ -168,8 +174,17 @@ async function searchJobsServerOptimized(
     let countQuery = supabase
       .from('job_postings')
       .select('id', { count: 'exact', head: true })
-      .eq('status', 'PUBLISHED')
-      .in('publication_type', ['public', 'members']);
+      .eq('status', 'PUBLISHED');
+
+    // 認証状態に応じてpublication_typeフィルターを適用
+    if (isAuthenticated) {
+      // ログインユーザーはpublicとmembersの両方を閲覧可能
+      countQuery = countQuery.in('publication_type', ['public', 'members']);
+    } else {
+      // 未認証ユーザーはpublicのみ閲覧可能
+      countQuery = countQuery.eq('publication_type', 'public');
+    }
+
     countQuery = applyFilters(countQuery, params);
 
     // データ取得クエリ（企業情報をJOINで一緒に取得）
@@ -196,8 +211,17 @@ async function searchJobsServerOptimized(
         )
       `
       )
-      .eq('status', 'PUBLISHED')
-      .in('publication_type', ['public', 'members']);
+      .eq('status', 'PUBLISHED');
+
+    // 認証状態に応じてpublication_typeフィルターを適用
+    if (isAuthenticated) {
+      // ログインユーザーはpublicとmembersの両方を閲覧可能
+      dataQuery = dataQuery.in('publication_type', ['public', 'members']);
+    } else {
+      // 未認証ユーザーはpublicのみ閲覧可能
+      dataQuery = dataQuery.eq('publication_type', 'public');
+    }
+
     dataQuery = applyFilters(dataQuery, params);
     dataQuery = dataQuery
       .order('created_at', { ascending: false })
