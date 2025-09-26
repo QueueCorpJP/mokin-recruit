@@ -38,6 +38,101 @@ export interface CompanyAnalyticsData {
   };
 }
 
+// スカウトログデータの型定義
+export interface ScoutLogEntry {
+  id: string;
+  sent_at: string;
+  sender_name: string;
+  candidate_name: string;
+  job_title?: string;
+  status: string;
+}
+
+export interface ScoutLogData {
+  logs: ScoutLogEntry[];
+  remainingTickets: number;
+  monthlyUsageByGroup: {
+    [groupId: string]: {
+      groupName: string;
+      usage: number;
+    };
+  };
+}
+
+async function fetchScoutLogs(companyId: string): Promise<ScoutLogData> {
+  const supabase = getSupabaseAdminClient();
+
+  // 企業の残りチケット数を取得
+  const { data: companyData } = await supabase
+    .from('company_accounts')
+    .select('remaining_tickets')
+    .eq('id', companyId)
+    .single();
+
+  const remainingTickets = companyData?.remaining_tickets || 0;
+
+  // 企業のグループIDを取得
+  const { data: groupData } = await supabase
+    .from('company_groups')
+    .select('id, group_name')
+    .eq('company_account_id', companyId);
+
+  const groupIds = groupData?.map(g => g.id) || [];
+  const groups = groupData || [];
+
+  // 過去6ヶ月のスカウト送信ログを取得
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const { data: scoutLogs } = await supabase
+    .from('scout_sends')
+    .select(
+      `
+      id,
+      sent_at,
+      sender_name,
+      candidate_name,
+      job_title,
+      status,
+      company_group_id
+    `
+    )
+    .eq('company_account_id', companyId)
+    .gte('sent_at', sixMonthsAgo.toISOString())
+    .order('sent_at', { ascending: false })
+    .limit(100);
+
+  // 月次グループ別使用量を計算
+  const currentMonth = new Date();
+  const monthStart = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  );
+
+  const monthlyUsageByGroup: ScoutLogData['monthlyUsageByGroup'] = {};
+
+  groups.forEach(group => {
+    const groupLogs =
+      scoutLogs?.filter(
+        log =>
+          log.company_group_id === group.id &&
+          new Date(log.sent_at) >= monthStart
+      ) || [];
+
+    monthlyUsageByGroup[group.id] = {
+      groupName: group.group_name,
+      usage: groupLogs.length,
+    };
+  });
+
+  return {
+    logs: scoutLogs || [],
+    remainingTickets,
+    monthlyUsageByGroup,
+  };
+}
+
 async function fetchCompanyAnalytics(
   companyId: string
 ): Promise<CompanyAnalyticsData> {
@@ -199,15 +294,22 @@ export default async function CompanyDetailPage({
   params,
   searchParams,
 }: CompanyDetailPageProps) {
-  // 企業データと分析データを並列で取得
-  const [company, analytics] = await Promise.all([
+  // 企業データ、分析データ、スカウトログを並列で取得
+  const [company, analytics, scoutLogs] = await Promise.all([
     fetchCompanyById(params.id),
     fetchCompanyAnalytics(params.id),
+    fetchScoutLogs(params.id),
   ]);
 
   if (!company) {
     notFound();
   }
 
-  return <CompanyDetailClient company={company} analytics={analytics} />;
+  return (
+    <CompanyDetailClient
+      company={company}
+      analytics={analytics}
+      scoutLogs={scoutLogs}
+    />
+  );
 }
