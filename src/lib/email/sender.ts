@@ -76,7 +76,7 @@ export async function sendEmailViaSendGrid(
       to: params.to,
       from: {
         email: process.env.SENDGRID_FROM_EMAIL || 'noreply@example.com',
-        name: 'Mokin Recruit',
+        name: 'CuePoint',
       },
       subject: params.subject,
       html: params.html,
