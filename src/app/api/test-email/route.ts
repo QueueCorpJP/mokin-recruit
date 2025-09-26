@@ -23,7 +23,10 @@ export async function POST(request: Request) {
     sgMail.setApiKey(apiKey);
     const msg = {
       to: email,
-      from,
+      from: {
+        email: from,
+        name: 'CuePoint',
+      },
       subject: 'SendGrid テストメール',
       text: 'これはテストメールです',
       html: '<strong>これはテストメールです</strong>',

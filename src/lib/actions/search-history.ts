@@ -823,6 +823,59 @@ export async function getUserDefaultGroupId() {
 }
 
 /**
+ * 保存された検索履歴のみを取得する（mypageでのおすすめ候補者表示用）
+ */
+export async function getSavedSearchHistory(
+  groupId?: string,
+  limit: number = 10
+) {
+  try {
+    // 企業ユーザー認証の確認
+    const authResult = await requireCompanyAuthForAction();
+    if (!authResult.success) {
+      return {
+        success: false,
+        error: (authResult as any).error || '認証が必要です',
+      };
+    }
+
+    const { companyUserId, companyAccountId } = authResult.data;
+    // Supabase管理者クライアントを使用（RLS無効でWHEREで手動フィルタリング）
+    const supabase = getSupabaseAdminClient();
+
+    // 全ての保存済み検索履歴を一度確認
+    const { data: allSavedSearches, error: allError } = await supabase
+      .from('search_history')
+      .select('*')
+      .eq('is_saved', true)
+      .limit(20);
+
+    if (allError) {
+      return {
+        success: false,
+        error: 'データベースアクセスエラー',
+      };
+    }
+
+    // 現在のユーザーの検索履歴のみをフィルタリング
+    const userSearches =
+      allSavedSearches?.filter(
+        (search: any) => search.searcher_id === companyUserId
+      ) || [];
+
+    return {
+      success: true,
+      data: userSearches.slice(0, limit),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'サーバーエラーが発生しました',
+    };
+  }
+}
+
+/**
  * 検索履歴を削除する（サーバーサイドでWHEREによる手動フィルタリング）
  */
 export async function deleteSearchHistory(historyId: string) {

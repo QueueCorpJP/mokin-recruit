@@ -6,7 +6,8 @@ import type { CandidateData } from '@/components/company/CandidateCard';
 import { searchCandidatesWithMockData } from '@/lib/utils/candidateSearch';
 
 interface Props {
-  companyGroupId?: string;
+  companyUserId: string;
+  companyGroupId: string;
   jobOptions?: Array<{ value: string; label: string; groupId?: string }>;
   initialSavedSearches?: Array<{
     id: string;
@@ -55,6 +56,7 @@ function normalizeConditions(raw: any): any {
 }
 
 export function SavedSearchRecommendationsClient({
+  companyUserId,
   companyGroupId,
   jobOptions = [],
   initialSavedSearches = [],
@@ -94,46 +96,63 @@ export function SavedSearchRecommendationsClient({
         isHidden: false,
         isAttention: index % 3 === 0,
         lastLogin,
-        companyName:
-          candidate.companyName || candidate.current_company || '企業名未設定',
-        department:
-          candidate.position || candidate.current_position || '部署名未設定',
-        position:
-          candidate.position || candidate.current_position || '役職未設定',
-        location: candidate.location || candidate.prefecture || '未設定',
+        companyName: candidate.recent_job_company_name || '企業名未設定',
+        department: candidate.recent_job_department_position || '部署名未設定',
+        position: candidate.recent_job_department_position || '役職未設定',
+        location: candidate.prefecture || '未設定',
         age: age ? `${age}歳` : '年齢未設定',
         gender:
-          candidate.gender === 'male'
+          candidate.gender === '男性'
             ? '男性'
-            : candidate.gender === 'female'
+            : candidate.gender === '女性'
               ? '女性'
               : '未設定',
-        salary: candidate.salary || candidate.desired_salary || '未設定',
-        university: '未設定',
-        degree: '未設定',
-        experienceJobs: (
-          candidate.experienceJobs ||
-          candidate.desired_job_types ||
-          candidate.skills ||
-          []
-        ).slice(0, 3),
-        experienceIndustries: (
-          candidate.experienceIndustries ||
-          candidate.desired_industries ||
-          []
-        ).slice(0, 3),
+        salary: candidate.current_salary || '未設定',
+        university:
+          Array.isArray(candidate.education) && candidate.education.length > 0
+            ? candidate.education[0].school_name || '大学名未設定'
+            : '大学名未設定',
+        degree:
+          Array.isArray(candidate.education) && candidate.education.length > 0
+            ? candidate.education[0].final_education || '学歴未設定'
+            : '学歴未設定',
+        experienceJobs: Array.isArray(candidate.recent_job_types)
+          ? candidate.recent_job_types
+              .map(item =>
+                typeof item === 'string'
+                  ? item
+                  : typeof item === 'object' && item.name
+                    ? item.name
+                    : String(item)
+              )
+              .slice(0, 3)
+          : Array.isArray(candidate.skills)
+            ? candidate.skills.map(skill => String(skill)).slice(0, 3)
+            : [],
+        experienceIndustries: Array.isArray(candidate.recent_job_industries)
+          ? candidate.recent_job_industries
+              .map(item =>
+                typeof item === 'string'
+                  ? item
+                  : typeof item === 'object' && item.name
+                    ? item.name
+                    : String(item)
+              )
+              .slice(0, 3)
+          : [],
         careerHistory: [
           {
             period: '現在',
-            company:
-              candidate.companyName ||
-              candidate.current_company ||
-              '企業名未設定',
-            role:
-              candidate.position || candidate.current_position || '役職未設定',
+            company: candidate.recent_job_company_name || '企業名未設定',
+            role: candidate.recent_job_department_position || '役職未設定',
           },
         ],
-        selectionCompanies: [],
+        selectionCompanies: [
+          {
+            company: '選考中企業情報未実装',
+            detail: 'おすすめ候補者では選考中企業情報は表示されません',
+          },
+        ],
       } as CandidateData;
     });
   }, [initialCandidates]);

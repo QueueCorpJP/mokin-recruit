@@ -3,24 +3,24 @@ import Image from 'next/image';
 export function FAQSection() {
   const faqs = [
     {
-      question: '登録したレジュメは企業からどうみられますか？',
-      answer:
-        '企業側は、スカウトを送る前では氏名・生年月日・住所・連絡先などの個人を特定できる情報は閲覧できません。氏名や生年月日などの情報の一部は、あなたがスカウトに返信した場合にのみ企業に公開されます。',
+      question: 'CuePointとはどのようなサービスですか？',
+      link: 'https://cuepoint.notion.site/CuePoint-2770ac1822c781799e90cb2dc0b49913?pvs=143',
     },
     {
-      question: '今の在籍企業に転職活動が知られたくないです。',
-      answer:
-        '現在の勤務先企業からは、自動的にプロフィールが閲覧されない仕組みになっています。\nさらに、過去の在籍企業や選考中の企業など、特定の企業を「ブロック企業」として設定することも可能ですので安心してご利用いただけます。',
+      question: '求人の応募方法を教えてください。',
+      link: 'https://cuepoint.notion.site/2770ac1822c7813f8012d75b89980737?pvs=143',
     },
     {
-      question: '受け取ったスカウトに返信するとどうなりますか？',
-      answer:
-        'あなたがスカウトに返信すると、企業の担当者が内容を確認し、面談のご案内が届くことが多いです。\nなお、返信後は氏名や生年月日などのプロフィール情報が企業に公開されます。',
+      question: '企業からのスカウトはどのように届きますか？',
+      link: 'https://cuepoint.notion.site/2770ac1822c781f58f8bef9c2b5469bf?pvs=143',
     },
     {
-      question: 'エージェントの方から連絡はきますか？',
-      answer:
-        'エージェント/ヘッドハンターを介さず、企業の採用担当者から直接連絡が届きます。',
+      question: '面談日時の調整はどのように行いますか？',
+      link: 'https://cuepoint.notion.site/2770ac1822c7817d9bc2e97a913c2f45?pvs=143',
+    },
+    {
+      question: '不具合やトラブルがあった場合の連絡先は？',
+      link: 'https://cuepoint.notion.site/2770ac1822c781129d40c05ddd0bb5f1?pvs=143',
     },
   ];
   return (
@@ -34,7 +34,7 @@ export function FAQSection() {
           height={701}
           className='w-full h-full object-cover'
           draggable='false'
-          loading="lazy"
+          loading='lazy'
         />
       </div>
       {/* 背景装飾テキスト */}
@@ -57,29 +57,27 @@ export function FAQSection() {
         {/* FAQ項目 */}
         <div className='flex flex-col gap-4 md:w-[800px] w-auto px-[24px] md:px-0'>
           {faqs.map((faq, idx) => (
-            <div
+            <a
               key={idx}
-              className='bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-10 py-6'
+              href={faq.link}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='bg-white rounded-[10px] shadow-[0px_0px_20px_0px_rgba(0,0,0,0.05)] px-10 py-6 hover:shadow-[0px_0px_30px_0px_rgba(0,0,0,0.1)] transition-shadow duration-200'
             >
-              <div className='flex flex-col gap-3'>
-                <div className='flex flex-row gap-2 items-center'>
-                  <div className='relative w-8 h-8 shrink-0'>
-                    <div className='w-8 h-8 rounded-full bg-[#FFF6A9]'></div>
-                    <div className='absolute inset-0 flex items-center justify-center'>
-                      <span className='text-[#0f9058] font-bold text-[18px] leading-[1.6] tracking-[1.8px] font-[family-name:var(--font-noto-sans-jp)]'>
-                        Q
-                      </span>
-                    </div>
+              <div className='flex flex-row gap-2 items-center'>
+                <div className='relative w-8 h-8 shrink-0'>
+                  <div className='w-8 h-8 rounded-full bg-[#FFF6A9]'></div>
+                  <div className='absolute inset-0 flex items-center justify-center'>
+                    <span className='text-[#0f9058] font-bold text-[18px] leading-[1.6] tracking-[1.8px] font-[family-name:var(--font-noto-sans-jp)]'>
+                      Q
+                    </span>
                   </div>
-                  <h3 className='text-[#0f9058] font-bold text-[18px] leading-[1.6] tracking-[1.8px] font-[family-name:var(--font-noto-sans-jp)]'>
-                    {faq.question}
-                  </h3>
                 </div>
-                <p className='text-[#323232] font-bold text-[16px] leading-[2] tracking-[1.6px] font-[family-name:var(--font-noto-sans-jp)] whitespace-pre-line'>
-                  {faq.answer}
-                </p>
+                <h3 className='text-[#0f9058] font-bold text-[18px] leading-[1.6] tracking-[1.8px] font-[family-name:var(--font-noto-sans-jp)]'>
+                  {faq.question}
+                </h3>
               </div>
-            </div>
+            </a>
           ))}
         </div>
         {/* 他の質問も見るボタン */}

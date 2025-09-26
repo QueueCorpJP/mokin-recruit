@@ -70,6 +70,13 @@ export function useClientAuth(): AuthState {
 
     checkSession();
 
+    // Listen for manual auth state check events
+    const handleManualCheck = () => {
+      checkSession();
+    };
+
+    window.addEventListener('auth-state-changed', handleManualCheck);
+
     // Listen for auth changes
     const {
       data: { subscription },
@@ -122,7 +129,10 @@ export function useClientAuth(): AuthState {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('auth-state-changed', handleManualCheck);
+    };
   }, [supabase.auth]);
 
   return authState;

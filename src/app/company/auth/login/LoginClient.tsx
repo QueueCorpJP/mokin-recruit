@@ -51,41 +51,32 @@ export function LoginClient({ userType }: LoginClientProps) {
 
     startTransition(async () => {
       try {
-        const result: LoginResult = await loginAction({
+        await loginAction({
           email: email.trim(),
           password,
           userType,
         });
 
-        if (!result.success) {
-          setError((result as any).error || 'ログインに失敗しました');
-          return;
-        }
-
-        // Force refresh to update authentication state
-        router.refresh();
-        // Small delay to ensure auth state propagates
-        setTimeout(() => {
-          if (userType === 'company') {
-            router.push('/company/mypage');
-          } else if (userType === 'admin') {
-            router.push('/admin/dashboard');
-          }
-        }, 100);
+        // 通常はここに到達しない（redirect が先に実行される）
       } catch (err) {
-        // Next.jsのリダイレクトエラーは正常な処理なので無視
+        // Next.jsのServer Actionでredirect()が呼ばれた場合の処理
         if (
           err instanceof Error &&
-          (err.message.includes('NEXT_REDIRECT') ||
-            (err as any).digest?.includes('NEXT_REDIRECT'))
+          (err.message === 'NEXT_REDIRECT' ||
+            err.message.includes('NEXT_REDIRECT') ||
+            (err as any).digest?.includes('NEXT_REDIRECT') ||
+            err.name === 'RedirectError')
         ) {
-          // リダイレクト中なのでエラーを表示しない
+          // リダイレクトは正常な処理なのでエラーを表示しない
           return;
         }
 
-        // その他のエラーのみを表示
-        console.error('Unexpected login error:', err);
-        setError('ログインに失敗しました');
+        // 認証エラーなどの実際のエラー
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('ログインに失敗しました');
+        }
       }
     });
   };

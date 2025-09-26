@@ -202,8 +202,7 @@ export async function getCandidatesDataWithQuery(
           id,
           first_name,
           last_name,
-          current_company,
-          recent_job_company_name,
+                    recent_job_company_name,
           prefecture,
           birth_date,
           gender
@@ -235,8 +234,7 @@ export async function getCandidatesDataWithQuery(
           id,
           first_name,
           last_name,
-          current_company,
-          recent_job_company_name,
+                    recent_job_company_name,
           prefecture,
           birth_date,
           gender
@@ -290,13 +288,13 @@ export async function getCandidatesDataWithQuery(
   // キーワード検索（名前・会社名・経験）
   // Supabaseの複数カラム部分一致はやや工夫が必要。ここでは名前・会社名のみ対応。
   if (params.keyword) {
-    // candidatesテーブルJOIN済みなのでfirst_name/last_name/current_companyでilike
+    // candidatesテーブルJOIN済みなのでfirst_name/last_name/recent_job_company_nameでilike
     const keyword = params.keyword.toLowerCase();
     query = query.filter(item => {
       const c = item.candidates || {};
       const first = String(c.first_name || '').toLowerCase();
       const last = String(c.last_name || '').toLowerCase();
-      const comp = String(c.current_company || '').toLowerCase();
+      const comp = String(c.recent_job_company_name || '').toLowerCase();
       return (
         first.includes(keyword) ||
         last.includes(keyword) ||
@@ -463,8 +461,7 @@ export async function getCandidatesDataWithQuery(
     return {
       id: candidateId,
       name: `${candidate?.first_name || ''} ${candidate?.last_name || ''}`.trim(),
-      company:
-        candidate?.recent_job_company_name || candidate?.current_company || '',
+      company: candidate?.recent_job_company_name || '',
       location: candidate?.prefecture || '',
       age,
       gender: candidate?.gender || '',
@@ -637,8 +634,7 @@ async function getCandidatesDataFallback(
             id,
             first_name,
             last_name,
-            current_company,
-            recent_job_company_name,
+                        recent_job_company_name,
             prefecture,
             birth_date,
             gender
@@ -669,8 +665,7 @@ async function getCandidatesDataFallback(
             id,
             first_name,
             last_name,
-            current_company,
-            recent_job_company_name,
+                        recent_job_company_name,
             prefecture,
             birth_date,
             gender
@@ -861,8 +856,7 @@ async function getCandidatesDataFallback(
       return {
         id: candidateId,
         name: `${candidate.first_name} ${candidate.last_name}`,
-        company:
-          candidate.recent_job_company_name || candidate.current_company || '',
+        company: candidate.recent_job_company_name || '',
         location: candidate.prefecture || '',
         age,
         gender: candidate.gender || '',
@@ -1088,6 +1082,7 @@ export interface CandidateDetailData {
   skills?: string[];
   languages?: Array<{ language: string; level: string }>;
   education?: Array<{
+    finalEducation: string;
     schoolName: string;
     department: string;
     graduationDate: string;
@@ -1115,7 +1110,7 @@ export async function getCandidateDetailData(
   const candidatePromise = supabase
     .from('candidates')
     .select(
-      `id, first_name, last_name, current_company, prefecture, current_residence, birth_date, gender, current_income, current_salary, desired_salary, last_login_at, updated_at, created_at, job_summary, self_pr, skills, recent_job_company_name, recent_job_department_position, recent_job_start_year, recent_job_start_month, recent_job_end_year, recent_job_end_month, recent_job_is_currently_working, recent_job_industries, recent_job_types, recent_job_description, desired_industries, desired_job_types, desired_locations, job_change_timing, interested_work_styles`
+      `id, first_name, last_name, prefecture, current_residence, birth_date, gender, current_salary, last_login_at, updated_at, created_at, job_summary, self_pr, skills, recent_job_company_name, recent_job_department_position, recent_job_start_year, recent_job_start_month, recent_job_end_year, recent_job_end_month, recent_job_is_currently_working, recent_job_industries, recent_job_types, recent_job_description`
     )
     .eq('id', candidateId)
     .single();
@@ -1162,14 +1157,12 @@ export async function getCandidateDetailData(
     .select('industry_name, experience_years')
     .eq('candidate_id', candidateId);
 
-  const selectionPromise = (() => {
-    let q = supabase
-      .from('career_status_entries')
-      .select('company_name, industries, progress_status, decline_reason')
-      .eq('candidate_id', candidateId);
-    if (companyGroupId) q = q.eq('company_group_id', companyGroupId);
-    return q;
-  })();
+  const selectionPromise = supabase
+    .from('career_status_entries')
+    .select(
+      'company_name, department, industries, progress_status, decline_reason'
+    )
+    .eq('candidate_id', candidateId);
 
   const skillsPromise = supabase
     .from('skills')
@@ -1179,7 +1172,9 @@ export async function getCandidateDetailData(
 
   const educationPromise = supabase
     .from('education')
-    .select('school_name, department, graduation_year, graduation_month')
+    .select(
+      'final_education, school_name, department, graduation_year, graduation_month'
+    )
     .eq('candidate_id', candidateId);
 
   // 担当者情報関連（rooms / scout_sends / company_groups）を並列で取得
@@ -1337,8 +1332,7 @@ export async function getCandidateDetailData(
     name:
       `${candidate.first_name || ''} ${candidate.last_name || ''}`.trim() ||
       'N/A',
-    company:
-      candidate.recent_job_company_name || candidate.current_company || '',
+    company: candidate.recent_job_company_name || '',
     location: candidate.prefecture || candidate.current_residence || '',
     age,
     gender:
@@ -1347,7 +1341,7 @@ export async function getCandidateDetailData(
         : candidate.gender === 'female'
           ? '女性'
           : candidate.gender || '',
-    income: candidate.current_income || candidate.current_salary || '',
+    income: candidate.current_salary || '',
     lastLogin: formatDate(candidate.last_login_at),
     lastUpdate: formatDate(candidate.updated_at),
     registrationDate: formatDate(candidate.created_at),
@@ -1360,10 +1354,10 @@ export async function getCandidateDetailData(
     birthDate: candidate.birth_date || '',
     prefecture: candidate.prefecture || candidate.current_residence || '',
     phoneNumber: candidate.phone_number || '',
-    currentCompany: candidate.current_company || '',
+    currentCompany: candidate.recent_job_company_name || '',
     currentPosition: candidate.recent_job_department_position || '',
-    currentIncome: candidate.current_income || candidate.current_salary || '',
-    desiredSalary: candidate.desired_salary || '',
+    currentIncome: candidate.current_salary || '',
+    desiredSalary: '',
     recentJobCompanyName: candidate.recent_job_company_name || '',
     recentJobDepartmentPosition: candidate.recent_job_department_position || '',
     recentJobStartYear: candidate.recent_job_start_year || '',
@@ -1377,24 +1371,14 @@ export async function getCandidateDetailData(
         (acc: number, j: any) => acc + (j.experience_years || 0),
         0
       ) || undefined,
-    desiredIndustries: Array.isArray(candidate.desired_industries)
-      ? candidate.desired_industries
-      : [],
-    desiredJobTypes: Array.isArray(candidate.desired_job_types)
-      ? candidate.desired_job_types
-      : [],
-    desiredLocations: Array.isArray(candidate.desired_locations)
-      ? candidate.desired_locations.filter(
-          (l: any) => l && String(l).trim() !== ''
-        )
-      : [],
-    interestedWorkStyles: Array.isArray(candidate.interested_work_styles)
-      ? candidate.interested_work_styles
-      : [],
+    desiredIndustries: [],
+    desiredJobTypes: [],
+    desiredLocations: [],
+    interestedWorkStyles: [],
     selfPr: candidate.self_pr || '',
-    hasCareerChange: candidate.has_career_change || '',
-    jobChangeTiming: candidate.job_change_timing || '',
-    currentActivityStatus: candidate.current_activity_status || '',
+    hasCareerChange: '',
+    jobChangeTiming: '',
+    currentActivityStatus: '',
     managementExperienceCount:
       typeof candidate.management_experience_count === 'number'
         ? candidate.management_experience_count
@@ -1431,23 +1415,13 @@ export async function getCandidateDetailData(
     ),
     workHistory,
     desiredConditions: {
-      annualIncome: candidate.desired_salary || '',
-      currentIncome: candidate.current_income || candidate.current_salary || '',
-      jobTypes: Array.isArray(candidate.desired_job_types)
-        ? candidate.desired_job_types
-        : [],
-      industries: Array.isArray(candidate.desired_industries)
-        ? candidate.desired_industries
-        : [],
-      workLocations: Array.isArray(candidate.desired_locations)
-        ? candidate.desired_locations.filter(
-            (location: string) => location && location.trim() !== ''
-          )
-        : [],
-      jobChangeTiming: candidate.job_change_timing || '',
-      workStyles: Array.isArray(candidate.interested_work_styles)
-        ? candidate.interested_work_styles
-        : [],
+      annualIncome: '',
+      currentIncome: candidate.current_salary || '',
+      jobTypes: [],
+      industries: [],
+      workLocations: [],
+      jobChangeTiming: '',
+      workStyles: [],
     },
     selectionStatus: (selectionStatus || []).map(
       (s: {
@@ -1483,11 +1457,13 @@ export async function getCandidateDetailData(
         : [],
     education: (education || []).map(
       (e: {
+        final_education: string;
         school_name: string;
         department: string;
         graduation_year: number;
         graduation_month: number;
       }) => ({
+        finalEducation: e.final_education,
         schoolName: e.school_name,
         department: e.department,
         graduationDate: `${e.graduation_year}年${e.graduation_month}月`,
@@ -1501,8 +1477,16 @@ export async function getCandidateDetailData(
     ...(() => {
       const { badgeType, badgeText } = calculateCandidateBadge({
         recent_job_types: candidate.recent_job_types,
-        desired_job_types: candidate.desired_job_types,
-        selectionCompanies: [], // recruitment/detailでは選考中企業の情報が利用可能な場合に実装
+        desired_job_types: [],
+        selectionCompanies: (selectionStatus || []).map((selection: any) => ({
+          company: selection.company_name || '企業名未設定',
+          industries: Array.isArray(selection.industries)
+            ? selection.industries
+            : [],
+          jobTypes: '', // career_status_entriesテーブルには職種情報がないため空文字列
+          status: selection.progress_status || '未設定',
+          declineReason: selection.decline_reason,
+        })),
       });
       return { badgeType, badgeText };
     })(),

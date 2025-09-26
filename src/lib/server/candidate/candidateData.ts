@@ -29,15 +29,12 @@ export interface CandidateData {
   job_summary?: string;
   self_pr?: string;
   management_experience_count?: number;
-  interested_work_styles?: string[];
   skills?: string[];
   experience_years?: number;
   desired_industries?: string[];
   desired_job_types?: string[];
   desired_salary?: string;
   desired_locations?: string[];
-  resume_filename?: string;
-  resume_uploaded_at?: string;
 }
 
 // 学歴データの型定義
@@ -90,11 +87,8 @@ export async function getCandidateData(
           job_summary,
           self_pr,
           management_experience_count,
-          interested_work_styles,
           skills,
-          experience_years,
-          resume_filename,
-          resume_uploaded_at
+          experience_years
         `
           )
           .eq('id', candidateId)

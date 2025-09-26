@@ -41,6 +41,12 @@ export function CandidateLoginClient() {
           // setSuccess('ログインに成功しました！');
           // Force refresh to update authentication state
           router.refresh();
+
+          // Trigger auth state update event for navigation
+          setTimeout(() => {
+            window.dispatchEvent(new Event('auth-state-changed'));
+          }, 50);
+
           // Small delay to ensure auth state propagates
           setTimeout(() => {
             router.push('/candidate/mypage');

@@ -135,6 +135,10 @@ export async function candidateLoginAction(
     revalidatePath('/', 'layout');
     revalidateTag('auth');
 
+    // 候補者関連のページも再検証
+    revalidatePath('/candidate');
+    revalidatePath('/candidate/mypage');
+
     // 候補者ダッシュボードにリダイレクト
     // redirect('/candidate/mypage');
     return {

@@ -56,6 +56,7 @@ export function filterCandidatesByConditions(
           job =>
             job &&
             job !== '未設定' &&
+            typeof job === 'string' &&
             job.toLowerCase().includes(jobType.toLowerCase())
         );
 
@@ -91,6 +92,7 @@ export function filterCandidatesByConditions(
           exp =>
             exp &&
             exp !== '未設定' &&
+            typeof exp === 'string' &&
             exp.toLowerCase().includes(industry.toLowerCase())
         );
 

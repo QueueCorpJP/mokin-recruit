@@ -48,33 +48,32 @@ integer DEFAULT 0, scout_reception_enabled boolean DEFAULT true, status text DEF
 CHECK (status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text, 'temporary'::text,
 'official'::text, 'withdrawn'::text, 'password_setting_ready'::text, 'active'::text,
 'DRAFT'::text])), created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time
-zone DEFAULT now(), last_login_at timestamp with time zone, current_company text, current_position
-text, last_name_kana text, first_name_kana text, gender text CHECK (gender IS NULL OR (gender = ANY
-(ARRAY['男性'::text, '女性'::text, '未回答'::text]))), birth_date date, prefecture text,
-recent_job_company_name text, recent_job_department_position text, recent_job_start_year text,
-recent_job_start_month text, recent_job_end_year text, recent_job_end_month text,
-recent_job_is_currently_working boolean, recent_job_industries jsonb, recent_job_types jsonb,
-recent_job_description text, recent_job_updated_at timestamp with time zone, resume_url text,
-resume_filename text, resume_uploaded_at timestamp with time zone, job_summary text, self_pr text,
-password_hash text, management_experience_count integer DEFAULT 0, interested_work_styles ARRAY
-DEFAULT '{}'::text[], CONSTRAINT candidates_pkey PRIMARY KEY (id) ); CREATE TABLE
-public.career_status_entries ( id uuid NOT NULL DEFAULT gen_random_uuid(), candidate_id uuid NOT
-NULL, is_private boolean DEFAULT false, industries jsonb, company_name text, department text,
-progress_status text, decline_reason text, created_at timestamp with time zone DEFAULT now(),
-updated_at timestamp with time zone DEFAULT now(), CONSTRAINT career_status_entries_pkey PRIMARY KEY
-(id), CONSTRAINT career_status_entries_candidate_id_fkey FOREIGN KEY (candidate_id) REFERENCES
-public.candidates(id) ); CREATE TABLE public.company_accounts ( id uuid NOT NULL DEFAULT
-gen_random_uuid(), company_name text NOT NULL, industry text NOT NULL, headquarters_address text,
-representative_name text, company_overview text, status text DEFAULT 'ACTIVE'::text CHECK (status =
-ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text])), created_at timestamp with time
-zone DEFAULT now(), updated_at timestamp with time zone DEFAULT now(), plan text NOT NULL DEFAULT
-'basic'::text CHECK (plan = ANY (ARRAY['basic'::text, 'standard'::text])), scout_limit integer
-DEFAULT 10 CHECK (scout_limit >= 1 AND scout_limit <= 1000), company_urls jsonb DEFAULT '[]'::jsonb,
-icon_image_url text, representative_position text, established_year integer, capital_amount integer,
-capital_unit text CHECK (capital_unit IS NULL OR (capital_unit = ANY (ARRAY['万円'::text,
-'億円'::text]))), employees_count integer, industries jsonb DEFAULT '[]'::jsonb, business_content
-text, prefecture text, address text, company_phase text CHECK (company_phase IS NULL OR
-(company_phase = ANY (ARRAY['スタートアップ（創業初期・社員数50名規模）'::text,
+zone DEFAULT now(), last_login_at timestamp with time zone, last_name_kana text, first_name_kana
+text, gender text CHECK (gender IS NULL OR (gender = ANY (ARRAY['男性'::text, '女性'::text,
+'未回答'::text]))), birth_date date, prefecture text, recent_job_company_name text,
+recent_job_department_position text, recent_job_start_year text, recent_job_start_month text,
+recent_job_end_month text, recent_job_is_currently_working boolean, recent_job_industries jsonb,
+recent_job_types jsonb, recent_job_description text, recent_job_updated_at timestamp with time zone,
+job_summary text, self_pr text, management_experience_count integer DEFAULT 0, recent_job_end_year
+text, CONSTRAINT candidates_pkey PRIMARY KEY (id) ); CREATE TABLE public.career_status_entries ( id
+uuid NOT NULL DEFAULT gen_random_uuid(), candidate_id uuid NOT NULL, is_private boolean DEFAULT
+false, industries jsonb, company_name text, department text, progress_status text, decline_reason
+text, created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT
+now(), job_change_timing text, current_activity_status text, has_career_change text, CONSTRAINT
+career_status_entries_pkey PRIMARY KEY (id), CONSTRAINT career_status_entries_candidate_id_fkey
+FOREIGN KEY (candidate_id) REFERENCES public.candidates(id) ); CREATE TABLE public.company_accounts
+( id uuid NOT NULL DEFAULT gen_random_uuid(), company_name text NOT NULL, industry text NOT NULL,
+headquarters_address text, representative_name text, company_overview text, status text DEFAULT
+'ACTIVE'::text CHECK (status = ANY (ARRAY['ACTIVE'::text, 'INACTIVE'::text, 'SUSPENDED'::text])),
+created_at timestamp with time zone DEFAULT now(), updated_at timestamp with time zone DEFAULT
+now(), plan text NOT NULL DEFAULT 'basic'::text CHECK (plan = ANY (ARRAY['none'::text,
+'standard'::text, 'strategic'::text])), scout_limit integer DEFAULT 10 CHECK (scout_limit >= 1 AND
+scout_limit <= 1000), company_urls jsonb DEFAULT '[]'::jsonb, icon_image_url text,
+representative_position text, established_year integer, capital_amount integer, capital_unit text
+CHECK (capital_unit IS NULL OR (capital_unit = ANY (ARRAY['万円'::text, '億円'::text]))),
+employees_count integer, industries jsonb DEFAULT '[]'::jsonb, business_content text, prefecture
+text, address text, company_phase text CHECK (company_phase IS NULL OR (company_phase = ANY
+(ARRAY['スタートアップ（創業初期・社員数50名規模）'::text,
 'スタートアップ（成長中・シリーズB以降）'::text, 'メガベンチャー（急成長・未上場）'::text,
 '上場ベンチャー（マザーズ等上場済）'::text, '中堅企業（~1000名規模）'::text,
 '上場企業（プライム・スタンダード等）'::text, '大企業（グローバル展開・数千名規模）'::text]))),

@@ -167,14 +167,61 @@ const FooterSection = lazy(() =>
                 </div>
               }
             >
-              <FaqBox
-                title='退会したい場合はどうすればいいですか？'
-                body='マイページの「アカウント設定」から「退会」ボタンを押し、画面の案内に従って手続きを進めてください。'
-              />
-              <FaqBox
-                title='パスワードを忘れた場合はどうすればいいですか？'
-                body='ログイン画面の「パスワードをお忘れですか？」リンクから再設定手続きを行ってください。'
-              />
+              <a
+                href='https://cuepoint.notion.site/CuePoint-2770ac1822c781799e90cb2dc0b49913?pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ display: 'block', textDecoration: 'none' }}
+              >
+                <FaqBox
+                  title='CuePointとはどのようなサービスですか？'
+                  body='詳細はこちらをご覧ください。'
+                />
+              </a>
+              <a
+                href='https://cuepoint.notion.site/2770ac1822c7813f8012d75b89980737?pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ display: 'block', textDecoration: 'none' }}
+              >
+                <FaqBox
+                  title='求人の応募方法を教えてください。'
+                  body='詳細はこちらをご覧ください。'
+                />
+              </a>
+              <a
+                href='https://cuepoint.notion.site/2770ac1822c781f58f8bef9c2b5469bf?pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ display: 'block', textDecoration: 'none' }}
+              >
+                <FaqBox
+                  title='企業からのスカウトはどのように届きますか？'
+                  body='詳細はこちらをご覧ください。'
+                />
+              </a>
+              <a
+                href='https://cuepoint.notion.site/2770ac1822c7817d9bc2e97a913c2f45?pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ display: 'block', textDecoration: 'none' }}
+              >
+                <FaqBox
+                  title='面談日時の調整はどのように行いますか？'
+                  body='詳細はこちらをご覧ください。'
+                />
+              </a>
+              <a
+                href='https://cuepoint.notion.site/2770ac1822c781129d40c05ddd0bb5f1?pvs=143'
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{ display: 'block', textDecoration: 'none' }}
+              >
+                <FaqBox
+                  title='不具合やトラブルがあった場合の連絡先は？'
+                  body='詳細はこちらをご覧ください。'
+                />
+              </a>
             </Suspense>
             {/* QA一覧を見るリンクボックス（ダミー） */}
             <div
